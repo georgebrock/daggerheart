@@ -1,3 +1,9 @@
-<header>
-   <input type="text" name="name" value="{{document.name}}">
+<header class='item-card-header'>
+    <img class='profile' src='{{document.img}}' data-action='onEditImage' data-edit='img' />
+    <div class='item-info'>
+        <h1 class='item-name'><input type='text' name='name' value='{{document.name}}' /></h1>
+        <div class='item-description'>
+            <h3>{{localize (concat 'DAGGERHEART.Feature.' document.type '.label')}}</h3>
+        </div>
+    </div>
 </header>

@@ -1,3 +1,4 @@
+import AncestryFeature from '../../../data/pseudo-documents/feature/itemFeature.mjs';
 import DaggerheartSheet from '../daggerheart-sheet.mjs';
 
 const { ItemSheetV2 } = foundry.applications.sheets;
@@ -7,6 +8,7 @@ export default class AncestrySheet extends DaggerheartSheet(ItemSheetV2) {
         classes: ['daggerheart', 'sheet', 'item', 'dh-style', 'ancestry'],
         position: { width: 450, height: 700 },
         actions: {
+            addFeature: this.addFeature,
             editFeature: this.editFeature,
             deleteFeature: this.deleteFeature
         },
@@ -60,29 +62,31 @@ export default class AncestrySheet extends DaggerheartSheet(ItemSheetV2) {
         this.render();
     }
 
+    static async addFeature() {
+        await AncestryFeature.create({ name: 'New Feature' }, { parent: this.document });
+        this.render();
+    }
+
     static async editFeature(_, target) {
         const feature = await fromUuid(target.dataset.feature);
         feature.sheet.render(true);
     }
 
-    static async deleteFeature(event, target) {
-        event.preventDefault();
-        event.stopPropagation();
-        await this.item.update({
-            'system.abilities': this.item.system.abilities.filter(x => x.uuid !== target.dataset.feature)
-        });
+    static async deleteFeature(_, target) {
+        await this.document.system.features.get(target.dataset.feature).delete();
+        this.render(true);
     }
 
     async _onDrop(event) {
         const data = TextEditor.getDragEventData(event);
         const item = await fromUuid(data.uuid);
-        if (item.type === 'feature' && item.system.type === SYSTEM.ITEM.featureTypes.ancestry.id) {
-            await this.document.update({
-                'system.abilities': [
-                    ...this.document.system.abilities,
-                    { img: item.img, name: item.name, uuid: item.uuid }
-                ]
-            });
-        }
+        // if (item.type === 'feature' && item.system.type === SYSTEM.ITEM.featureTypes.ancestry.id) {
+        //     await this.document.update({
+        //         'system.abilities': [
+        //             ...this.document.system.abilities,
+        //             { img: item.img, name: item.name, uuid: item.uuid }
+        //         ]
+        //     });
+        // }
     }
 }

@@ -4,9 +4,9 @@
     data-group='{{tabs.features.group}}'
 >
     <fieldset>
-        <legend>{{localize "DAGGERHEART.Sheets.Feature.Tabs.Features"}}</legend>
+        <legend>{{localize "DAGGERHEART.Sheets.Feature.Tabs.Features"}} <a><i class="fa-solid fa-plus icon-button" data-action="addFeature"></i></a></legend>
         <div class="feature-list">
-            {{#each source.system.abilities as |feature key|}}
+            {{#each source.system.features as |feature key|}}
                 {{> 'systems/daggerheart/templates/sheets/global/partials/feature-section-item.hbs' feature=feature}}
             {{/each}}
         </div>

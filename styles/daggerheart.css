@@ -2968,6 +2968,45 @@ div.daggerheart.views.multiclass {
 .application.sheet.daggerheart.dh-style.class .tab.settings .list-items .item-line .controls a {
   text-shadow: none;
 }
+.application.daggerheart.sheet.dh-style.pseudo .effects-list {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+.application.daggerheart.sheet.dh-style.pseudo .effects-list .effect-item {
+  margin-bottom: 10px;
+}
+.application.daggerheart.sheet.dh-style.pseudo .effects-list .effect-item:last-child {
+  margin-bottom: 0px;
+}
+.application.daggerheart.sheet.dh-style.pseudo .effects-list .effect-item .effect-line {
+  display: grid;
+  align-items: center;
+  grid-template-columns: 1fr 4fr 1fr;
+}
+.application.daggerheart.sheet.dh-style.pseudo .effects-list .effect-item .effect-line h4 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: lighter;
+  color: light-dark(#222, #efe6d8);
+}
+.application.daggerheart.sheet.dh-style.pseudo .effects-list .effect-item .effect-line .image {
+  height: 40px;
+  width: 40px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: none;
+}
+.application.daggerheart.sheet.dh-style.pseudo .effects-list .effect-item .effect-line .controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.application.daggerheart.sheet.dh-style.pseudo .effects-list .effect-item .effect-line .controls a {
+  text-shadow: none;
+}
 @font-face {
   font-family: 'Cinzel';
   font-style: normal;
@@ -3250,6 +3289,9 @@ div.daggerheart.views.multiclass {
   overflow: hidden;
   transform: translateY(-20px);
   transform-origin: top;
+}
+.application.sheet.dh-style datalist option {
+  background: red;
 }
 .application.setting.dh-style fieldset h2,
 .application.setting.dh-style fieldset h3,

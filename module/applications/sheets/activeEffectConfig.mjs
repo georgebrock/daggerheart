@@ -33,7 +33,8 @@ export default class DhActiveEffectConfig extends ActiveEffectConfig {
             case 'changes':
                 const fieldPaths = [];
                 const validFieldPath = fieldPath => this.validFieldPath(fieldPath, this.#unapplicablePaths);
-                context.document.parent.system.schema.apply(function () {
+                CONFIG.Actor.dataModels.character.schema.apply(function () {
+                    // Should probably display a union of Character and Adversary fields?
                     if (!(this instanceof foundry.data.fields.SchemaField)) {
                         if (validFieldPath(this.fieldPath)) {
                             fieldPaths.push(this.fieldPath);

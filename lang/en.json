@@ -802,6 +802,19 @@
             }
         },
         "Feature": {
+            "Label": "Feature",
+            "FIELDS": {
+                "name": { "label": "Name" },
+                "description": { "label": "Description" },
+                "activeEffects": { "label": "Active Effects" }
+            },
+            "ancestry": {
+                "label": "Ancestry Feature"
+            },
+            "weapon": {
+                "label": "Weapon Feature"
+            },
+            "FeatureTypeLabel": "{type} Feature",
             "Type": {
                 "ancestry": "Ancestry",
                 "community": "Community",
@@ -822,6 +835,9 @@
             "Normal": "Normal",
             "Input": "Input",
             "Ticks": "Ticks"
+        },
+        "ActiveEffect": {
+            "New": "New Active Effect"
         },
         "Application": {
             "Downtime": {

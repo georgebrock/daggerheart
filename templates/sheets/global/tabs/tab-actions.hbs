@@ -6,7 +6,7 @@
     <fieldset class="one-column">
         <legend>{{localize "Actions"}} <a><i class="fa-solid fa-plus icon-button" data-action="addAction"></i></a></legend>
         <div class="actions-list">
-            {{#each document.system.actions as |action index|}}
+            {{#each source.actions as |action index|}}
                 <div class="action-item">
                     <img class="image" src="{{action.img}}" />
                     <span>{{action.name}}</span>
