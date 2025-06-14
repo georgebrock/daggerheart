@@ -51,7 +51,7 @@ export default class AdversarySheet extends DaggerheartSheet(ActorSheetV2) {
         const context = await super._prepareContext(_options);
         context.document = this.document;
         context.tabs = super._getTabs(this.constructor.TABS);
-console.log(context)
+        
         return context;
     }
 
