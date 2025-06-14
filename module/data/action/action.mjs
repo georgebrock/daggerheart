@@ -14,6 +14,16 @@ const fields = foundry.data.fields;
     - Range Check
     - Area of effect and measurement placement
     - Auto use costs and action
+
+    Activity Types List
+    - Attack => Weapon Attack, Spell Attack, etc...
+    - Effects => Like Attack without damage
+    - Damage => Like Attack without roll
+    - Healing
+    - Resource => Merge Healing & Resource ?
+    - Summon
+    - Sequencer => Trigger a list of Activities set on the item one by one
+    - Macro
 */
 
 export class DHBaseAction extends foundry.abstract.DataModel {
@@ -49,9 +59,9 @@ export class DHBaseAction extends foundry.abstract.DataModel {
             }),
             range: new fields.StringField({
                 choices: SYSTEM.GENERAL.range,
-                required: true,
-                blank: false,
-                initial: 'self'
+                required: false,
+                blank: true,
+                initial: null
             })
         };
     }
@@ -74,7 +84,7 @@ export class DHBaseAction extends foundry.abstract.DataModel {
         return 'systems/daggerheart/templates/chat/attack-roll.hbs';
     }
 
-    static getRollType() {
+    static getRollType(parent) {
         return 'ability';
     }
 
@@ -83,9 +93,12 @@ export class DHBaseAction extends foundry.abstract.DataModel {
         updateSource.img ??= parent?.img ?? parent?.system?.img;
         if (parent?.system?.trait) {
             updateSource['roll'] = {
-                type: this.getRollType(),
+                type: this.getRollType(parent),
                 trait: parent.system.trait
             };
+        }
+        if(parent?.type === 'weapon' && !!this.schema.fields.damage) {
+            updateSource['damage'] = {includeBase: true};
         }
         if (parent?.system?.range) {
             updateSource['range'] = parent?.system?.range;
@@ -93,7 +106,23 @@ export class DHBaseAction extends foundry.abstract.DataModel {
         return updateSource;
     }
 
-    async use(event) {
+    getRollData() {
+        const actorData = this.actor.getRollData(false);
+        return {
+            ...actorData.toObject(),
+            prof: actorData.proficiency?.value ?? 1,
+            cast: actorData.spellcast?.value ?? 1,
+            scale: this.cost.length ? this.cost.reduce((a,c) => {a[c.type] = c.value; return a},{}) : 1
+        }
+    }
+
+    async use(event, ...args) {
+        // throw new Error("Activity must implement a 'use' method.");
+        const data = {
+            itemUUID: this.item,
+            activityId: this.id
+        };
+        
         if(this.cost?.length) {
             const hasCost = await this.checkCost();
             if(!hasCost) return ui.notifications.warn("You don't have the resources to use that action.");
@@ -104,7 +133,7 @@ export class DHBaseAction extends foundry.abstract.DataModel {
         if(this.range) {
             const hasRange = await this.checkRange();
         }
-        if (this.roll.type && this.roll.trait) {
+        if (this.roll?.type && this.roll?.trait) {
             const modifierValue = this.actor.system.traits[this.roll.trait].value;
             const config = {
                 event: event,
@@ -129,8 +158,13 @@ export class DHBaseAction extends foundry.abstract.DataModel {
             if (this.effects.length) {
                 // Apply Active Effects. In Chat Message ?
             }
-            return this.actor.diceRoll(config);
+            data.roll = await this.actor.diceRoll(config);
         }
+        if(this.withMessage || true) {
+
+        }
+
+        return data;
     }
 
     async checkCost() {
@@ -174,19 +208,19 @@ export class DHBaseAction extends foundry.abstract.DataModel {
     }
 }
 
-const tmpTargetObject = () => {
-
-}
-
 const extraDefineSchema = (field, option) => {
     return {
         [field]: {
             // damage: new fields.SchemaField({
             //     parts: new fields.ArrayField(new fields.EmbeddedDataField(DHDamageData))
             // }),
-            damage: new DHDamageField(option),
+            damage: new DHDamageField(),
             roll: new fields.SchemaField({
                 type: new fields.StringField({ nullable: true, initial: null, choices: SYSTEM.GENERAL.rollTypes }),
+                trait: new fields.StringField({ nullable: true, initial: null, choices: SYSTEM.ACTOR.abilities }),
+                difficulty: new fields.NumberField({ nullable: true, initial: null, integer: true, min: 0 })
+            }),
+            save: new fields.SchemaField({
                 trait: new fields.StringField({ nullable: true, initial: null, choices: SYSTEM.ACTOR.abilities }),
                 difficulty: new fields.NumberField({ nullable: true, initial: null, integer: true, min: 0 })
             }),
@@ -207,72 +241,61 @@ const extraDefineSchema = (field, option) => {
     };
 };
 
-export class DHAttackAction extends DHBaseAction {
-    static defineSchema() {
-        return {
-            ...super.defineSchema(),
-            ...extraDefineSchema('damage', true),
-            ...extraDefineSchema('roll'),
-            ...extraDefineSchema('target'),
-            ...extraDefineSchema('effects')
-        };
-    }
+export class DHDamageAction extends DHBaseAction {
+    directDamage = true;
 
-    static getRollType() {
-        return 'weapon';
-    }
-
-    prepareData() {
-        super.prepareData();
-        if (this.damage.includeBase && !!this.item?.system?.damage) {
-            const baseDamage = this.getParentDamage();
-            this.damage.parts.unshift(new DHDamageData(baseDamage));
-        }
-    }
-
-    getParentDamage() {
-        return {
-            multiplier: 'proficiency',
-            dice: this.item?.system?.damage.value,
-            bonus: this.item?.system?.damage.bonus ?? 0,
-            type: this.item?.system?.damage.type,
-            base: true
-        };
-    }
-
-    // Temporary until full formula parser
-    // getDamageFormula() {
-    //     return this.damage.parts.map(p => p.formula).join(' + ');
-    // }
-}
-
-export class DHSpellCastAction extends DHBaseAction {
     static defineSchema() {
         return {
             ...super.defineSchema(),
             ...extraDefineSchema('damage'),
-            ...extraDefineSchema('roll'),
             ...extraDefineSchema('target'),
             ...extraDefineSchema('effects')
         };
     }
 
-    static getRollType() {
-        return 'spellcast';
-    }
-}
+    async use(event, ...args) {
+        const messageData = await super.use(event, args);
+        if(!this.directDamage) return;
+        const roll = await this.rollDamage();
+        if(!roll) return;
+        const cls = getDocumentClass('ChatMessage'),
+            msg = new cls({
+                user: game.user.id,
+                content: await foundry.applications.handlebars.renderTemplate(
+                    this.chatTemplate,
+                    {
+                        ...roll,
+                        ...messageData
+                    }
+                )
+            });
 
-export class DHDamageAction extends DHBaseAction {
-    static defineSchema() {
+        cls.create(msg.toObject());
+    }
+
+    async rollDamage() {
+        const formula = this.damage.parts.map(p => p.getFormula(this.actor)).join(' + ');
+        console.log(this, formula)
+        if (!formula || formula == '') return;
+
+        let roll = { formula: formula, total: formula };
+        if (isNaN(formula)) {
+            roll = await new Roll(formula, this.getRollData()).evaluate();
+        }
+        console.log(roll)
         return {
-            ...super.defineSchema(),
-            ...extraDefineSchema('damage', false),
-            ...extraDefineSchema('target'),
-            ...extraDefineSchema('effects')
-        };
+            roll: roll.formula,
+            total: roll.total,
+            dice: roll.dice,
+            type: this.damage.parts.map(p => p.type)
+        }
     }
 
-    async use(event) {
+    get chatTemplate() {
+        return 'systems/daggerheart/templates/chat/damage-roll.hbs';
+    }
+
+    /* async use(event, ...args) {
         const formula = this.damage.parts.map(p => p.getFormula(this.actor)).join(' + ');
         if (!formula || formula == '') return;
 
@@ -295,8 +318,86 @@ export class DHDamageAction extends DHBaseAction {
         });
 
         cls.create(msg.toObject());
-    }
+    } */
+
+    /* async applyDamage(targets, value) {
+        const promises = [];
+        for(let t of targets) {
+            if(!t) continue;
+            promises.push(new Promise(async (resolve, reject) => {
+                    await t.takeDamage(value, 'physical'); // Apply one instance of damage per parts ?
+                    resolve();
+                })
+            )
+        }
+        return Promise.all(promises).then((values) => {
+            return values;
+        });
+    } */
 }
+
+export class DHAttackAction extends DHDamageAction {
+    directDamage = false;
+
+    static defineSchema() {
+        return {
+            ...super.defineSchema(),
+            ...extraDefineSchema('roll'),
+            ...extraDefineSchema('save')
+        };
+    }
+
+    static getRollType(parent) {
+        return parent.type === 'weapon' ? 'weapon' : 'spellcast';
+    }
+
+    get chatTemplate() {
+        return 'systems/daggerheart/templates/chat/attack-roll.hbs';
+    }
+
+    prepareData() {
+        super.prepareData();
+        if (this.damage.includeBase && !!this.item?.system?.damage) {
+            const baseDamage = this.getParentDamage();
+            this.damage.parts.unshift(new DHDamageData(baseDamage));
+        }
+    }
+
+    getParentDamage() {
+        return {
+            multiplier: 'proficiency',
+            dice: this.item?.system?.damage.value,
+            bonus: this.item?.system?.damage.bonus ?? 0,
+            type: this.item?.system?.damage.type,
+            base: true
+        };
+    }
+
+    /* async use(event, ...args) {
+
+    } */
+
+    // Temporary until full formula parser
+    // getDamageFormula() {
+    //     return this.damage.parts.map(p => p.formula).join(' + ');
+    // }
+}
+
+/* export class DHSpellCastAction extends DHBaseAction {
+    static defineSchema() {
+        return {
+            ...super.defineSchema(),
+            ...extraDefineSchema('damage'),
+            ...extraDefineSchema('roll'),
+            ...extraDefineSchema('target'),
+            ...extraDefineSchema('effects')
+        };
+    }
+
+    static getRollType(parent) {
+        return 'spellcast';
+    }
+} */
 
 export class DHHealingAction extends DHBaseAction {
     static defineSchema() {
@@ -317,30 +418,38 @@ export class DHHealingAction extends DHBaseAction {
         };
     }
 
-    async use(event) {
+    async use(event, ...args) {
+        const messageData = await super.use(event, args),
+            roll = await this.rollHealing(),
+            cls = getDocumentClass('ChatMessage'),
+            msg = new cls({
+                user: game.user.id,
+                content: await foundry.applications.handlebars.renderTemplate(
+                    this.chatTemplate,
+                    {
+                        ...roll,
+                        ...messageData
+                    }
+                )
+            });
+
+        cls.create(msg.toObject());
+    }
+
+    async rollHealing() {
         const formula = this.healing.value.getFormula(this.actor);
         if (!formula || formula == '') return;
 
-        // const roll = await super.use(event);
         let roll = { formula: formula, total: formula };
         if (isNaN(formula)) {
-            roll = await new Roll(formula).evaluate();
+            roll = await new Roll(formula, this.getRollData()).evaluate();
         }
-
-        const cls = getDocumentClass('ChatMessage');
-        const msg = new cls({
-            user: game.user.id,
-            content: await foundry.applications.handlebars.renderTemplate(
-                'systems/daggerheart/templates/chat/healing-roll.hbs',
-                {
-                    roll: roll.formula,
-                    total: roll.total,
-                    type: this.healing.type
-                }
-            )
-        });
-
-        cls.create(msg.toObject());
+        return {
+            roll: roll.formula,
+            total: roll.total,
+            dice: roll.dice,
+            type: this.healing.type
+        }
     }
 
     get chatTemplate() {
@@ -348,7 +457,7 @@ export class DHHealingAction extends DHBaseAction {
     }
 }
 
-export class DHResourceAction extends DHBaseAction {
+/* export class DHResourceAction extends DHBaseAction {
     static defineSchema() {
         return {
             ...super.defineSchema(),
@@ -367,7 +476,7 @@ export class DHResourceAction extends DHBaseAction {
             })
         };
     }
-}
+} */
 
 export class DHSummonAction extends DHBaseAction {
     static defineSchema() {
@@ -395,7 +504,7 @@ export class DHMacroAction extends DHBaseAction {
         };
     }
 
-    async use(event) {
+    async use(event, ...args) {
         const fixUUID = !this.documentUUID.includes('Macro.') ? `Macro.${this.documentUUID}` : this.documentUUID,
             macro = await fromUuid(fixUUID);
         try {

@@ -70,6 +70,16 @@ export const healingTypes = {
         id: 'stress',
         label: 'DAGGERHEART.HealingType.Stress.Name',
         abbreviation: 'DAGGERHEART.HealingType.Stress.Abbreviation'
+    },
+    hope: {
+        id: 'hope',
+        label: 'DAGGERHEART.HealingType.Hope.Name',
+        abbreviation: 'DAGGERHEART.HealingType.Hope.Abbreviation'
+    },
+    armorStack: {
+        id: 'armorStack',
+        label: 'DAGGERHEART.HealingType.ArmorStack.Name',
+        abbreviation: 'DAGGERHEART.HealingType.ArmorStack.Abbreviation'
     }
 };
 

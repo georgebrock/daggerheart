@@ -531,6 +531,14 @@
             "Stress": {
                 "Name": "Stress",
                 "Stress": "STR"
+            },
+            "Hope": {
+                "Name": "Hope",
+                "Abbreviation": "HO"
+            },
+            "ArmorStack": {
+                "Name": "Armor Stack",
+                "Stress": "AS"
             }
         },
         "ArmorFeature": {

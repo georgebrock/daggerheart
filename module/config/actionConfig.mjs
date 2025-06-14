@@ -4,21 +4,21 @@ export const actionTypes = {
         name: 'DAGGERHEART.Actions.Types.Attack.Name',
         icon: 'fa-swords'
     },
-    spellcast: {
-        id: 'spellcast',
-        name: 'DAGGERHEART.Actions.Types.Spellcast.Name',
-        icon: 'fa-book-sparkles'
-    },
+    // spellcast: {
+    //     id: 'spellcast',
+    //     name: 'DAGGERHEART.Actions.Types.Spellcast.Name',
+    //     icon: 'fa-book-sparkles'
+    // },
     healing: {
         id: 'healing',
         name: 'DAGGERHEART.Actions.Types.Healing.Name',
         icon: 'fa-kit-medical'
     },
-    resource: {
-        id: 'resource',
-        name: 'DAGGERHEART.Actions.Types.Resource.Name',
-        icon: 'fa-honey-pot'
-    },
+    // resource: {
+    //     id: 'resource',
+    //     name: 'DAGGERHEART.Actions.Types.Resource.Name',
+    //     icon: 'fa-honey-pot'
+    // },
     damage: {
         id: 'damage',
         name: 'DAGGERHEART.Actions.Types.Damage.Name',

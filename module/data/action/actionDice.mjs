@@ -23,16 +23,17 @@ export class DHActionDiceData extends foundry.abstract.DataModel {
     getFormula(actor) {
         return this.custom.enabled
             ? this.custom.formula
-            : `${actor.system[this.multiplier] ?? 1}${this.dice}${this.bonus ? (this.bonus < 0 ? ` - ${Math.abs(this.bonus)}` : ` + ${this.bonus}`) : ''}`;
+            : `${actor.system[this.multiplier].value ?? 1}${this.dice}${this.bonus ? (this.bonus < 0 ? ` - ${Math.abs(this.bonus)}` : ` + ${this.bonus}`) : ''}`;
     }
 }
 
 export class DHDamageField extends fields.SchemaField {
-    constructor(hasBase, options, context = {}) {
+    constructor(options, context = {}) {
         const damageFields = {
-            parts: new fields.ArrayField(new fields.EmbeddedDataField(DHDamageData))
+            parts: new fields.ArrayField(new fields.EmbeddedDataField(DHDamageData)),
+            includeBase: new fields.BooleanField({ initial: false })
         };
-        if (hasBase) damageFields.includeBase = new fields.BooleanField({ initial: true });
+        // if (hasBase) damageFields.includeBase = new fields.BooleanField({ initial: true });
         super(damageFields, options, context);
     }
 }

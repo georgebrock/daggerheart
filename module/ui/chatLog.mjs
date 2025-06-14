@@ -107,7 +107,7 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
             ui.notifications.info(game.i18n.localize('DAGGERHEART.Notification.Info.NoTargetsSelected'));
 
         for (var target of targets) {
-            await target.actor.takeHealing(healing, event.currentTarget.dataset.type);
+            await target.actor.modifyResource(healing, event.currentTarget.dataset.type);
         }
     };
 

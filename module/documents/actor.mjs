@@ -494,8 +494,8 @@ export default class DhpActor extends Actor {
                   : damage >= this.system.damageThresholds.minor
                     ? 1
                     : 0;
-
-        const update = {
+        await this.modifyResource(hpDamage, type);
+        /* const update = {
             'system.resources.hitPoints.value': Math.min(
                 this.system.resources.hitPoints.value + hpDamage,
                 this.system.resources.hitPoints.max
@@ -513,10 +513,39 @@ export default class DhpActor extends Actor {
                     update: update
                 }
             });
+        } */
+    }
+
+    async modifyResource(value, type) {
+        let resource, target, update;
+        switch (type) {
+            case 'armorStrack':
+                resource = 'system.stacks.value';
+                target = this.armor;
+                update = Math.min(this.marks.value + value, this.marks.max);
+                break;
+            default:
+                resource = `system.resources.${type}`;
+                target = this;
+                update = Math.min(this.resources[type].value + value, this.resources[type].max);
+                break;
+        }
+        if(!resource || !target || !update) return;
+        if (game.user.isGM) {
+            await target.update(update);
+        } else {
+            await game.socket.emit(`system.${SYSTEM.id}`, {
+                action: socketEvent.GMUpdate,
+                data: {
+                    action: GMUpdateEvent.UpdateDocument,
+                    uuid: target.uuid,
+                    update: update
+                }
+            });
         }
     }
 
-    async takeHealing(healing, type) {
+    /* async takeHealing(healing, type) {
         let update = {};
         switch (type) {
             case SYSTEM.GENERAL.healingTypes.health.id:
@@ -549,7 +578,7 @@ export default class DhpActor extends Actor {
                 }
             });
         }
-    }
+    } */
 
     //Move to action-scope?
     /* async useAction(action) {
