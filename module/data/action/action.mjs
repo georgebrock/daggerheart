@@ -1,41 +1,6 @@
 import { abilities } from '../../config/actorConfig.mjs';
 import { DHActionDiceData, DHDamageData, DHDamageField } from './actionDice.mjs';
 
-export default class DHAction extends foundry.abstract.DataModel {
-    static defineSchema() {
-        const fields = foundry.data.fields;
-        return {
-            id: new fields.DocumentIdField(),
-            name: new fields.StringField({ initial: 'New Action' }),
-            damage: new fields.SchemaField({
-                type: new fields.StringField({ choices: SYSTEM.GENERAL.damageTypes, nullable: true, initial: null }),
-                value: new fields.StringField({})
-            }),
-            healing: new fields.SchemaField({
-                type: new fields.StringField({ choices: SYSTEM.GENERAL.healingTypes, nullable: true, initial: null }),
-                value: new fields.StringField()
-            }),
-            conditions: new fields.ArrayField(
-                new fields.SchemaField({
-                    name: new fields.StringField(),
-                    icon: new fields.StringField(),
-                    description: new fields.StringField()
-                })
-            ),
-            cost: new fields.SchemaField({
-                type: new fields.StringField({ choices: SYSTEM.GENERAL.abilityCosts, nullable: true, initial: null }),
-                value: new fields.NumberField({ nullable: true, initial: null })
-            }),
-            target: new fields.SchemaField({
-                type: new fields.StringField({
-                    choices: SYSTEM.ACTIONS.targetTypes,
-                    initial: SYSTEM.ACTIONS.targetTypes.other.id
-                })
-            })
-        };
-    }
-}
-
 const fields = foundry.data.fields;
 
 /*
@@ -57,6 +22,7 @@ export class DHBaseAction extends foundry.abstract.DataModel {
             _id: new fields.DocumentIdField(),
             type: new fields.StringField({ initial: undefined, readonly: true, required: true }),
             name: new fields.StringField({ initial: undefined }),
+            description: new fields.HTMLField(),
             img: new fields.FilePathField({ initial: undefined, categories: ['IMAGE'], base64: false }),
             actionType: new fields.StringField({ choices: SYSTEM.ITEM.actionTypes, initial: 'action', nullable: true }),
             cost: new fields.ArrayField(
@@ -128,6 +94,16 @@ export class DHBaseAction extends foundry.abstract.DataModel {
     }
 
     async use(event) {
+        if(this.cost?.length) {
+            const hasCost = await this.checkCost();
+            if(!hasCost) return ui.notifications.warn("You don't have the resources to use that action.");
+        }
+        if(this.target?.type) {
+            const hasTarget = await this.checkTarget();
+        }
+        if(this.range) {
+            const hasRange = await this.checkRange();
+        }
         if (this.roll.type && this.roll.trait) {
             const modifierValue = this.actor.system.traits[this.roll.trait].value;
             const config = {
@@ -156,6 +132,50 @@ export class DHBaseAction extends foundry.abstract.DataModel {
             return this.actor.diceRoll(config);
         }
     }
+
+    async checkCost() {
+        if(!this.cost.length || !this.actor) return true;
+        console.log(this.actor, this.cost)
+        return this.cost.reduce((a, c) => a && this.actor.system.resources[c.type]?.value >= (c.value * (c.scalable ? c.step : 1)), true);
+    }
+
+    async checkTarget() {
+        /* targets = Array.from(game.user.targets).map(x => {
+            const target = {
+                id: x.id,
+                name: x.actor.name,
+                img: x.actor.img,
+                difficulty: x.actor.system.difficulty,
+                evasion: x.actor.system.evasion?.value
+            };
+
+            target.hit = target.difficulty ? roll.total >= target.difficulty : roll.total >= target.evasion;
+
+            return target;
+        }); */
+        const targets = targets = Array.from(game.user.targets).map(x => {
+            return {
+                id,
+                name: this.actor.name,
+                img: x.actor.img,
+                difficulty: x.actor.system.difficulty,
+                evasion: x.actor.system.evasion?.value
+            }
+        });
+        console.log(this.target)
+        if(this.target.type === SYSTEM.ACTIONS.targetTypes.self.id) return this.actor;
+        if(this.target.amount) {
+
+        }
+    }
+    
+    async checkRange() {
+        console.log(this.range)
+    }
+}
+
+const tmpTargetObject = () => {
+
 }
 
 const extraDefineSchema = (field, option) => {
@@ -173,8 +193,10 @@ const extraDefineSchema = (field, option) => {
             target: new fields.SchemaField({
                 type: new fields.StringField({
                     choices: SYSTEM.ACTIONS.targetTypes,
-                    initial: SYSTEM.ACTIONS.targetTypes.other.id
-                })
+                    initial: SYSTEM.ACTIONS.targetTypes.any.id,
+                    nullable: true, initial: null
+                }),
+                amount: new fields.NumberField({ nullable: true, initial: null, integer: true, min: 0 })
             }),
             effects: new fields.ArrayField( // ActiveEffect
                 new fields.SchemaField({

@@ -552,7 +552,7 @@ export default class DhpActor extends Actor {
     }
 
     //Move to action-scope?
-    async useAction(action) {
+    /* async useAction(action) {
         const userTargets = Array.from(game.user.targets);
         const otherTarget = action.target.type === SYSTEM.ACTIONS.targetTypes.other.id;
         if (otherTarget && userTargets.length === 0) {
@@ -614,5 +614,5 @@ export default class DhpActor extends Actor {
 
             cls.create(msg.toObject());
         }
-    }
+    } */
 }

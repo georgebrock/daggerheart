@@ -45,6 +45,7 @@ export default class DhActiveEffectConfig extends ActiveEffectConfig {
 
                 break;
         }
+        console.log(context, partContext)
 
         return partContext;
     }

@@ -62,6 +62,7 @@ export default class DHActionConfig extends DaggerheartSheet(ApplicationV2) {
         if (!!this.action.effects) context.effects = this.action.effects.map(e => this.action.item.effects.get(e._id));
         if (this.action.damage?.hasOwnProperty('includeBase')) context.hasBaseDamage = !!this.action.parent.damage;
         context.getRealIndex = this.getRealIndex.bind(this);
+        console.log(context)
         return context;
     }
 
@@ -132,6 +133,7 @@ export default class DHActionConfig extends DaggerheartSheet(ApplicationV2) {
             data = this.action.toObject();
         data.effects.push({ _id: created._id });
         this.constructor.updateForm.bind(this)(null, null, { object: foundry.utils.flattenObject(data) });
+        this.action.item.effects.get(created._id).sheet.render(true);
     }
 
     /**

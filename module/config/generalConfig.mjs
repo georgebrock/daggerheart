@@ -319,7 +319,27 @@ export const abilityCosts = {
     },
     stress: {
         id: 'stress',
-        label: 'Stress'
+        label: 'DAGGERHEART.HealingType.Stress.Name'
+    },
+    armor: {
+        id: 'armor',
+        label: 'Armor Stack'
+    },
+    hp: {
+        id: 'hp',
+        label: 'DAGGERHEART.HealingType.HitPoints.Name'
+    },
+    prayer: {
+        id: 'prayer',
+        label: 'Prayer Dice'
+    },
+    favor: {
+        id: 'favor',
+        label: 'Favor Points'
+    },
+    slayer: {
+        id: 'slayer',
+        label: 'Slayer Dice'
     }
 };
 

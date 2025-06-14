@@ -7,7 +7,12 @@
     </div>
     {{#if fields.target}}
     <div class="action-category-data open">
-        {{formField fields.target.type value=source.target.type label="Target" name="target.type" localize=true}}
+        <div class="multi-display">
+            {{#if (and source.target.type (not (eq source.target.type 'self')))}}
+                {{ formField fields.target.amount value=source.target.amount label="Amount" name="target.amount" }}
+            {{/if}}
+            {{ formField fields.target.type value=source.target.type label="Target" name="target.type" localize=true }}
+        </div>
     </div>
     {{/if}}
 </fieldset>
