@@ -28,13 +28,18 @@ export default class DHAdversaryRoll extends foundry.abstract.TypeDataModel {
                     hit: new fields.BooleanField({ initial: false })
                 })
             ),
-            damage: new fields.SchemaField(
+            hasDamage: new fields.BooleanField({ initial: false }),
+            /* damage: new fields.SchemaField(
                 {
                     value: new fields.StringField({}),
                     type: new fields.StringField({ choices: Object.keys(SYSTEM.GENERAL.damageTypes), integer: false })
                 },
                 { nullable: true, initial: null }
-            )
+            ), */
+            action: new fields.SchemaField({
+                itemId: new fields.StringField(),
+                actionId: new fields.StringField()
+            })
         };
     }
 

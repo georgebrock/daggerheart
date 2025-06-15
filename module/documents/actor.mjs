@@ -256,7 +256,7 @@ export default class DhpActor extends Actor {
      * @param {boolean} [config.roll.simple=false]
      * @param {string} [config.roll.type]
      * @param {number} [config.roll.difficulty]
-     * @param {any} [config.damage]
+     * @param {boolean} [config.hasDamage]
      * @param {object} [config.chatMessage]
      * @param {string} config.chatMessage.template
      * @param {boolean} [config.chatMessage.mute]
@@ -269,7 +269,6 @@ export default class DhpActor extends Actor {
             disadvantageDice = 'd6',
             advantage = config.event.altKey ? true : config.event.ctrlKey ? false : null,
             targets,
-            damage = config.damage,
             modifiers = this.formatRollModifier(config.roll),
             rollConfig,
             formula,
@@ -354,18 +353,9 @@ export default class DhpActor extends Actor {
             }
         }
 
-        if (config.checkTarget) {
-            targets = Array.from(game.user.targets).map(x => {
-                const target = {
-                    id: x.id,
-                    name: x.actor.name,
-                    img: x.actor.img,
-                    difficulty: x.actor.system.difficulty,
-                    evasion: x.actor.system.evasion?.value
-                };
-
+        if (config.targets?.length) {
+            targets = config.targets.map(target => {
                 target.hit = target.difficulty ? roll.total >= target.difficulty : roll.total >= target.evasion;
-
                 return target;
             });
         }
@@ -377,14 +367,16 @@ export default class DhpActor extends Actor {
                 dice,
                 roll,
                 modifiers: modifiers.filter(x => x.label),
-                advantageState: advantage
+                advantageState: advantage,
+                action: config.source,
+                hasDamage: config.hasDamage
             };
             if (this.type === 'character') {
                 configRoll.hope = { dice: hopeDice, value: hope };
                 configRoll.fear = { dice: fearDice, value: fear };
                 configRoll.advantage = { dice: advantageDice, value: roll.dice[2]?.results[0].result ?? null };
             }
-            if (damage) configRoll.damage = damage;
+            // if (damage) configRoll.damage = damage;
             if (targets) configRoll.targets = targets;
             const systemData =
                     this.type === 'character' && !config.roll.simple ? new DHDualityRoll(configRoll) : configRoll,
@@ -396,7 +388,7 @@ export default class DhpActor extends Actor {
                     content: config.chatMessage.template,
                     rolls: [roll]
                 });
-
+            
             await cls.create(msg.toObject());
         }
         return roll;
@@ -494,7 +486,7 @@ export default class DhpActor extends Actor {
                   : damage >= this.system.damageThresholds.minor
                     ? 1
                     : 0;
-        await this.modifyResource(hpDamage, type);
+        await this.modifyResource({value: hpDamage, type});
         /* const update = {
             'system.resources.hitPoints.value': Math.min(
                 this.system.resources.hitPoints.value + hpDamage,
@@ -516,33 +508,39 @@ export default class DhpActor extends Actor {
         } */
     }
 
-    async modifyResource(value, type) {
-        let resource, target, update;
-        switch (type) {
-            case 'armorStrack':
-                resource = 'system.stacks.value';
-                target = this.armor;
-                update = Math.min(this.marks.value + value, this.marks.max);
-                break;
-            default:
-                resource = `system.resources.${type}`;
-                target = this;
-                update = Math.min(this.resources[type].value + value, this.resources[type].max);
-                break;
-        }
-        if(!resource || !target || !update) return;
-        if (game.user.isGM) {
-            await target.update(update);
-        } else {
-            await game.socket.emit(`system.${SYSTEM.id}`, {
-                action: socketEvent.GMUpdate,
-                data: {
-                    action: GMUpdateEvent.UpdateDocument,
-                    uuid: target.uuid,
-                    update: update
-                }
-            });
-        }
+    async modifyResource(resources) {
+        if(!resources.length) return;
+        let updates = { actor: { target: this, resources: {} }, armor: { target: this.armor, resources: {} } };
+        resources.forEach(r => {
+            switch (type) {
+                case 'armorStrack':
+                    // resource = 'system.stacks.value';
+                    // target = this.armor;
+                    // update = Math.min(this.marks.value + value, this.marks.max);
+                    updates.armor.resources['system.stacks.value'] = Math.min(this.marks.value + value, this.marks.max);
+                    break;
+                default:
+                    // resource = `system.resources.${type}`;
+                    // target = this;
+                    // update = Math.min(this.resources[type].value + value, this.resources[type].max);
+                    updates.armor.resources[`system.resources.${type}`] = Math.min(this.resources[type].value + value, this.resources[type].max);
+                    break;
+            }
+        })
+        Object.values(updates).forEach(async (u) => {
+            if (game.user.isGM) {
+                await u.target.update(u.resources);
+            } else {
+                await game.socket.emit(`system.${SYSTEM.id}`, {
+                    action: socketEvent.GMUpdate,
+                    data: {
+                        action: GMUpdateEvent.UpdateDocument,
+                        uuid: u.target.uuid,
+                        update: u.resources
+                    }
+                });
+            }
+        })
     }
 
     /* async takeHealing(healing, type) {

@@ -53,13 +53,19 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
         event.stopPropagation();
         const actor = game.actors.get(message.system.origin);
         if (!actor || !game.user.isGM) return true;
-
-        await actor.damageRoll(
-            message.system.title,
-            message.system.damage,
-            message.system.targets.filter(x => x.hit).map(x => ({ id: x.id, name: x.name, img: x.img })),
-            event.shiftKey
-        );
+        if(message.system.action?.itemId && message.system.action?.actionId) {
+            const item = actor.items.get(message.system.action?.itemId),
+                action = item?.system?.actions?.find(a => a._id === message.system.action.actionId);
+            if(!item || !action || !action?.rollDamage) return;
+            await action.rollDamage(event, this);
+        } else {
+            await actor.damageRoll(
+                message.system.title,
+                message.system.damage,
+                message.system.targets.filter(x => x.hit).map(x => ({ id: x.id, name: x.name, img: x.img })),
+                event.shiftKey
+            );
+        }
     };
 
     hoverTarget = event => {
@@ -107,7 +113,7 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
             ui.notifications.info(game.i18n.localize('DAGGERHEART.Notification.Info.NoTargetsSelected'));
 
         for (var target of targets) {
-            await target.actor.modifyResource(healing, event.currentTarget.dataset.type);
+            await target.actor.modifyResource([{value: healing, type: event.currentTarget.dataset.type}]);
         }
     };
 

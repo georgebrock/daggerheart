@@ -50,9 +50,9 @@ export const targetTypes = {
         id: 'friendly',
         label: 'Friendly'
     },
-    adversary: {
-        id: 'adversary',
-        label: 'Adversary'
+    hostile: {
+        id: 'hostile',
+        label: 'Hostile'
     },
     any: {
         id: 'any',

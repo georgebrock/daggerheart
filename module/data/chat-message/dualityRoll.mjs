@@ -39,26 +39,31 @@ export default class DHDualityRoll extends foundry.abstract.TypeDataModel {
                     hit: new fields.BooleanField({ initial: false })
                 })
             ),
-            damage: new fields.SchemaField({
-                value: new fields.StringField({}),
-                type: new fields.StringField({ choices: Object.keys(SYSTEM.GENERAL.damageTypes), integer: false }),
-                bonusDamage: new fields.ArrayField(
-                    new fields.SchemaField({
-                        value: new fields.StringField({}),
-                        type: new fields.StringField({
-                            choices: Object.keys(SYSTEM.GENERAL.damageTypes),
-                            integer: false
-                        }),
-                        initiallySelected: new fields.BooleanField(),
-                        appliesOn: new fields.StringField(
-                            { choices: Object.keys(SYSTEM.EFFECTS.applyLocations) },
-                            { nullable: true, initial: null }
-                        ),
-                        description: new fields.StringField({}),
-                        hopeIncrease: new fields.StringField({ nullable: true })
-                    }),
-                    { nullable: true, initial: null }
-                )
+            hasDamage: new fields.BooleanField({ initial: false }),
+            // damage: new fields.SchemaField({
+            //     value: new fields.StringField({}),
+            //     type: new fields.StringField({ choices: Object.keys(SYSTEM.GENERAL.damageTypes), integer: false }),
+            //     bonusDamage: new fields.ArrayField(
+            //         new fields.SchemaField({
+            //             value: new fields.StringField({}),
+            //             type: new fields.StringField({
+            //                 choices: Object.keys(SYSTEM.GENERAL.damageTypes),
+            //                 integer: false
+            //             }),
+            //             initiallySelected: new fields.BooleanField(),
+            //             appliesOn: new fields.StringField(
+            //                 { choices: Object.keys(SYSTEM.EFFECTS.applyLocations) },
+            //                 { nullable: true, initial: null }
+            //             ),
+            //             description: new fields.StringField({}),
+            //             hopeIncrease: new fields.StringField({ nullable: true })
+            //         }),
+            //         { nullable: true, initial: null }
+            //     )
+            // }),
+            action: new fields.SchemaField({
+                itemId: new fields.StringField(),
+                actionId: new fields.StringField()
             })
         };
     }
