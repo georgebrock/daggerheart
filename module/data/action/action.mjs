@@ -36,6 +36,7 @@ export class DHBaseAction extends foundry.abstract.DataModel {
     static defineSchema() {
         return {
             _id: new fields.DocumentIdField(),
+            systemPath: new fields.StringField({ required: true, initial: 'actions' }),
             type: new fields.StringField({ initial: undefined, readonly: true, required: true }),
             name: new fields.StringField({ initial: undefined }),
             description: new fields.HTMLField(),
@@ -119,7 +120,7 @@ export class DHBaseAction extends foundry.abstract.DataModel {
     prepareData() {}
 
     get index() {
-        return this.parent.actions.indexOf(this);
+        return foundry.utils.getProperty(this.parent, this.systemPath).indexOf(this);
     }
 
     get item() {
