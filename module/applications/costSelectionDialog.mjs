@@ -1,9 +1,10 @@
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 export default class CostSelectionDialog extends HandlebarsApplicationMixin(ApplicationV2) {
-    constructor(cost, resolve) {
+    constructor(costs, action, resolve) {
         super({});
-        this.cost = cost;
+        this.costs = costs;
+        this.action = action;
         this.resolve = resolve;
     }
 
@@ -15,7 +16,7 @@ export default class CostSelectionDialog extends HandlebarsApplicationMixin(Appl
             height: 'auto'
         },
         actions: {
-            sendHope: this.sendHope
+            sendCost: this.sendCost
         },
         form: {
             handler: this.updateForm,
@@ -26,7 +27,7 @@ export default class CostSelectionDialog extends HandlebarsApplicationMixin(Appl
 
     /** @override */
     static PARTS = {
-        damageSelection: {
+        costSelection: {
             id: 'costSelection',
             template: 'systems/daggerheart/templates/views/costSelection.hbs'
         }
@@ -40,25 +41,21 @@ export default class CostSelectionDialog extends HandlebarsApplicationMixin(Appl
     }
 
     async _prepareContext(_options) {
+        const updatedCosts = this.action.calcCosts(this.costs);
         return {
-            cost: this.cost.map(c => {
-                c.scale = c.scale ?? 1;
-                c.step = c.step ?? 1;
-                c.total = c.value * c.scale * c.step;
-                c.enabled = c.hasOwnProperty('enabled') ? c.enabled : true;
-                return c
-            })
+            costs: updatedCosts,
+            canUse: this.action.getRealCosts(updatedCosts)?.hasCost
         };
     }
 
     static async updateForm(event, _, formData) {
-        this.cost = foundry.utils.mergeObject(this.cost, foundry.utils.expandObject(formData.object));
+        this.costs = foundry.utils.mergeObject(this.costs, foundry.utils.expandObject(formData.object).costs);
         this.render(true)
     }
 
-    static sendHope(event) {
+    static sendCost(event) {
         event.preventDefault();
-        this.resolve(this.cost.filter(c => c.enabled));
+        this.resolve(this.action.getRealCosts(this.costs));
         this.close();
     }
 }

@@ -2,25 +2,25 @@
     <div class="roll-dialog-container">
         <div class="flexcol">
             <div class="roll-dialog-experience-container">
-                {{#each this.experiences}}
-                    {{#if this.description}}
-                        <div class="roll-dialog-chip {{#if this.selected}}selected{{/if}}" data-action="selectExperience" data-key="{{this.id}}">
-                            <span>{{this.description}}</span>
-                            <span>+{{this.value}}</span>
+                {{#each experiences}}
+                    {{#if description}}
+                        <div class="roll-dialog-chip {{#if (includes ../selectedExperiences id)}}selected{{/if}}" data-action="selectExperience" data-key="{{id}}">
+                            <span>{{description}}</span>
+                            <span>+{{value}}</span>
                         </div>
                     {{/if}}
                 {{/each}}
             </div>
             <div class="flexrow">
-                <button class="disadvantage flex1 {{#if this.advantage}}selected{{/if}}" data-action="updateIsAdvantage" data-advantage="true">{{localize "DAGGERHEART.General.Advantage.Full"}}</button>
-                <button class="disadvantage flex1 {{#if (eq this.advantage false)}}selected{{/if}}" data-action="updateIsAdvantage">{{localize "DAGGERHEART.General.Disadvantage.Full"}}</button>
+                <button class="disadvantage flex1 {{#if (eq advantage 1)}}selected{{/if}}" data-action="updateIsAdvantage" data-advantage="1">{{localize "DAGGERHEART.General.Advantage.Full"}}</button>
+                <button class="disadvantage flex1 {{#if (eq advantage -1)}}selected{{/if}}" data-action="updateIsAdvantage" data-advantage="-1">{{localize "DAGGERHEART.General.Disadvantage.Full"}}</button>
             </div>
-            {{#if (not this.isNpc)}}
+            {{!-- {{#if (not isNpc)}} --}}
                 <div class="form-group">
                     <label>Hope</label>
                     <div class="form-fields">
                         <select name="hope">
-                            {{selectOptions this.diceOptions selected=this.hope valueAttr="value" labelAttr="name" localize=true}}
+                            {{selectOptions diceOptions selected=hope valueAttr="value" labelAttr="name" localize=true}}
                         </select>
                     </div>
                 </div>
@@ -28,14 +28,14 @@
                     <label>Fear</label>
                     <div class="form-fields">
                         <select name="fear">
-                            {{selectOptions this.diceOptions selected=this.fear valueAttr="value" labelAttr="name" localize=true}}
+                            {{selectOptions diceOptions selected=fear valueAttr="value" labelAttr="name" localize=true}}
                         </select>
                     </div>
                 </div>
-            {{/if}}
+            {{!-- {{/if}} --}}
         </div>
         <footer>
-            <button data-action="finish">Roll</button>
+            <button data-action="close"{{#unless canRoll}} disabled{{/unless}}>Roll</button>
         </footer>
     </div>
 </div>

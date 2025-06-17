@@ -257,13 +257,30 @@ export default class DhpActor extends Actor {
      * @param {string} [config.roll.type]
      * @param {number} [config.roll.difficulty]
      * @param {boolean} [config.hasDamage]
+     * @param {boolean} [config.hasEffect]
      * @param {object} [config.chatMessage]
      * @param {string} config.chatMessage.template
      * @param {boolean} [config.chatMessage.mute]
-     * @param {boolean} [config.checkTarget]
+     * @param {object} [config.targets]
+     * @param {object} [config.costs]
      */
-    async diceRoll(config) {
-        let hopeDice = 'd12',
+    async diceRoll(config, action) {
+        // console.log(config)
+        const newConfig = {
+            // data: {
+                ...config,
+                action,
+                actor: this.getRollData(),
+            // },
+            // options: {
+                // dialog: false,
+            // },
+            // event: config.event
+        }
+        // console.log(this, newConfig)
+        const roll = CONFIG.Dice.daggerheart[this.type === 'character' ? 'DualityRoll' : 'D20Roll'].build(newConfig)
+        return config;
+        /* let hopeDice = 'd12',
             fearDice = 'd12',
             advantageDice = 'd6',
             disadvantageDice = 'd6',
@@ -280,16 +297,21 @@ export default class DhpActor extends Actor {
                 this.type === 'character'
                     ? new RollSelectionDialog(
                           this.system.experiences,
-                          this.system.resources.hope.value,
+                          config.costs,
+                          action,
                           resolve
                       ).render(true)
-                    : new NpcRollSelectionDialog(this.system.experiences, resolve).render(true);
+                    : new NpcRollSelectionDialog(
+                        this.system.experiences,
+                        resolve
+                    ).render(true);
             });
             rollConfig = await dialogClosed;
 
             advantage = rollConfig.advantage;
             hopeDice = rollConfig.hope;
             fearDice = rollConfig.fear;
+            if(rollConfig.costs) config.costs = rollConfig.costs;
 
             rollConfig.experiences.forEach(x =>
                 modifiers.push({
@@ -316,13 +338,14 @@ export default class DhpActor extends Actor {
             formula = `${advantage === true || advantage === false ? 2 : 1}d20${advantage === true ? 'kh' : advantage === false ? 'kl' : ''}`;
         }
         formula += ` ${modifiers.map(x => `+ ${x.value}`).join(' ')}`;
-        const roll = await Roll.create(formula).evaluate();
-        const dice = roll.dice.flatMap(dice => ({
-            denomination: dice.denomination,
-            number: dice.number,
-            total: dice.total,
-            results: dice.results.map(result => ({ result: result.result, discarded: !result.active }))
-        }));
+        const roll = await Roll.create(formula).evaluate(),
+            dice = roll.dice.flatMap(dice => ({
+                denomination: dice.denomination,
+                number: dice.number,
+                total: dice.total,
+                results: dice.results.map(result => ({ result: result.result, discarded: !result.active }))
+            }));
+        config.roll.evaluated = roll;
 
         if (this.type === 'character') {
             setDiceSoNiceForDualityRoll(roll, advantage);
@@ -355,10 +378,11 @@ export default class DhpActor extends Actor {
 
         if (config.targets?.length) {
             targets = config.targets.map(target => {
-                target.hit = target.difficulty ? roll.total >= target.difficulty : roll.total >= target.evasion;
+                const difficulty = config.roll.difficulty ??  target.difficulty ?? target.evasion
+                target.hit = roll.total >= difficulty;
                 return target;
             });
-        }
+        } else if(config.roll.difficulty) roll.success = roll.total >= config.roll.difficulty;
 
         if (config.chatMessage) {
             const configRoll = {
@@ -369,7 +393,8 @@ export default class DhpActor extends Actor {
                 modifiers: modifiers.filter(x => x.label),
                 advantageState: advantage,
                 action: config.source,
-                hasDamage: config.hasDamage
+                hasDamage: config.hasDamage,
+                hasEffect: config.hasEffect
             };
             if (this.type === 'character') {
                 configRoll.hope = { dice: hopeDice, value: hope };
@@ -391,7 +416,8 @@ export default class DhpActor extends Actor {
             
             await cls.create(msg.toObject());
         }
-        return roll;
+        
+        return config; */
     }
 
     formatRollModifier(roll) {

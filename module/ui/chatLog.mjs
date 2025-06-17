@@ -14,8 +14,11 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
     }
 
     addChatListeners = async (app, html, data) => {
-        html.querySelectorAll('.duality-action').forEach(element =>
+        html.querySelectorAll('.duality-action-damage').forEach(element =>
             element.addEventListener('click', event => this.onRollDamage(event, data.message))
+        );
+        html.querySelectorAll('.duality-action-effect').forEach(element =>
+            element.addEventListener('click', event => this.onApplyEffect(event, data.message))
         );
         html.querySelectorAll('.target-container').forEach(element => {
             element.addEventListener('mouseenter', this.hoverTarget);
@@ -57,7 +60,7 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
             const item = actor.items.get(message.system.action?.itemId),
                 action = item?.system?.actions?.find(a => a._id === message.system.action.actionId);
             if(!item || !action || !action?.rollDamage) return;
-            await action.rollDamage(event, this);
+            await action.rollDamage(event, message);
         } else {
             await actor.damageRoll(
                 message.system.title,
@@ -67,6 +70,18 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
             );
         }
     };
+
+    onApplyEffect = async (event, message) => {
+        event.stopPropagation();
+        const actor = game.actors.get(message.system.origin);
+        if (!actor || !game.user.isGM) return true;
+        if(message.system.action?.itemId && message.system.action?.actionId) {
+            const item = actor.items.get(message.system.action?.itemId),
+                action = item?.system?.actions?.find(a => a._id === message.system.action.actionId);
+            if(!item || !action) return;
+            await action.applyEffects(event, message);
+        }
+    }
 
     hoverTarget = event => {
         event.stopPropagation();

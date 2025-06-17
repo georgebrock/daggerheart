@@ -1,34 +1,344 @@
+import D20RollDialog from '../dialogs/d20RollDialog.mjs';
 
-export default class DHRoll extends Roll {
+export class DHRoll extends Roll {
+    constructor(formula, data, options) {
+        super(formula, data, options);
+    }
+
     static async build(config={}, message={}) {
-        const roll = await this.buildConfigure();
-        await this.buildEvaluate(config, message={});
-        await this.buildPost(config, message={});
+        const roll = await this.buildConfigure(config, message);
+        await this.buildEvaluate(roll, config, message={});
+        await this.buildPost(roll, config, message={});
         return roll;
     }
     
     static async buildConfigure(config={}, message={}) {
         config.hooks = [...(config.hooks ?? []), ""];
+        config.dialog ??= {};
         for ( const hook of config.hooks ) {
-            if ( Hooks.call(`dnd5e.preRoll${hook.capitalize()}`, config, message) === false ) return null;
+            if ( Hooks.call(`${SYSTEM.id}.preRoll${hook.capitalize()}`, config, message) === false ) return null;
         }
+
+        this.applyKeybindings(config);
+
+        // let roll;
+        // if(config.dialog?.configure === false) {
+        //     roll = new this('', config.actor, config);
+        // } else {
+        if(config.dialog.configure !== false) {
+            // Open Roll Dialog
+            const DialogClass = config.dialog?.class ?? this.DefaultDialog;
+            config = await DialogClass.configure(config, message);
+        }
+        console.log(config)
+        let roll = new this('', config.actor, config);
+
+        for ( const hook of config.hooks ) {
+            if ( Hooks.call(`${SYSTEM.id}.post${hook.capitalize()}RollConfiguration`, roll, config, message) === false ) return [];
+        }
+        console.log(roll);
+
+        return roll;
     }
     
     static async buildEvaluate(roll, config={}, message={}) {
-        if(config.evaluate !== false) await roll.evalutate();
+        if(config.evaluate !== false) await roll.evaluate();
+        this.postEvaluate(roll, config);
     }
     
-    static async buildPost(config, message) {
+    static async buildPost(roll, config, message) {
         for ( const hook of config.hooks ) {
-            if ( Hooks.call(`dnd5e.postRoll${hook.capitalize()}`, config, message) === false ) return null;
+            if ( Hooks.call(`${SYSTEM.id}.postRoll${hook.capitalize()}`, config, message) === false ) return null;
         }
+        
         // Create Chat Message
-        await this.toMessage(roll, message.data);
+        if(message.data) {
+
+        } else {
+            const messageData = {};
+            await this.toMessage(roll, config);
+        }
     }
 
-    static async toMessage(roll, data) {
+    static async postEvaluate(roll, config={}) {}
+
+    static async toMessage(roll, config) {
+        console.log(config)
+        const cls = getDocumentClass("ChatMessage"),
+            msg = {
+                type: this.messageType,
+                sound: config.mute ? null : CONFIG.sounds.dice,
+                system: config,
+                content: config.chatMessage.template,
+                rolls: [roll]
+            };
+        await cls.create(msg);
+    }
+
+    static applyKeybindings(config) {
+        config.dialog.configure ??= true;
+    }
+}
+
+// DHopeDie
+// DFearDie
+// DualityDie
+// D20Die
+
+export class DualityDie extends foundry.dice.terms.Die {
+    constructor({ number=1, faces=12, ...args }={}) {
+        super({ number, faces, ...args });
+    }
+}
+
+export class D20Roll extends DHRoll {
+    constructor(formula, data={}, options={}) {
+        super(formula, data, options);
+        // console.log(data, options)
+        // this.options = this._prepareData(data);
+        // this.options = options;
+        this.createBaseDice();
+        this.configureModifiers();
+
+        this._formula = this.resetFormula();
+    }
+
+    static ADV_MODE = {
+        NORMAL: 0,
+        ADVANTAGE: 1,
+        DISADVANTAGE: -1
+    };
+
+    static messageType = 'adversaryRoll';
+
+    static CRITICAL_TRESHOLD = 20;
+
+    static DefaultDialog = D20RollDialog;
+
+    get d20() {
+        if ( !(this.terms[0] instanceof foundry.dice.terms.Die) ) this.createBaseDice();
+        return this.terms[0];
+    }
+
+    set d20(faces) {
+        if ( !(this.terms[0] instanceof foundry.dice.terms.Die) ) this.createBaseDice();
+        this.terms[0].faces = faces;
+    }
+
+    get isCritical() {
+        if ( !this.d20._evaluated ) return;
+        return this.d20.total >= this.constructor.CRITICAL_TRESHOLD;
+    }
+
+    get hasAdvantage() {
+        return this.options.advantage === this.constructor.ADV_MODE.ADVANTAGE;
+    }
+
+    get hasDisadvantage() {
+        return this.options.advantage === this.constructor.ADV_MODE.DISADVANTAGE;
+    }
+
+    static applyKeybindings(config) {
+        const keys = {
+            normal: config.event.shiftKey || config.event.altKey || config.event.ctrlKey,
+            advantage: config.event.altKey,
+            disadvantage: config.event.ctrlKey
+        };
         
-        const cls = getDocumentClass("ChatMessage");
-        const msg = new cls(data);
+        // Should the roll configuration dialog be displayed?
+        config.dialog.configure ??= !Object.values(keys).some(k => k);
+
+        // Determine advantage mode
+        const advantage = config.advantage || keys.advantage;
+        const disadvantage = config.disadvantage || keys.disadvantage;
+        if ( advantage && !disadvantage ) config.advantage = this.ADV_MODE.ADVANTAGE;
+        else if ( !advantage && disadvantage ) config.advantage = this.ADV_MODE.DISADVANTAGE;
+        else config.advantage = this.ADV_MODE.NORMAL;
+    }
+
+    static async postEvaluate(roll, config={}) {
+        if (config.targets?.length) {
+            targets = config.targets.map(target => {
+                const difficulty = config.roll.difficulty ??  target.difficulty ?? target.evasion
+                target.hit = roll.total >= difficulty;
+                return target;
+            });
+        } else if(config.roll.difficulty) roll.success = roll.total >= config.roll.difficulty;
+        // config.roll.advantage = {
+        //     dice: roll.dHope.faces,
+        //     value: roll.dHope.total
+        // }
+        config.roll.total = roll.total;
+    }
+
+    createBaseDice() {
+        if ( this.terms[0] instanceof foundry.dice.terms.Die ) return;
+        this.terms[0] = new foundry.dice.terms.Die({ faces: 20 });
+    }
+
+    applyAdvantage() {
+        this.d20.modifiers.findSplice(m => ["kh", "kl"].includes(m));
+        if ( !this.hasAdvantage && !this.hasAdvantage ) this.number = 1;
+        else {
+            this.d20.number = 2;
+            this.d20.modifiers.push(this.hasAdvantage ? "kh" : "kl");
+        }
+    }
+
+    // Trait bonus != Adversary
+    configureModifiers() {
+        
+        this.applyAdvantage();
+
+        this.applyBaseBonus();
+
+        this.options.experiences?.forEach(m => {
+            if(this.options.actor.experiences?.[m]) this.terms.push(...this.formatModifier(this.options.actor.experiences[m].total));
+        })
+
+        if(this.options.extraFormula) this.terms.push(new foundry.dice.terms.OperatorTerm({operator: '+'}), ...this.constructor.parse(this.options.extraFormula, this.getRollData()));
+
+        // this.resetFormula();
+    }
+
+    applyBaseBonus() {
+        // if(this.options.action) {
+            if(this.options.type === "attack") this.terms.push(...this.formatModifier(this.options.actor.system.attack.modifier));
+            this.options.roll.modifiers?.forEach(m => {
+                this.terms.push(...this.formatModifier(m));
+            })
+        // }
+    }
+
+    getRollData() {
+        return {...this.options.actor.getRollData(), ...(this.options.action?.getRollData() ?? {})}
+    }
+
+    formatModifier(modifier) {
+        const numTerm = modifier < 0 ? '-' : '+';
+        return [new foundry.dice.terms.OperatorTerm({operator: numTerm}), new foundry.dice.terms.NumericTerm({number: Math.abs(modifier)})];
+    }
+
+    resetFormula() {
+        return this._formula = this.constructor.getFormula(this.terms);
+    }
+}
+
+export class DualityRoll extends D20Roll {
+    constructor(formula, data={}, options={}) {
+        super(formula, data, options);
+    }
+
+    static messageType = 'dualityRoll';
+
+    static DefaultDialog = D20RollDialog;
+
+    get dHope() {
+        // if ( !(this.terms[0] instanceof foundry.dice.terms.Die) ) return;
+        if ( !(this.dice[0] instanceof CONFIG.Dice.daggerheart.DualityDie) ) this.createBaseDice();
+        return this.dice[0];
+        // return this.#hopeDice;
+    }
+
+    set dHope(faces) {
+        if ( !(this.dice[0] instanceof CONFIG.Dice.daggerheart.DualityDie) ) this.createBaseDice();
+        this.terms[0].faces = faces;
+        // this.#hopeDice = `d${face}`;
+    }
+
+    get dFear() {
+        // if ( !(this.terms[1] instanceof foundry.dice.terms.Die) ) return;
+        if ( !(this.dice[1] instanceof CONFIG.Dice.daggerheart.DualityDie) ) this.createBaseDice();
+        return this.dice[1];
+        // return this.#fearDice;
+    }
+
+    set dFear(faces) {
+        if ( !(this.dice[1] instanceof CONFIG.Dice.daggerheart.DualityDie) ) this.createBaseDice();
+        this.dice[1].faces = faces;
+        // this.#fearDice = `d${face}`;
+    }
+
+    get isCritical() {
+        if ( !this.dHope._evaluated || !this.dFear._evaluated ) return;
+        return this.dHope.total === this.dFear.total;
+    }
+
+    get withHope() {
+        if(!this._evaluated) return;
+        return this.dHope.total > this.dFear.total;
+    }
+
+    get withFear() {
+        if(!this._evaluated) return;
+        return this.dHope.total < this.dFear.total;
+    }
+
+    createBaseDice() {
+        if ( this.dice[0] instanceof CONFIG.Dice.daggerheart.DualityDie && this.dice[1] instanceof CONFIG.Dice.daggerheart.DualityDie ) return;
+        if ( !(this.dice[0] instanceof CONFIG.Dice.daggerheart.DualityDie) ) this.terms[0] = new CONFIG.Dice.daggerheart.DualityDie();
+        this.terms[1] = new foundry.dice.terms.OperatorTerm({operator:'+'});
+        if ( !(this.dice[2] instanceof CONFIG.Dice.daggerheart.DualityDie) ) this.terms[2] = new CONFIG.Dice.daggerheart.DualityDie();
+    }
+
+    applyAdvantage() {
+        const dieFaces = 6,
+            bardRallyFaces = null,
+            advDie = new foundry.dice.terms.Die({faces: dieFaces});
+        // console.log(this.hasAdvantage, this.hasDisadvantage)
+        if(this.hasAdvantage || this.hasDisadvantage || bardRallyFaces) this.terms.push(new foundry.dice.terms.OperatorTerm({operator:'+'}));
+        if(bardRallyFaces) {
+            const rallyDie = new foundry.dice.terms.Die({faces: bardRallyFaces});
+            if(this.hasAdvantage) {
+                this.terms.push(new foundry.dice.terms.PoolTerm({
+                    terms: [advDie.formula, rallyDie.formula],
+                    modifiers: ["kh"]
+                }))
+            } else if(this.hasDisadvantage){
+                this.terms.push(advDie, new foundry.dice.terms.OperatorTerm({operator:'+'}), rallyDie);
+            }
+        } else if(this.hasAdvantage || this.hasDisadvantage) this.terms.push(advDie);
+    }
+
+    applyBaseBonus() {
+        // if(this.options.action) {
+        // console.log(this.options, this.options.actor.system.traits[this.options.roll.trait].bonus)
+            // console.log(this.options.actor.system);
+            if(this.options.roll?.trait) this.terms.push(...this.formatModifier(this.options.actor.traits[this.options.roll.trait].total));
+            this.options.roll.modifiers?.forEach(m => {
+                this.terms.push(...this.formatModifier(m.value));
+            })
+        // } else if(this.options.trait) this.terms.push(...this.formatModifier(this.options.actor.system.traits[this.options.roll.trait].total));
+    }
+
+    static async postEvaluate(roll, config={}) {
+        super.postEvaluate(roll, config);
+        config.roll.hope = {
+            dice: roll.dHope.faces,
+            value: roll.dHope.total
+        }
+        config.roll.fear = {
+            dice: roll.dFear.faces,
+            value: roll.dFear.total
+        }
+        config.roll.dualityResult = roll.withHope ? 1 : roll.withFear ? 2 : 0;
+    }
+}
+
+export class DamageRoll extends DHRoll {
+    constructor(formula, data={}, options={}) {
+        super(formula, data, options)
+    }
+
+    static messageType = 'damageRoll';
+
+    static DefaultDialog = D20RollDialog;
+
+    get messageType() {
+        return 'damageRoll';
+    }
+
+    get messageTemplate() {
+        return '';
     }
 }

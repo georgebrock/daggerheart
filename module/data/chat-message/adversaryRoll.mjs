@@ -29,6 +29,7 @@ export default class DHAdversaryRoll extends foundry.abstract.TypeDataModel {
                 })
             ),
             hasDamage: new fields.BooleanField({ initial: false }),
+            hasEffect: new fields.BooleanField({ initial: false }),
             /* damage: new fields.SchemaField(
                 {
                     value: new fields.StringField({}),

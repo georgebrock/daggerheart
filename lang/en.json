@@ -927,12 +927,16 @@
             },
             "AttackRoll": {
                 "Title": "Attack - {attack}",
-                "RollDamage": "Roll Damage"
+                "RollDamage": "Roll Damage",
+                "ApplyEffect": "Apply Effects"
             },
             "DamageRoll": {
                 "Title": "Damage - {damage}",
                 "DealDamageToTargets": "Damage Hit Targets",
                 "DealDamage": "Deal Damage"
+            },
+            "ApplyEffect": {
+                "Title": "Apply Effects - {name}"
             },
             "HealingRoll": {
                 "Heal": "Heal"

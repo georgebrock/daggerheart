@@ -1,0 +1,85 @@
+const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
+
+export default class D20RollDialog extends HandlebarsApplicationMixin(ApplicationV2) {
+    constructor(config={}, options={}) {
+        super(options);
+
+        this.config = config;
+        this.config.experiences = [];
+    }
+
+    static DEFAULT_OPTIONS = {
+        tag: 'form',
+        id: 'roll-selection',
+        classes: ['daggerheart', 'views', 'roll-selection'],
+        position: {
+            width: 400,
+            height: 'auto'
+        },
+        actions: {
+            updateIsAdvantage: this.updateIsAdvantage,
+            selectExperience: this.selectExperience,
+            // finish: this.finish
+        },
+        form: {
+            handler: this.updateRollConfiguration,
+            submitOnChange: true,
+            submitOnClose: false
+        }
+    };
+
+    /** @override */
+    static PARTS = {
+        costSelection: {
+            id: 'costSelection',
+            template: 'systems/daggerheart/templates/views/costSelection.hbs'
+        },
+        rollSelection: {
+            id: 'rollSelection',
+            template: 'systems/daggerheart/templates/views/rollSelection.hbs'
+        }
+    };
+
+    async _prepareContext(_options) {
+        const context = await super._prepareContext(_options);
+        context.experiences = Object.keys(this.config.actor.experiences).map(id => ({ id, ...this.config.actor.experiences[id] }));
+        context.selectedExperiences = this.config.experiences;
+        context.advantage = this.config.advantage;
+        context.diceOptions = [{id:12, value: 'd12'},{id:20, value: 'd20'}]
+        if(this.config.costs?.length) {
+            const updatedCosts = this.config.action.calcCosts(this.config.costs);
+            context.costs = updatedCosts
+            context.canRoll = this.config.action.getRealCosts(updatedCosts)?.hasCost;
+        } else context.canRoll = true;
+        return context;
+    }
+
+    static updateRollConfiguration(event, _, formData) {
+        const { ...rest } = foundry.utils.expandObject(formData.object);
+        this.config.costs = foundry.utils.mergeObject(this.config.costs, rest.costs);
+        this.render();
+    }
+
+    static updateIsAdvantage(_, button) {
+        const advantage = Number(button.dataset.advantage);
+        this.config.advantage = this.config.advantage === advantage ? 0 : advantage;
+        this.render();
+    }
+
+    static selectExperience(_, button) {
+        if (this.config.experiences.find(x => x === button.dataset.key)) {
+            this.config.experiences = this.config.experiences.filter(x => x !== button.dataset.key);
+        } else {
+            this.config.experiences = [...this.config.experiences, button.dataset.key];
+        }
+        this.render();
+    }
+
+    static async configure(config={}) {
+        return new Promise(resolve => {
+            const app = new this(config);
+            app.addEventListener("close", () => resolve(app.config), { once: true });
+            app.render({ force: true });
+        });
+    }
+}

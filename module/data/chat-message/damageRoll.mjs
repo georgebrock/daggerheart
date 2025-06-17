@@ -26,7 +26,8 @@ export default class DHDamageRoll extends foundry.abstract.TypeDataModel {
                 new fields.SchemaField({
                     id: new fields.StringField({ required: true }),
                     name: new fields.StringField(),
-                    img: new fields.StringField()
+                    img: new fields.StringField(),
+                    hit: new fields.BooleanField({ initial: false })
                 })
             )
         };

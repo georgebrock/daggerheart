@@ -15,6 +15,7 @@ import { abilities } from './module/config/actorConfig.mjs';
 import Resources from './module/applications/resources.mjs';
 import DHDualityRoll from './module/data/chat-message/dualityRoll.mjs';
 import { DualityRollColor } from './module/data/settings/Appearance.mjs';
+import { DHRoll, DualityRoll, D20Roll, DamageRoll, DualityDie } from './module/applications/roll.mjs'
 
 globalThis.SYSTEM = SYSTEM;
 
@@ -36,6 +37,16 @@ Hooks.once('init', () => {
         ...x,
         name: game.i18n.localize(x.name)
     }));
+
+    CONFIG.Dice.daggerheart = {
+        DualityDie: DualityDie,
+        DHRoll: DHRoll,
+        DualityRoll: DualityRoll,
+        D20Roll: D20Roll,
+        DamageRoll: DamageRoll
+    };
+
+    CONFIG.Dice.rolls = [...CONFIG.Dice.rolls, ...[DHRoll, DualityRoll, D20Roll, DamageRoll]];
 
     CONFIG.Item.documentClass = documents.DhpItem;
 

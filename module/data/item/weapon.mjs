@@ -2,7 +2,7 @@ import BaseDataItem from './base.mjs';
 import FormulaField from '../fields/formulaField.mjs';
 import ActionField from '../fields/actionField.mjs';
 import { weaponFeatures } from '../../config/itemConfig.mjs';
-import { actionsTypes } from '../../data/_module.mjs';
+import { actionsTypes } from '../action/_module.mjs'; 
 
 export default class DHWeapon extends BaseDataItem {
     /** @inheritDoc */

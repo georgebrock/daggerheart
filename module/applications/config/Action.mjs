@@ -62,12 +62,21 @@ export default class DHActionConfig extends DaggerheartSheet(ApplicationV2) {
         if (!!this.action.effects) context.effects = this.action.effects.map(e => this.action.item.effects.get(e._id));
         if (this.action.damage?.hasOwnProperty('includeBase') && this.action.type === 'attack') context.hasBaseDamage = !!this.action.parent.damage;
         context.getRealIndex = this.getRealIndex.bind(this);
+        context.disableOption = this.disableOption.bind(this);
         return context;
     }
 
     static toggleSection(_, button) {
         this.openSection = button.dataset.section === this.openSection ? null : button.dataset.section;
         this.render(true);
+    }
+
+    disableOption(index, options, choices) {
+        const filtered = foundry.utils.deepClone(options);
+        Object.keys(filtered).forEach(o => {
+            if(choices.find((c, idx) => c.type === o && index !== idx)) delete filtered[o];
+        });
+        return filtered
     }
 
     getRealIndex(index) {
