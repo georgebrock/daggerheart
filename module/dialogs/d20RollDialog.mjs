@@ -6,6 +6,10 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
 
         this.config = config;
         this.config.experiences = [];
+        /* this.diceOptions = [
+            { id:12, value: 'd12' },
+            { id:20, value: 'd20' }
+        ]; */
     }
 
     static DEFAULT_OPTIONS = {
@@ -45,7 +49,7 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
         context.experiences = Object.keys(this.config.actor.experiences).map(id => ({ id, ...this.config.actor.experiences[id] }));
         context.selectedExperiences = this.config.experiences;
         context.advantage = this.config.advantage;
-        context.diceOptions = [{id:12, value: 'd12'},{id:20, value: 'd20'}]
+        /* context.diceOptions = this.diceOptions; */
         if(this.config.costs?.length) {
             const updatedCosts = this.config.action.calcCosts(this.config.costs);
             context.costs = updatedCosts
@@ -56,6 +60,7 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
 
     static updateRollConfiguration(event, _, formData) {
         const { ...rest } = foundry.utils.expandObject(formData.object);
+        console.log(formData.object, rest)
         this.config.costs = foundry.utils.mergeObject(this.config.costs, rest.costs);
         this.render();
     }

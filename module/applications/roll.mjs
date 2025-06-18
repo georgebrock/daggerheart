@@ -125,6 +125,10 @@ export class D20Roll extends DHRoll {
         this.terms[0].faces = faces;
     }
 
+    get dAdvantage() {
+        return this.dice[2];
+    }
+
     get isCritical() {
         if ( !this.d20._evaluated ) return;
         return this.d20.total >= this.constructor.CRITICAL_TRESHOLD;
@@ -156,21 +160,6 @@ export class D20Roll extends DHRoll {
         else config.advantage = this.ADV_MODE.NORMAL;
     }
 
-    static async postEvaluate(roll, config={}) {
-        if (config.targets?.length) {
-            targets = config.targets.map(target => {
-                const difficulty = config.roll.difficulty ??  target.difficulty ?? target.evasion
-                target.hit = roll.total >= difficulty;
-                return target;
-            });
-        } else if(config.roll.difficulty) roll.success = roll.total >= config.roll.difficulty;
-        // config.roll.advantage = {
-        //     dice: roll.dHope.faces,
-        //     value: roll.dHope.total
-        // }
-        config.roll.total = roll.total;
-    }
-
     createBaseDice() {
         if ( this.terms[0] instanceof foundry.dice.terms.Die ) return;
         this.terms[0] = new foundry.dice.terms.Die({ faces: 20 });
@@ -193,7 +182,15 @@ export class D20Roll extends DHRoll {
         this.applyBaseBonus();
 
         this.options.experiences?.forEach(m => {
-            if(this.options.actor.experiences?.[m]) this.terms.push(...this.formatModifier(this.options.actor.experiences[m].total));
+            if(this.options.actor.experiences?.[m]) this.options.roll.modifiers.push(
+                { 
+                    label: this.options.actor.experiences[m].description,
+                    value: this.options.actor.experiences[m].total
+                }
+            );
+        })
+        this.options.roll.modifiers?.forEach(m => {
+            this.terms.push(...this.formatModifier(m.value));
         })
 
         if(this.options.extraFormula) this.terms.push(new foundry.dice.terms.OperatorTerm({operator: '+'}), ...this.constructor.parse(this.options.extraFormula, this.getRollData()));
@@ -204,14 +201,36 @@ export class D20Roll extends DHRoll {
     applyBaseBonus() {
         // if(this.options.action) {
             if(this.options.type === "attack") this.terms.push(...this.formatModifier(this.options.actor.system.attack.modifier));
-            this.options.roll.modifiers?.forEach(m => {
+            /* this.options.roll.modifiers?.forEach(m => {
                 this.terms.push(...this.formatModifier(m));
-            })
+            }) */
         // }
     }
 
+    static async postEvaluate(roll, config={}) {
+        if (config.targets?.length) {
+            targets = config.targets.map(target => {
+                const difficulty = config.roll.difficulty ??  target.difficulty ?? target.evasion
+                target.hit = roll.total >= difficulty;
+                return target;
+            });
+        } else if(config.roll.difficulty) roll.success = roll.total >= config.roll.difficulty;
+        // config.roll.advantage = {
+        //     dice: roll.dHope.faces,
+        //     value: roll.dHope.total
+        // }
+        config.roll.total = roll.total;
+        config.roll.formula = roll.formula;
+        config.roll.advantage = {
+            type: config.advantage,
+            dice: roll.dAdvantage?.denomination,
+            value: roll.dAdvantage?.total
+        }
+        config.roll.modifierTotal = config.roll.modifiers.reduce((a,c) => a + c.value, 0);
+    }
+
     getRollData() {
-        return {...this.options.actor.getRollData(), ...(this.options.action?.getRollData() ?? {})}
+        return this.options.actor.getRollData();
     }
 
     formatModifier(modifier) {
@@ -259,6 +278,10 @@ export class DualityRoll extends D20Roll {
         // this.#fearDice = `d${face}`;
     }
 
+    get dAdvantage() {
+        return this.dice[2];
+    }
+
     get isCritical() {
         if ( !this.dHope._evaluated || !this.dFear._evaluated ) return;
         return this.dHope.total === this.dFear.total;
@@ -274,6 +297,23 @@ export class DualityRoll extends D20Roll {
         return this.dHope.total < this.dFear.total;
     }
 
+    get hasBarRally() {
+        return null;
+    }
+
+    
+
+    get totalLabel() {
+        const label =
+            this.withHope
+                ? 'DAGGERHEART.General.Hope'
+                : this.withFear
+                  ? 'DAGGERHEART.General.Fear'
+                  : 'DAGGERHEART.General.CriticalSuccess';
+
+        return game.i18n.localize(label);
+    }
+
     createBaseDice() {
         if ( this.dice[0] instanceof CONFIG.Dice.daggerheart.DualityDie && this.dice[1] instanceof CONFIG.Dice.daggerheart.DualityDie ) return;
         if ( !(this.dice[0] instanceof CONFIG.Dice.daggerheart.DualityDie) ) this.terms[0] = new CONFIG.Dice.daggerheart.DualityDie();
@@ -283,7 +323,7 @@ export class DualityRoll extends D20Roll {
 
     applyAdvantage() {
         const dieFaces = 6,
-            bardRallyFaces = null,
+            bardRallyFaces = this.hasBarRally,
             advDie = new foundry.dice.terms.Die({faces: dieFaces});
         // console.log(this.hasAdvantage, this.hasDisadvantage)
         if(this.hasAdvantage || this.hasDisadvantage || bardRallyFaces) this.terms.push(new foundry.dice.terms.OperatorTerm({operator:'+'}));
@@ -304,24 +344,33 @@ export class DualityRoll extends D20Roll {
         // if(this.options.action) {
         // console.log(this.options, this.options.actor.system.traits[this.options.roll.trait].bonus)
             // console.log(this.options.actor.system);
-            if(this.options.roll?.trait) this.terms.push(...this.formatModifier(this.options.actor.traits[this.options.roll.trait].total));
-            this.options.roll.modifiers?.forEach(m => {
-                this.terms.push(...this.formatModifier(m.value));
-            })
+            /* if(this.options.roll?.trait) this.terms.push(...this.formatModifier(this.options.actor.traits[this.options.roll.trait].total)); */
+            if(!this.options.roll.modifiers) this.options.roll.modifiers = [];
+            if(this.options.roll?.trait) this.options.roll.modifiers.push(
+                {
+                    label: `DAGGERHEART.Abilities.${this.options.roll.trait}.name`,
+                    value: this.options.actor.traits[this.options.roll.trait].total
+                }
+            );
         // } else if(this.options.trait) this.terms.push(...this.formatModifier(this.options.actor.system.traits[this.options.roll.trait].total));
     }
 
     static async postEvaluate(roll, config={}) {
+        console.log(roll,config)
         super.postEvaluate(roll, config);
         config.roll.hope = {
-            dice: roll.dHope.faces,
+            dice: roll.dHope.denomination,
             value: roll.dHope.total
         }
         config.roll.fear = {
-            dice: roll.dFear.faces,
+            dice: roll.dFear.denomination,
             value: roll.dFear.total
         }
-        config.roll.dualityResult = roll.withHope ? 1 : roll.withFear ? 2 : 0;
+        config.roll.result = {
+            duality: roll.withHope ? 1 : roll.withFear ? -1 : 0,
+            total: roll.dHope.total + roll.dFear.total,
+            label: roll.totalLabel
+        }
     }
 }
 

@@ -1,17 +1,17 @@
 <div class="dice-roll daggerheart chat roll" data-action="expandRoll">
     <div class="dice-flavor">{{title}}</div>
     <div class="duality-modifiers">
-        {{#each modifiers}}
+        {{#each roll.modifiers}}
             <div class="duality-modifier">
-                {{label}}
+                {{localize label}} {{#if (gte value 0)}}+{{/if}}{{value}}
             </div>
         {{/each}}
-        {{#if (eq advantage 1)}}
+        {{#if (eq roll.advantage.type 1)}}
             <div class="duality-modifier">
                 {{localize "DAGGERHEART.General.Advantage.Full"}}
             </div>
         {{/if}}
-        {{#if (eq advantage -1)}}
+        {{#if (eq roll.advantage.type -1)}}
             <div class="duality-modifier">
                 {{localize "DAGGERHEART.General.Disadvantage.Full"}}
             </div>
@@ -29,7 +29,7 @@
                                 |
                                 <span>1{{roll.fear.dice}}</span>
                             </span>
-                            <span class="part-total">{{diceTotal}}</span>
+                            <span class="part-total">{{roll.result.total}}</span>
                         </header>
                         <div class="flexrow">
                             <ol class="dice-rolls duality">
@@ -58,23 +58,23 @@
                             </ol>
                         </div>  
                     </div>
-                    {{#if (eq advantage 1)}}
+                    {{#if roll.advantage.type}}
                         <div class="dice">
                             <header class="part-header flexrow">
                                 <span class="part-formula">
-                                    <span>1{{advantage.dice}}</span>
+                                    <span>1{{roll.advantage.dice}}</span>
                                 </span>
-                                <span class="part-total">{{advantage.value}}</span>
+                                <span class="part-total">{{roll.advantage.value}}</span>
                             </header>
                             <div class="flexrow">
                                 <ol class="dice-rolls">
-                                    <li class="roll die {{advantage.dice}}">
+                                    <li class="roll die {{roll.advantage.dice}}">
                                         <div class="dice-container">
-                                            <div class="dice-inner-container advantage">
+                                            <div class="dice-inner-container {{#if (eq roll.advantage.type 1)}}advantage{{else}}disadvantage{{/if}}">
                                                 <div class="dice-wrapper">
                                                     <img class="dice" src="../icons/svg/d6-grey.svg"/>
                                                 </div>
-                                                <div class="dice-value">{{advantage.value}}</div>
+                                                <div class="dice-value">{{roll.advantage.value}}</div>
                                             </div>
                                         </div>
                                     </li>
@@ -82,36 +82,12 @@
                             </div>  
                         </div>
                     {{/if}}
-                    {{#if (eq advantage -1)}}
-                        <div class="dice">
-                            <header class="part-header flexrow">
-                                <span class="part-formula">
-                                    <span>1{{advantage.dice}}</span>
-                                </span>
-                                <span class="part-total">{{advantage.value}}</span>
-                            </header>
-                            <div class="flexrow">
-                                <ol class="dice-rolls">
-                                    <li class="roll die {{advantage.dice}}">
-                                        <div class="dice-container">
-                                            <div class="dice-inner-container disadvantage">
-                                                <div class="dice-wrapper">
-                                                    <img class="dice" src="../icons/svg/d6-grey.svg"/>
-                                                </div>
-                                                <div class="dice-value">{{advantage.value}}</div>
-                                            </div>
-                                        </div>
-                                    </li>
-                                </ol>
-                            </div>  
-                        </div>
-                    {{/if}}
-                    {{#if modifierTotal.value}}<div class="duality-modifier">{{modifierTotal.label}}</div>{{/if}}
+                    {{#if roll.modifierTotal}}<div class="duality-modifier">{{#if (gt roll.modifierTotal 0)}}+{{/if}}{{roll.modifierTotal}}</div>{{/if}}
                 </section>
             </div>
         </div>
-        <div class="dice-total duality {{#if roll.fear.discarded}}hope{{else}}{{#if roll.hope.discarded}}fear{{else}}critical{{/if}}{{/if}}">
-            <div class="dice-total-label">{{totalLabel}}</div>
+        <div class="dice-total duality {{#if (eq roll.result.duality 1)}}hope{{else}}{{#if (eq roll.result.duality -1)}}fear{{else}}critical{{/if}}{{/if}}">
+            <div class="dice-total-label">{{roll.result.label}}</div>
             <div class="dice-total-value">
                 {{roll.total}}
             </div>
@@ -136,7 +112,7 @@
                     <button class="duality-action{{#if hasDamage}} duality-action-effect{{/if}}" data-value="{{roll.total}}"><span>{{localize "DAGGERHEART.Chat.AttackRoll.ApplyEffect"}}</span></button>
             {{/if}}
             <div class="duality-result">
-                <div>{{roll.total}} {{#if (eq roll.dualityResult 1)}}With Hope{{else}}{{#if (eq roll.dualityResult 2)}}With Fear{{else}}Critical Success{{/if}}{{/if}}</div>
+                <div>{{roll.total}} {{#if (eq roll.result.duality 1)}}With Hope{{else}}{{#if (eq roll.result.duality -1)}}With Fear{{else}}Critical Success{{/if}}{{/if}}</div>
             </div>
         </div>
     </div>

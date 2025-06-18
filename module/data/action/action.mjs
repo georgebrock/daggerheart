@@ -140,6 +140,10 @@ export class DHBaseAction extends foundry.abstract.DataModel {
         return foundry.utils.getProperty(this.parent, this.systemPath).indexOf(this);
     }
 
+    get id() {
+        return this._id;
+    }
+
     get item() {
         return this.parent.parent;
     }
@@ -190,8 +194,8 @@ export class DHBaseAction extends foundry.abstract.DataModel {
             event,
             title: this.item.name,
             source: {
-                itemId: this.item._id,
-                actionId: this._id
+                item: this.item._id,
+                action: this._id
             },
             type: this.type,
             hasDamage: !!this.damage?.parts?.length,
@@ -238,7 +242,7 @@ export class DHBaseAction extends foundry.abstract.DataModel {
                 ...config,
                 roll: {
                     // modifier: modifierValue,
-                    modifier: [],
+                    modifiers: [],
                     trait: this.roll?.trait,
                     label: game.i18n.localize(abilities[this.roll.trait].label),
                     type: this.actionType,

@@ -1736,6 +1736,10 @@
   border-radius: 0 6px 0 0;
   margin-left: -8px;
 }
+.theme-colorful .chat-message.duality .message-content .dice-result .dice-actions .duality-action.duality-action-effect {
+  border-top-left-radius: 6px;
+  margin-left: initial;
+}
 .theme-colorful .chat-message.duality .message-content .dice-result .dice-actions .duality-result {
   border-radius: 6px 0 0 0;
   margin-right: -8px;
@@ -1938,6 +1942,9 @@ div.daggerheart.views.multiclass {
 }
 .daggerheart.views.roll-selection .roll-selection-container i {
   filter: invert(0%) sepia(100%) saturate(0%) hue-rotate(21deg) brightness(17%) contrast(103%);
+}
+.daggerheart.views.roll-selection #roll-selection-costSelection footer {
+  display: none;
 }
 .daggerheart.views.roll-selection .roll-dialog-container .disadvantage,
 .daggerheart.views.roll-selection .roll-dialog-container .advantage {

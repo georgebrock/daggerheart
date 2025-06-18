@@ -9,15 +9,26 @@ export default class DhpChatMessage extends foundry.documents.ChatMessage {
 
         /* We can change to fully implementing the renderHTML function if needed, instead of augmenting it. */
         const html = await super.renderHTML();
-
+        console.log(this.system)
         if (
             this.type === 'dualityRoll'
         ) {
             html.classList.add('duality');
-            const dualityResult = this.system.dualityResult;
-            if (dualityResult === DHDualityRoll.dualityResult.hope) html.classList.add('hope');
+            /* const dualityResult = this.system.dualityResult; */
+            switch (this.system.roll.result.duality) {
+                case 1:
+                    html.classList.add('hope');
+                    break;
+                case -1:
+                    html.classList.add('fear');
+                    break;         
+                default:
+                    html.classList.add('critical');
+                    break;
+            }
+            /* if (dualityResult === DHDualityRoll.dualityResult.hope) html.classList.add('hope');
             else if (dualityResult === DHDualityRoll.dualityResult.fear) html.classList.add('fear');
-            else html.classList.add('critical');
+            else html.classList.add('critical'); */
         }
 
         return html;

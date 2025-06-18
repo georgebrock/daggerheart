@@ -266,10 +266,11 @@ export default class DhpActor extends Actor {
      */
     async diceRoll(config, action) {
         // console.log(config)
+        config.source = {...(config.source ?? {}), actor: this.id};
         const newConfig = {
             // data: {
                 ...config,
-                action,
+                /* action, */
                 actor: this.getRollData(),
             // },
             // options: {

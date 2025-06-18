@@ -288,16 +288,15 @@ export default class CharacterSheet extends DaggerheartSheet(ActorSheetV2) {
         const abilityLabel = game.i18n.localize(abilities[button.dataset.attribute].label);
         const config = {
             event: event,
-            title: game.i18n.format('DAGGERHEART.Chat.DualityRoll.AbilityCheckTitle', {
-                ability: abilityLabel
-            }),
+            title: game.i18n.format('DAGGERHEART.Chat.DualityRoll.AbilityCheckTitle', { ability: abilityLabel }),
             roll: {
-                label: abilityLabel,
-                modifier: button.dataset.value
+                trait: button.dataset.attribute
+                /* label: abilityLabel,
+                modifier: button.dataset.value */
             },
-            chatMessage: {
+            /* chatMessage: {
                 template: 'systems/daggerheart/templates/chat/duality-roll.hbs'
-            }
+            } */
         };
         this.document.diceRoll(config);
 

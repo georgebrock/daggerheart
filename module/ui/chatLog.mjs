@@ -54,11 +54,13 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
 
     onRollDamage = async (event, message) => {
         event.stopPropagation();
-        const actor = game.actors.get(message.system.origin);
+        console.log(message.system)
+        const actor = game.actors.get(message.system.source.actor);
+        console.log(message.system)
         if (!actor || !game.user.isGM) return true;
-        if(message.system.action?.itemId && message.system.action?.actionId) {
-            const item = actor.items.get(message.system.action?.itemId),
-                action = item?.system?.actions?.find(a => a._id === message.system.action.actionId);
+        if(message.system.source.item && message.system.source.action) {
+            const item = actor.items.get(message.system.source.item),
+                action = item?.system?.actions?.find(a => a._id === message.system.source.action);
             if(!item || !action || !action?.rollDamage) return;
             await action.rollDamage(event, message);
         } else {
@@ -73,11 +75,11 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
 
     onApplyEffect = async (event, message) => {
         event.stopPropagation();
-        const actor = game.actors.get(message.system.origin);
+        const actor = game.actors.get(message.system.source.actor);
         if (!actor || !game.user.isGM) return true;
-        if(message.system.action?.itemId && message.system.action?.actionId) {
-            const item = actor.items.get(message.system.action?.itemId),
-                action = item?.system?.actions?.find(a => a._id === message.system.action.actionId);
+        if(message.system.source.item && message.system.source.action) {
+            const item = actor.items.get(message.system.source.item),
+                action = item?.system?.actions?.find(a => a._id === message.system.source.action);
             if(!item || !action) return;
             await action.applyEffects(event, message);
         }
@@ -155,7 +157,7 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
         event.stopPropagation();
 
         const action = message.system.actions[Number.parseInt(event.currentTarget.dataset.index)];
-        const actor = game.actors.get(message.system.origin);
+        const actor = game.actors.get(message.system.source.actor);
         await actor.useAction(action);
     };
 }

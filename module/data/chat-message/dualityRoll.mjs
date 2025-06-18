@@ -17,18 +17,18 @@ export default class DHDualityRoll extends foundry.abstract.TypeDataModel {
     static defineSchema() {
         return {
             title: new fields.StringField(),
-            origin: new fields.StringField({ required: true }),
+            /* origin: new fields.StringField({ required: true }), */
             roll: new fields.DataField({}),
-            modifiers: new fields.ArrayField(
+            /* modifiers: new fields.ArrayField(
                 new fields.SchemaField({
                     value: new fields.NumberField({ integer: true }),
                     label: new fields.StringField({})
                 })
-            ),
-            hope: diceField(),
+            ), */
+            /* hope: diceField(),
             fear: diceField(),
-            advantageState: new fields.BooleanField({ nullable: true, initial: null }),
-            advantage: diceField(),
+            advantageState: new fields.BooleanField({ nullable: true, initial: null }), */
+            /* advantage: diceField(), */
             targets: new fields.ArrayField(
                 new fields.SchemaField({
                     id: new fields.StringField({}),
@@ -41,14 +41,15 @@ export default class DHDualityRoll extends foundry.abstract.TypeDataModel {
             ),
             hasDamage: new fields.BooleanField({ initial: false }),
             hasEffect: new fields.BooleanField({ initial: false }),
-            action: new fields.SchemaField({
-                itemId: new fields.StringField(),
-                actionId: new fields.StringField()
+            source: new fields.SchemaField({
+                actor: new fields.StringField(),
+                item: new fields.StringField(),
+                action: new fields.StringField()
             })
         };
     }
 
-    get diceTotal() {
+    /* get diceTotal() {
         return this.hope.value + this.fear.value;
     }
 
@@ -89,5 +90,5 @@ export default class DHDualityRoll extends foundry.abstract.TypeDataModel {
     prepareDerivedData() {
         this.hope.discarded = this.hope.value < this.fear.value;
         this.fear.discarded = this.fear.value < this.hope.value;
-    }
+    } */
 }
