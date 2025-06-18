@@ -7,10 +7,11 @@ const fields = foundry.data.fields;
 
 /*
     ToDo
+    - Add setting for Hope/Fear result on Damage, Heal, Resource (Handle Roll result as part of formula if needed)
+    - Add setting and/or checkbox for cost and damage like
     - Target Check / Target Picker
     - Range Check
     - Area of effect and measurement placement
-    - Handle Roll result as part of formula if needed
     - Summon Action create method
 
     - Create classes form Target, Cost, etc ?
@@ -390,7 +391,18 @@ export class DHDamageAction extends DHBaseAction {
         let roll = { formula: formula, total: formula },
             bonusDamage = [];
 
-        if (!event.shiftKey) {
+        const config = {
+            title: game.i18n.format('DAGGERHEART.Chat.DamageRoll.Title', { damage: this.name }),
+            formula,
+            chatMessage: {
+                template: 'systems/daggerheart/templates/chat/damage-roll.hbs'
+            },
+            targets: (data.system?.targets ?? data.targets).map(x => ({ id: x.id, name: x.name, img: x.img, hit: true }))
+        }
+
+        roll = CONFIG.Dice.daggerheart.DamageRoll.build(config)
+
+        /* if (!event.shiftKey) {
             const dialogClosed = new Promise((resolve, _) => {
                 new DamageSelectionDialog(formula, bonusDamage, resolve).render(true);
             });
@@ -444,7 +456,7 @@ export class DHDamageAction extends DHBaseAction {
                 rolls: [roll]
             });
 
-        cls.create(msg.toObject());
+        cls.create(msg.toObject()); */
     }
 
     get chatTemplate() {

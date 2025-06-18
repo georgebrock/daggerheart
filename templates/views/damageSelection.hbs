@@ -2,10 +2,10 @@
     <div class="form-group">
         <label><strong>Total Damage</strong></label>
         <div class="form-fields">
-            <input type="text" value="{{rollString}}" disabled />
+            <input type="text" value="{{formula}}" disabled />
         </div>
     </div>
-    {{#each bonusDamage as |damage index|}}
+    {{!-- {{#each bonusDamage as |damage index|}}
         <div class="form-group">
             <label><strong>{{damage.description}}</strong></label>
             <div class="form-fields">
@@ -22,8 +22,8 @@
                 {{/if}}
             </div>
         </div>
-    {{/each}}
+    {{/each}} --}}
     <footer>
-        <button data-action="rollDamage">Roll</button>
+        <button data-action="close">Roll</button>
     </footer>
 </div>

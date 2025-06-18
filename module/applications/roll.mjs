@@ -1,4 +1,10 @@
 import D20RollDialog from '../dialogs/d20RollDialog.mjs';
+import DamageDialog from '../dialogs/damageDialog.mjs';
+
+/*
+    - Damage & other resources roll
+    - Close dialog => don't roll
+*/
 
 export class DHRoll extends Roll {
     constructor(formula, data, options) {
@@ -31,7 +37,7 @@ export class DHRoll extends Roll {
             config = await DialogClass.configure(config, message);
         }
         console.log(config)
-        let roll = new this('', config.actor, config);
+        let roll = new this(config.formula, config.actor, config);
 
         for ( const hook of config.hooks ) {
             if ( Hooks.call(`${SYSTEM.id}.post${hook.capitalize()}RollConfiguration`, roll, config, message) === false ) return [];
@@ -381,13 +387,9 @@ export class DamageRoll extends DHRoll {
 
     static messageType = 'damageRoll';
 
-    static DefaultDialog = D20RollDialog;
-
-    get messageType() {
-        return 'damageRoll';
-    }
+    static DefaultDialog = DamageDialog;
 
     get messageTemplate() {
-        return '';
+        return 'systems/daggerheart/templates/chat/damage-roll.hbs';
     }
 }
