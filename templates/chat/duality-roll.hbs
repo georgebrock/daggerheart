@@ -104,7 +104,7 @@
                 {{/each}}
             </div>
         {{/if}}
-        <div class="dice-actions{{#unless (or hasDamage hasEffect)}} duality-alone{{/unless}}">
+        <div class="dice-actions{{#unless (or hasDamage hasHealing)}} duality-alone{{/unless}}">
             {{#if hasDamage}}
                     <button class="duality-action duality-action-damage" data-value="{{roll.total}}"><span>{{localize "DAGGERHEART.Chat.AttackRoll.RollDamage"}}</span></button>
             {{else}}

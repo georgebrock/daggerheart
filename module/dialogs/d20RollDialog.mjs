@@ -50,11 +50,12 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
         context.selectedExperiences = this.config.experiences;
         context.advantage = this.config.advantage;
         /* context.diceOptions = this.diceOptions; */
+        context.canRoll = true;
         if(this.config.costs?.length) {
             const updatedCosts = this.config.action.calcCosts(this.config.costs);
             context.costs = updatedCosts
             context.canRoll = this.config.action.getRealCosts(updatedCosts)?.hasCost;
-        } else context.canRoll = true;
+        }
         return context;
     }
 

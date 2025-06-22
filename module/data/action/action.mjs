@@ -240,7 +240,6 @@ export class DHBaseAction extends foundry.abstract.DataModel {
             config = {
                 ...config,
                 roll: {
-                    // modifier: modifierValue,
                     modifiers: [],
                     trait: this.roll?.trait,
                     label: game.i18n.localize(abilities[this.roll.trait].label),
@@ -289,6 +288,14 @@ export class DHBaseAction extends foundry.abstract.DataModel {
         return await this.actor.modifyResource(config.costs.values);
     }
     /* COST */
+
+    /* USES */
+    async spendUses(config) {
+        if(!this.uses.max) return;
+
+    }
+    /* USES */
+
 
     /* TARGET */
     async getTarget(config) {
@@ -397,62 +404,6 @@ export class DHDamageAction extends DHBaseAction {
         }
 
         roll = CONFIG.Dice.daggerheart.DamageRoll.build(config)
-
-        /* if (!event.shiftKey) {
-            const dialogClosed = new Promise((resolve, _) => {
-                new DamageSelectionDialog(formula, bonusDamage, resolve).render(true);
-            });
-            const result = await dialogClosed;
-            bonusDamage = result.bonusDamage;
-            formula = result.rollString;
-        }
-
-        if (isNaN(formula)) {
-            roll = await new Roll(formula, this.getRollData()).evaluate();
-        }
-        if(!roll) return;
-        const dice = [],
-            modifiers = [];
-        for (var i = 0; i < roll.terms.length; i++) {
-            const term = roll.terms[i];
-            if (term.faces) {
-                dice.push({
-                    type: `d${term.faces}`,
-                    rolls: term.results.map(x => x.result),
-                    total: term.results.reduce((acc, x) => acc + x.result, 0)
-                });
-            } else if (term.operator) {
-            } else if (term.number) {
-                const operator = i === 0 ? '' : roll.terms[i - 1].operator;
-                modifiers.push({ value: term.number, operator: operator });
-            }
-        }
-
-        const cls = getDocumentClass('ChatMessage'),
-            systemData = {
-                title: game.i18n.format('DAGGERHEART.Chat.DamageRoll.Title', { damage: this.name }),
-                roll: formula,
-                damage: {
-                    total: roll.total,
-                    type: this.damage.parts[0].type         // Handle multiple type damage
-                },
-                dice: dice,
-                modifiers: modifiers,
-                targets: (data.system?.targets ?? data.targets).map(x => ({ id: x.id, name: x.name, img: x.img, hit: true }))
-            },
-            msg = new cls({
-                type: 'damageRoll',
-                user: game.user.id,
-                sound: CONFIG.sounds.dice,
-                system: systemData,
-                content: await foundry.applications.handlebars.renderTemplate(
-                    'systems/daggerheart/templates/chat/damage-roll.hbs',
-                    systemData
-                ),
-                rolls: [roll]
-            });
-
-        cls.create(msg.toObject()); */
     }
 }
 
@@ -502,25 +453,6 @@ export class DHHealingAction extends DHBaseAction {
         return await this.rollHealing(event, config);
     }
 
-    /* async use(event, ...args) {
-        const config = await super.use(event, args);
-        if(['error', 'warning'].includes(config.type)) return;
-        const roll = await this.rollHealing(),
-            cls = getDocumentClass('ChatMessage'),
-            msg = new cls({
-                user: game.user.id,
-                content: await foundry.applications.handlebars.renderTemplate(
-                    this.chatTemplate,
-                    {
-                        ...roll,
-                        ...config
-                    }
-                )
-            });
-
-        cls.create(msg.toObject());
-    } */
-
     async rollHealing(event, data) {
         console.log(event, data)
         let formula = this.healing.value.getFormula(this.actor);
@@ -536,20 +468,7 @@ export class DHHealingAction extends DHBaseAction {
             messageTemplate: 'systems/daggerheart/templates/chat/healing-roll.hbs'
         }
 
-        roll = CONFIG.Dice.daggerheart.DamageRoll.build(config)
-        /* const formula = this.healing.value.getFormula(this.actor);
-        if (!formula || formula == '') return;
-
-        let roll = { formula: formula, total: formula };
-        if (isNaN(formula)) {
-            roll = await new Roll(formula, this.getRollData()).evaluate();
-        }
-        return {
-            roll: roll.formula,
-            total: roll.total,
-            dice: roll.dice,
-            type: this.healing.type
-        } */
+        roll = CONFIG.Dice.daggerheart.DamageRoll.build(config);
     }
 
     get chatTemplate() {
@@ -586,7 +505,6 @@ export class DHEffectAction extends DHBaseAction {
     }
 
     async chatApplyEffects(event, data) {
-        // console.log(data, this.effects, this.effectsDetails)
         const cls = getDocumentClass('ChatMessage'),
             systemData = {
                 title: game.i18n.format('DAGGERHEART.Chat.ApplyEffect.Title', { name: this.name }),
