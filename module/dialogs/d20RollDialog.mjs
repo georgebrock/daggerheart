@@ -22,7 +22,7 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
         actions: {
             updateIsAdvantage: this.updateIsAdvantage,
             selectExperience: this.selectExperience,
-            // finish: this.finish
+            submitRoll: this.submitRoll
         },
         form: {
             handler: this.updateRollConfiguration,
@@ -78,6 +78,15 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
             this.config.experiences = [...this.config.experiences, button.dataset.key];
         }
         this.render();
+    }
+
+    static async submitRoll() {
+        await this.close({ submitted: true  });
+    }
+
+    /** @override */
+    _onClose(options={}) {
+        if ( !options.submitted ) this.config = false;
     }
 
     static async configure(config={}) {

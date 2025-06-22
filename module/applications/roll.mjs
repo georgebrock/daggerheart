@@ -13,6 +13,7 @@ export class DHRoll extends Roll {
 
     static async build(config={}, message={}) {
         const roll = await this.buildConfigure(config, message);
+        if(!roll) return;
         await this.buildEvaluate(roll, config, message={});
         await this.buildPost(roll, config, message={});
         return roll;
@@ -35,14 +36,13 @@ export class DHRoll extends Roll {
             // Open Roll Dialog
             const DialogClass = config.dialog?.class ?? this.DefaultDialog;
             config = await DialogClass.configure(config, message);
+            if(!config) return;
         }
-        console.log(config)
         let roll = new this(config.formula, config.actor, config);
 
         for ( const hook of config.hooks ) {
             if ( Hooks.call(`${SYSTEM.id}.post${hook.capitalize()}RollConfiguration`, roll, config, message) === false ) return [];
         }
-        console.log(roll);
 
         return roll;
     }

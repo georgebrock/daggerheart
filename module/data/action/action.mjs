@@ -220,6 +220,7 @@ export class DHBaseAction extends foundry.abstract.DataModel {
 
         // Proceed with Roll
         config = await this.proceedRoll(config);
+        if(!config) return;
         
         // Update Actor resources based on Action Cost configuration
         this.spendCost(config.costs.values);

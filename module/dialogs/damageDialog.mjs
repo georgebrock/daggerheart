@@ -15,7 +15,9 @@ export default class DamageDialog extends HandlebarsApplicationMixin(Application
             width: 400,
             height: 'auto'
         },
-        actions: {},
+        actions: {
+            submitRoll: this.submitRoll
+        },
         form: {
             handler: this.updateRollConfiguration,
             submitOnChange: true,
@@ -36,6 +38,15 @@ export default class DamageDialog extends HandlebarsApplicationMixin(Application
         context.title = this.config.title;
         context.formula = this.config.formula;
         return context;
+    }
+
+    static async submitRoll() {
+        await this.close({ submitted: true  });
+    }
+
+    /** @override */
+    _onClose(options={}) {
+        if ( !options.submitted ) this.config = false;
     }
 
     static async configure(config={}) {
