@@ -1,5 +1,7 @@
 .chat-message {
-    .duality-modifiers, .duality-result, .dice-title {
+    .duality-modifiers,
+    .duality-result,
+    .dice-title {
         display: none;
     }
 }
@@ -67,7 +69,8 @@
                             align-items: center;
                             justify-content: center;
                             position: relative;
-                            &.hope, &.fear {
+                            &.hope,
+                            &.fear {
                                 .dice-wrapper {
                                     clip-path: polygon(
                                         50% 0%,
@@ -335,8 +338,10 @@
         > * {
             padding: 0 8px;
         }
-        .message-content {  
-            .duality-modifiers, .duality-result, .dice-title {
+        .message-content {
+            .duality-modifiers,
+            .duality-result,
+            .dice-title {
                 display: flex;
             }
             .duality-modifiers {
@@ -364,7 +369,7 @@
             }
             .dice-result {
                 .duality-modifiers {
-                    display: flex;          // Default => display: none;
+                    display: flex; // Default => display: none;
                     gap: 2px;
                     margin-bottom: 4px;
                     .duality-modifier {
@@ -375,7 +380,9 @@
                         font-size: 12px;
                     }
                 }
-                .dice-formula, > .dice-total, .part-header {
+                .dice-formula,
+                > .dice-total,
+                .part-header {
                     display: none;
                 }
                 .dice-tooltip {
@@ -384,7 +391,7 @@
                         .tooltip-part {
                             display: flex;
                             align-items: end;
-                            gap: .25rem;
+                            gap: 0.25rem;
                             .dice {
                                 .dice-rolls {
                                     margin-bottom: 0;

@@ -8,6 +8,9 @@
   "scripts": {
     "start": "concurrently \"rollup -c --watch\" \"node ../../../../FoundryDev/main.js --dataPath=../../../  --noupnp\"  \"gulp\"",
     "start-test": "node ./resources/app/main.js --dataPath=./ && rollup -c --watch && gulp",
+    "build": "npm run rollup && npm run gulp",
+    "rollup": "rollup -c",
+    "gulp": "gulp less",
     "pushLDBtoYML": "node ./tools/pushLDBtoYML.mjs",
     "pullYMLtoLDB": "node ./tools/pullYMLtoLDB.mjs",
     "createSymlink": "node ./tools/create-symlink.mjs"

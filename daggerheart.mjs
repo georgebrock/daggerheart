@@ -4,18 +4,23 @@ import * as models from './module/data/_module.mjs';
 import * as documents from './module/documents/_module.mjs';
 import RegisterHandlebarsHelpers from './module/helpers/handlebarsHelper.mjs';
 import DhCombatTracker from './module/ui/combatTracker.mjs';
-import { GMUpdateEvent, handleSocketEvent, socketEvent } from './module/helpers/socket.mjs';
+import { handleSocketEvent, registerSocketHooks } from './module/helpers/socket.mjs';
 import { registerDHSettings } from './module/applications/settings.mjs';
 import DhpChatLog from './module/ui/chatLog.mjs';
 import DhpRuler from './module/ui/ruler.mjs';
 import DhpTokenRuler from './module/ui/tokenRuler.mjs';
-import { dualityRollEnricher } from './module/enrichers/DualityRollEnricher.mjs';
+import { DhDualityRollEnricher, DhTemplateEnricher } from './module/enrichers/_module.mjs';
 import { getCommandTarget, rollCommandToJSON, setDiceSoNiceForDualityRoll } from './module/helpers/utils.mjs';
 import { abilities } from './module/config/actorConfig.mjs';
 import Resources from './module/applications/resources.mjs';
+import { NarrativeCountdowns, registerCountdownApplicationHooks } from './module/applications/countdowns.mjs';
 import DHDualityRoll from './module/data/chat-message/dualityRoll.mjs';
 import { DualityRollColor } from './module/data/settings/Appearance.mjs';
 import { DHRoll, DualityRoll, D20Roll, DamageRoll, DualityDie } from './module/applications/roll.mjs'
+import { DhMeasuredTemplate } from './module/placeables/_module.mjs';
+import { renderDualityButton } from './module/enrichers/DualityRollEnricher.mjs';
+import { renderMeasuredTemplate } from './module/enrichers/TemplateEnricher.mjs';
+import { registerCountdownHooks } from './module/data/countdowns.mjs';
 
 globalThis.SYSTEM = SYSTEM;
 
@@ -28,10 +33,18 @@ Hooks.once('init', () => {
         documents
     };
 
-    CONFIG.TextEditor.enrichers.push({
-        pattern: /\[\[\/dr\s?(.*?)\]\]/g,
-        enricher: dualityRollEnricher
-    });
+    CONFIG.TextEditor.enrichers.push(
+        ...[
+            {
+                pattern: /\[\[\/dr\s?(.*?)\]\]/g,
+                enricher: DhDualityRollEnricher
+            },
+            {
+                pattern: /^@Template\[(.*)\]$/g,
+                enricher: DhTemplateEnricher
+            }
+        ]
+    );
 
     CONFIG.statusEffects = Object.values(SYSTEM.GENERAL.conditions).map(x => ({
         ...x,
@@ -47,6 +60,7 @@ Hooks.once('init', () => {
     };
 
     CONFIG.Dice.rolls = [...CONFIG.Dice.rolls, ...[DHRoll, DualityRoll, D20Roll, DamageRoll]];
+    CONFIG.MeasuredTemplate.objectClass = DhMeasuredTemplate;
 
     CONFIG.Item.documentClass = documents.DhpItem;
 
@@ -75,14 +89,19 @@ Hooks.once('init', () => {
     Actors.registerSheet(SYSTEM.id, applications.DhpEnvironment, { types: ['environment'], makeDefault: true });
 
     CONFIG.ActiveEffect.documentClass = documents.DhActiveEffect;
-    DocumentSheetConfig.unregisterSheet(
+    foundry.applications.apps.DocumentSheetConfig.unregisterSheet(
         CONFIG.ActiveEffect.documentClass,
         'core',
         foundry.applications.sheets.ActiveEffectConfig
     );
-    DocumentSheetConfig.registerSheet(CONFIG.ActiveEffect.documentClass, SYSTEM.id, applications.DhActiveEffectConfig, {
-        makeDefault: true
-    });
+    foundry.applications.apps.DocumentSheetConfig.registerSheet(
+        CONFIG.ActiveEffect.documentClass,
+        SYSTEM.id,
+        applications.DhActiveEffectConfig,
+        {
+            makeDefault: true
+        }
+    );
 
     CONFIG.Combat.dataModels = {
         base: models.DhCombat
@@ -117,78 +136,50 @@ Hooks.once('init', () => {
 
 Hooks.on('ready', () => {
     ui.resources = new CONFIG.ui.resources();
-    if (game.settings.get(SYSTEM.id, SYSTEM.SETTINGS.gameSettings.Resources.DisplayFear) !== 'hide')
+    if (game.settings.get(SYSTEM.id, SYSTEM.SETTINGS.gameSettings.appearance).displayFear !== 'hide')
         ui.resources.render({ force: true });
+
     document.body.classList.toggle(
         'theme-colorful',
         game.settings.get(SYSTEM.id, SYSTEM.SETTINGS.gameSettings.appearance).dualityColorScheme ===
             DualityRollColor.colorful.value
     );
+
+    registerCountdownHooks();
+    registerSocketHooks();
+    registerCountdownApplicationHooks();
 });
 
 Hooks.once('dicesoniceready', () => {});
-
-Hooks.on(socketEvent.GMUpdate, async (action, uuid, update) => {
-    if (game.user.isGM) {
-        const document = uuid ? await fromUuid(uuid) : null;
-        switch (action) {
-            case GMUpdateEvent.UpdateDocument:
-                if (document && update) {
-                    await document.update(update);
-                }
-                break;
-            case GMUpdateEvent.UpdateFear:
-                if (game.user.isGM) {
-                    await game.settings.set(
-                        SYSTEM.id,
-                        SYSTEM.SETTINGS.gameSettings.Resources.Fear,
-                        Math.max(Math.min(update, 6), 0)
-                    );
-                    Hooks.callAll(socketEvent.DhpFearUpdate);
-                    await game.socket.emit(`system.${SYSTEM.id}`, { action: socketEvent.DhpFearUpdate });
-                }
-                break;
-        }
-    }
-});
-
-const renderDualityButton = async event => {
-    const button = event.currentTarget,
-        traitValue = button.dataset.trait?.toLowerCase(),
-        target = getCommandTarget();
-    if (!target) return;
-
-    const config = {
-        event: event,
-        title: button.dataset.title,
-        roll: {
-            modifier: traitValue ? target.system.traits[traitValue].value : null,
-            label: button.dataset.label,
-            type: button.dataset.actionType ?? null // Need check
-        },
-        chatMessage: {
-            template: 'systems/daggerheart/templates/chat/duality-roll.hbs'
-        }
-    };
-    await target.diceRoll(config);
-};
 
 Hooks.on('renderChatMessageHTML', (_, element) => {
     element
         .querySelectorAll('.duality-roll-button')
         .forEach(element => element.addEventListener('click', renderDualityButton));
+
+    element
+        .querySelectorAll('.measured-template-button')
+        .forEach(element => element.addEventListener('click', renderMeasuredTemplate));
 });
 
 Hooks.on('renderJournalEntryPageProseMirrorSheet', (_, element) => {
     element
         .querySelectorAll('.duality-roll-button')
         .forEach(element => element.addEventListener('click', renderDualityButton));
+
+    element
+        .querySelectorAll('.measured-template-button')
+        .forEach(element => element.addEventListener('click', renderMeasuredTemplate));
 });
 
 Hooks.on('renderHandlebarsApplication', (_, element) => {
     element
         .querySelectorAll('.duality-roll-button')
         .forEach(element => element.addEventListener('click', renderDualityButton));
+
+    element
+        .querySelectorAll('.measured-template-button')
+        .forEach(element => element.addEventListener('click', renderMeasuredTemplate));
 });
 
 Hooks.on('chatMessage', (_, message) => {
@@ -266,6 +257,29 @@ Hooks.on('chatMessage', (_, message) => {
     }
 });
 
+Hooks.on('renderJournalDirectory', async (tab, html, _, options) => {
+    if (tab.id === 'journal') {
+        if (options.parts && !options.parts.includes('footer')) return;
+
+        const buttons = tab.element.querySelector('.directory-footer.action-buttons');
+        const title = game.i18n.format('DAGGERHEART.Countdown.Title', {
+            type: game.i18n.localize('DAGGERHEART.Countdown.Types.narrative')
+        });
+        buttons.insertAdjacentHTML(
+            'afterbegin',
+            `
+            <button id="narrative-countdown-button">
+                <i class="fa-solid fa-stopwatch"></i>
+                <span style="font-weight: 400; font-family: var(--font-sans);">${title}</span>
+            </button>`
+        );
+
+        buttons.querySelector('#narrative-countdown-button').onclick = async () => {
+            new NarrativeCountdowns().open();
+        };
+    }
+});
+
 const preloadHandlebarsTemplates = async function () {
     return foundry.applications.handlebars.loadTemplates([
         'systems/daggerheart/templates/sheets/parts/attributes.hbs',
@@ -299,6 +313,7 @@ const preloadHandlebarsTemplates = async function () {
         'systems/daggerheart/templates/views/actionTypes/roll.hbs',
         'systems/daggerheart/templates/views/actionTypes/cost.hbs',
         'systems/daggerheart/templates/views/actionTypes/range-target.hbs',
-        'systems/daggerheart/templates/views/actionTypes/effect.hbs'
+        'systems/daggerheart/templates/views/actionTypes/effect.hbs',
+        'systems/daggerheart/templates/settings/components/settings-item-line.hbs'
     ]);
 };

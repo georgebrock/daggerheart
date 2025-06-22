@@ -1,14 +1,14 @@
-import BaseDataItem from "./base.mjs";
+import BaseDataItem from './base.mjs';
 import ActionField from '../fields/actionField.mjs';
 
 export default class DHConsumable extends BaseDataItem {
-     /** @inheritDoc */
+    /** @inheritDoc */
     static get metadata() {
         return foundry.utils.mergeObject(super.metadata, {
-            label: "TYPES.Item.consumable",
-            type: "consumable",
+            label: 'TYPES.Item.consumable',
+            type: 'consumable',
             hasDescription: true,
-            isQuantifiable: true,
+            isQuantifiable: true
         });
     }
 

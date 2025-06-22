@@ -5,7 +5,7 @@ import BaseDataActor from './base.mjs';
 
 const attributeField = () =>
     new foundry.data.fields.SchemaField({
-        value: new foundry.data.fields.NumberField({ initial: 0, integer: true }),
+        value: new foundry.data.fields.NumberField({ initial: null, integer: true }),
         bonus: new foundry.data.fields.NumberField({ initial: 0, integer: true }),
         tierMarked: new foundry.data.fields.BooleanField({ initial: false })
     });
@@ -54,13 +54,7 @@ export default class DhCharacter extends BaseDataActor {
                     description: new fields.StringField({}),
                     value: new fields.NumberField({ integer: true, initial: 0 }),
                     bonus: new fields.NumberField({ integer: true, initial: 0 })
-                }),
-                {
-                    initial: {
-                        [foundry.utils.randomID()]: { description: '', value: 2 },
-                        [foundry.utils.randomID()]: { description: '', value: 2 }
-                    }
-                }
+                })
             ),
             gold: new fields.SchemaField({
                 coins: new fields.NumberField({ initial: 0, integer: true }),
@@ -91,6 +85,14 @@ export default class DhCharacter extends BaseDataActor {
                 armorScore: new fields.NumberField({ integer: true, initial: 0 })
             })
         };
+    }
+
+    get tier() {
+        return this.levelData.level.current === 1
+            ? 1
+            : Object.values(game.settings.get(SYSTEM.id, SYSTEM.SETTINGS.gameSettings.LevelTiers).tiers).find(
+                  tier => currentLevel >= tier.levels.start && currentLevel <= tier.levels.end
+              ).tier;
     }
 
     get ancestry() {
@@ -138,19 +140,6 @@ export default class DhCharacter extends BaseDataActor {
             : this.primaryWeapon || this.secondaryWeapon
               ? burden.oneHanded.value
               : null;
-    }
-
-    get refreshableFeatures() {
-        return this.parent.items.reduce(
-            (acc, x) => {
-                if (x.type === 'feature' && x.system.refreshData?.type === 'feature' && x.system.refreshData?.type) {
-                    acc[x.system.refreshData.type].push(x);
-                }
-
-                return acc;
-            },
-            { shortRest: [], longRest: [] }
-        );
     }
 
     static async unequipBeforeEquip(itemToEquip) {
@@ -235,7 +224,7 @@ export default class DhCharacter extends BaseDataActor {
 
         for (var traitKey in this.traits) {
             var trait = this.traits[traitKey];
-            trait.total = trait.value + trait.bonus;
+            trait.total = (trait.value ?? 0) + trait.bonus;
         }
 
         for (var experienceKey in this.experiences) {
@@ -247,6 +236,14 @@ export default class DhCharacter extends BaseDataActor {
         this.resources.stress.maxTotal = this.resources.stress.max + this.resources.stress.bonus;
         this.evasion.total = (this.class?.evasion ?? 0) + this.evasion.bonus;
         this.proficiency.total = this.proficiency.value + this.proficiency.bonus;
+    }
+
+    getRollData() {
+        const data = super.getRollData();
+        return {
+            ...data,
+            tier: this.tier
+        };
     }
 }
 

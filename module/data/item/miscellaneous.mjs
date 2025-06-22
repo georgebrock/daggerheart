@@ -5,10 +5,10 @@ export default class DHMiscellaneous extends BaseDataItem {
     /** @inheritDoc */
     static get metadata() {
         return foundry.utils.mergeObject(super.metadata, {
-            label: "TYPES.Item.miscellaneous",
-            type: "miscellaneous",
+            label: 'TYPES.Item.miscellaneous',
+            type: 'miscellaneous',
             hasDescription: true,
-            isQuantifiable: true,
+            isQuantifiable: true
         });
     }
 

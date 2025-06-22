@@ -8,7 +8,6 @@
 /* Background */
 /* Duality */
 /* Fear */
-@import '../node_modules/@yaireo/tagify/dist/tagify.css';
 .daggerheart.sheet.class .editor {
   height: 500px;
 }
@@ -1297,24 +1296,37 @@
 .combat-sidebar .encounter-controls.combat {
   justify-content: space-between;
 }
-.combat-sidebar .encounter-controls.combat .encounter-control-fear-container {
+.combat-sidebar .encounter-controls.combat .encounter-fear-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.combat-sidebar .encounter-controls.combat .encounter-fear-controls .encounter-fear-dice-container {
+  display: flex;
+  gap: 2px;
+}
+.combat-sidebar .encounter-controls.combat .encounter-fear-controls .encounter-fear-dice-container .encounter-control-fear-container {
   display: flex;
   position: relative;
   align-items: center;
   justify-content: center;
   color: black;
 }
-.combat-sidebar .encounter-controls.combat .encounter-control-fear-container .dice {
-  height: 24px;
+.combat-sidebar .encounter-controls.combat .encounter-fear-controls .encounter-fear-dice-container .encounter-control-fear-container .dice {
+  height: 22px;
+  width: 22px;
 }
-.combat-sidebar .encounter-controls.combat .encounter-control-fear-container .encounter-control-fear {
+.combat-sidebar .encounter-controls.combat .encounter-fear-controls .encounter-fear-dice-container .encounter-control-fear-container .encounter-control-fear {
   position: absolute;
   font-size: 16px;
 }
-.combat-sidebar .encounter-controls.combat .encounter-control-fear-container .encounter-control-counter {
+.combat-sidebar .encounter-controls.combat .encounter-fear-controls .encounter-fear-dice-container .encounter-control-fear-container .encounter-control-counter {
   position: absolute;
   right: -10px;
   color: var(--color-text-secondary);
+}
+.combat-sidebar .encounter-controls.combat .encounter-fear-controls .encounter-countdowns {
+  color: var(--content-link-icon-color);
 }
 .combat-sidebar .encounter-controls.combat .control-buttons {
   width: min-content;
@@ -1891,6 +1903,11 @@ div.daggerheart.views.multiclass {
 .daggerheart.views.levelup .levelup-section .levelup-container .levelup-inner-container .levelup-posttext {
   padding: 8px 0;
 }
+.daggerheart.views .downtime-container .downtime-header {
+  margin: 0;
+  color: light-dark(#18162e, #f3c267);
+  text-align: center;
+}
 .daggerheart.views .downtime-container .activity-container {
   display: flex;
   align-items: center;
@@ -1906,11 +1923,29 @@ div.daggerheart.views.multiclass {
   font-weight: bold;
 }
 .daggerheart.views .downtime-container .activity-container .activity-title .activity-image {
-  width: 120px;
+  width: 80px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin-right: 8px;
   border: 2px solid black;
   border-radius: 50%;
-  margin-right: 8px;
   cursor: pointer;
+}
+.daggerheart.views .downtime-container .activity-container .activity-title .activity-image .activity-select-label {
+  position: absolute;
+  top: -9px;
+  font-size: 14px;
+  border: 1px solid light-dark(#18162e, #f3c267);
+  border-radius: 6px;
+  color: light-dark(#efe6d8, #222);
+  background-image: url(../assets/parchments/dh-parchment-light.png);
+  padding: 0 8px;
+  line-height: 1;
+  font-weight: bold;
+}
+.daggerheart.views .downtime-container .activity-container .activity-title .activity-image img {
+  border-radius: 50%;
 }
 .daggerheart.views .downtime-container .activity-container .activity-title .activity-image:hover,
 .daggerheart.views .downtime-container .activity-container .activity-title .activity-image.selected {
@@ -2496,6 +2531,354 @@ div.daggerheart.views.multiclass {
 .item-button .item-icon.checked {
   opacity: 1;
 }
+.theme-light .daggerheart.dh-style.dialog.character-creation .tab-navigation nav a .descriptor {
+  background: red;
+  background-image: url('../assets/parchments/dh-parchment-dark.png');
+}
+.theme-light .daggerheart.dh-style.dialog.character-creation .main-selections-container .traits-container .suggested-traits-container .suggested-trait-container,
+.theme-light .daggerheart.dh-style.dialog.character-creation .main-selections-container .creation-action-footer .footer-section nav a .descriptor,
+.theme-light .daggerheart.dh-style.dialog.character-creation .main-selections-container .equipment-selection .simple-equipment-container .simple-equipment label {
+  background-image: url('../assets/parchments/dh-parchment-dark.png');
+}
+.daggerheart.dh-style.dialog.character-creation .window-content {
+  gap: 16px;
+}
+.daggerheart.dh-style.dialog.character-creation .tab-navigation nav {
+  flex: 1;
+}
+.daggerheart.dh-style.dialog.character-creation .tab-navigation nav a {
+  flex: 1;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+.daggerheart.dh-style.dialog.character-creation .tab-navigation nav a.disabled {
+  opacity: 0.4;
+}
+.daggerheart.dh-style.dialog.character-creation .tab-navigation nav a .nav-section-text {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.daggerheart.dh-style.dialog.character-creation .tab-navigation nav a .finish-marker {
+  position: absolute;
+  align-self: center;
+  top: -8px;
+  padding: 4px;
+  border: 1px solid;
+  border-radius: 50%;
+  height: 16px;
+  width: 16px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-cool-4);
+  content: '';
+}
+.daggerheart.dh-style.dialog.character-creation .tab-navigation nav a .finish-marker.active {
+  background-color: var(--color-warm-2);
+}
+.daggerheart.dh-style.dialog.character-creation .tab-navigation nav a .descriptor {
+  position: absolute;
+  bottom: -8px;
+  font-size: 12px;
+  border-radius: 8px;
+  width: 56px;
+  text-align: center;
+  line-height: 1;
+  border: 1px solid light-dark(#18162e, #f3c267);
+  border-radius: 6px;
+  color: light-dark(#efe6d8, #222);
+  background-image: url(../assets/parchments/dh-parchment-light.png);
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .selections-container {
+  width: 140px;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .selections-container .card-preview-container {
+  border-color: light-dark(#18162e, #f3c267);
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .selections-outer-container {
+  display: flex;
+  justify-content: space-evenly;
+  height: 210px;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .section-container {
+  border-radius: 8px;
+  border-color: light-dark(#18162e, #f3c267);
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .section-container legend {
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 28px;
+  font-weight: bold;
+  padding: 0 8px;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .section-container .section-inner-container {
+  position: relative;
+  border-radius: 8px;
+  border-color: light-dark(#18162e, #f3c267);
+  display: flex;
+  justify-content: center;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .section-container .section-inner-container legend {
+  font-size: 20px;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .section-container .section-inner-container .action-button {
+  position: absolute;
+  bottom: -8px;
+  height: 16px;
+  width: 110px;
+  min-height: unset;
+  border: 1px solid light-dark(#18162e, #f3c267);
+  color: light-dark(#efe6d8, #efe6d8);
+  background-color: light-dark(var(--color-warm-3), var(--color-warm-3));
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .section-container .section-inner-container .action-button:hover {
+  background-color: light-dark(var(--color-warm-2), var(--color-warm-2));
+  filter: drop-shadow(0 0 3px light-dark(var(--color-warm-2), var(--color-warm-2)));
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .traits-container {
+  text-align: center;
+  display: flex;
+  gap: 16px;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .traits-container .suggested-traits-container {
+  display: flex;
+  flex-wrap: wrap;
+  width: 176px;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .traits-container .suggested-traits-container .suggested-trait-container {
+  width: 56px;
+  white-space: nowrap;
+  border: 1px solid light-dark(#18162e, #f3c267);
+  border-radius: 6px;
+  color: light-dark(#efe6d8, #222);
+  background-image: url('../assets/parchments/dh-parchment-light.png');
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .traits-container .traits-inner-container {
+  display: flex;
+  justify-content: space-evenly;
+  gap: 8px;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .traits-container .traits-inner-container .trait-container {
+  border: 1px solid light-dark(#18162e, #f3c267);
+  padding: 0 4px;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .experiences-inner-container {
+  display: flex;
+  justify-content: space-evenly;
+  text-align: center;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .experiences-inner-container .experience-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .experiences-inner-container .experience-container .experience-description {
+  border-color: light-dark(#18162e, #f3c267);
+  padding-right: 24px;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .experiences-inner-container .experience-container .experience-value {
+  position: absolute;
+  right: 0;
+  width: 22px;
+  border-left: 1px solid light-dark(#18162e, #f3c267);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .creation-action-footer {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .creation-action-footer .footer-section {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .creation-action-footer .footer-section nav {
+  flex: 1;
+  gap: 8px;
+  border: 0;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .creation-action-footer .footer-section nav a {
+  flex: 1;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  border: 1px solid light-dark(#18162e, #f3c267);
+  border-radius: 6px;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .creation-action-footer .footer-section nav a .nav-section-text {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .creation-action-footer .footer-section nav a .finish-marker {
+  position: absolute;
+  align-self: center;
+  top: -10px;
+  padding: 4px;
+  border: 1px solid;
+  border-radius: 50%;
+  height: 20px;
+  width: 20px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-cool-4);
+  content: '';
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .creation-action-footer .footer-section nav a .finish-marker.finished {
+  background-color: var(--color-warm-2);
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .creation-action-footer .footer-section nav a .descriptor {
+  position: absolute;
+  bottom: -8px;
+  font-size: 12px;
+  border-radius: 8px;
+  width: 56px;
+  text-align: center;
+  line-height: 1;
+  border: 1px solid light-dark(#18162e, #f3c267);
+  border-radius: 6px;
+  color: light-dark(#efe6d8, #222);
+  background-image: url(../assets/parchments/dh-parchment-light.png);
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .creation-action-footer .footer-section button {
+  flex: 1;
+  height: 100%;
+  white-space: nowrap;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .main-equipment-selection {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 16px;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .main-equipment-selection.triple {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .equipment-selection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border: 2px solid light-dark(#18162e, #f3c267);
+  border-radius: 8px;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .equipment-selection legend {
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 28px;
+  font-weight: bold;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .equipment-selection .equipment-subsection {
+  display: flex;
+  align-items: start;
+  gap: 32px;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .equipment-selection .equipment-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .equipment-selection .simple-equipment-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  gap: 8px;
+  height: 100%;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .equipment-selection .simple-equipment-container .simple-equipment {
+  border: 1px solid light-dark(#18162e, #f3c267);
+  border-radius: 8px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .equipment-selection .simple-equipment-container .simple-equipment.selectable {
+  cursor: pointer;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .equipment-selection .simple-equipment-container .simple-equipment.inactive {
+  opacity: 0.4;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .equipment-selection .simple-equipment-container .simple-equipment label {
+  position: absolute;
+  top: -8px;
+  font-size: 12px;
+  white-space: nowrap;
+  border: 1px solid light-dark(#18162e, #f3c267);
+  border-radius: 6px;
+  color: light-dark(#efe6d8, #222);
+  background-image: url('../assets/parchments/dh-parchment-light.png');
+  padding: 0 2px;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .equipment-selection .simple-equipment-container .simple-equipment img {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .equipment-selection .suggestion-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  height: min-content;
+  border: 2px solid light-dark(#18162e, #f3c267);
+  border-radius: 8px;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .equipment-selection .suggestion-container legend {
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 12px;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .equipment-selection .suggestion-container .suggestion-inner-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 6px;
+  cursor: grab;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .equipment-selection .suggestion-container .suggestion-inner-container.taken {
+  opacity: 0.4;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .equipment-selection .suggestion-container .suggestion-inner-container label {
+  position: absolute;
+  top: -2px;
+  font-size: 12px;
+}
+.daggerheart.dh-style.dialog.character-creation .main-selections-container .equipment-selection .suggestion-container .suggestion-inner-container img {
+  width: 120px;
+}
+.daggerheart.dh-style.dialog.character-creation .creation-action-footer {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+.daggerheart.dh-style.dialog.character-creation .creation-action-footer button {
+  flex: 1;
+  height: 100%;
+  white-space: nowrap;
+}
 .theme-light .daggerheart.levelup .tiers-container .tier-container {
   background-image: url('../assets/parchments/dh-parchment-light.png');
 }
@@ -2709,6 +3092,27 @@ div.daggerheart.views.multiclass {
 .daggerheart.levelup .levelup-footer {
   display: flex;
 }
+.daggerheart.views.ownership-selection .ownership-outer-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.daggerheart.views.ownership-selection .ownership-outer-container .ownership-container {
+  display: flex;
+  border: 2px solid light-dark(#18162e, #f3c267);
+  border-radius: 6px;
+  padding: 0 4px 0 0;
+  align-items: center;
+  gap: 8px;
+}
+.daggerheart.views.ownership-selection .ownership-outer-container .ownership-container img {
+  height: 40px;
+  width: 40px;
+  border-radius: 6px 0 0 6px;
+}
+.daggerheart.views.ownership-selection .ownership-outer-container .ownership-container select {
+  margin: 4px 0;
+}
 :root {
   --shadow-text-stroke: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
   --fear-animation: background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, opacity 0.3s ease;
@@ -2822,6 +3226,228 @@ div.daggerheart.views.multiclass {
 }
 #resources:has(.fear-bar) {
   min-width: 200px;
+}
+.theme-light .daggerheart.dh-style.countdown.minimized .minimized-view .mini-countdown-container {
+  background-image: url('../assets/parchments/dh-parchment-dark.png');
+}
+.daggerheart.dh-style.countdown {
+  overflow: hidden;
+}
+.daggerheart.dh-style.countdown fieldset {
+  align-items: center;
+  margin-top: 5px;
+  border-radius: 6px;
+  border-color: light-dark(#18162e, #f3c267);
+}
+.daggerheart.dh-style.countdown fieldset legend {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: bold;
+  color: light-dark(#18162e, #f3c267);
+}
+.daggerheart.dh-style.countdown fieldset legend a {
+  text-shadow: none;
+}
+.daggerheart.dh-style.countdown.minimized {
+  height: auto !important;
+  max-height: unset !important;
+  max-width: 740px !important;
+  width: auto !important;
+}
+.daggerheart.dh-style.countdown.minimized .window-content {
+  display: flex;
+  padding: 4px 8px;
+  justify-content: center;
+}
+.daggerheart.dh-style.countdown.minimized .minimized-view {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.daggerheart.dh-style.countdown.minimized .minimized-view .mini-countdown-container {
+  width: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 2px solid light-dark(#18162e, #f3c267);
+  border-radius: 6px;
+  padding: 0 4px 0 0;
+  background-image: url('../assets/parchments/dh-parchment-light.png');
+  color: light-dark(#efe6d8, #222);
+  cursor: pointer;
+}
+.daggerheart.dh-style.countdown.minimized .minimized-view .mini-countdown-container.disabled {
+  cursor: initial;
+}
+.daggerheart.dh-style.countdown.minimized .minimized-view .mini-countdown-container img {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px 0 0 6px;
+}
+.daggerheart.dh-style.countdown.minimized .minimized-view .mini-countdown-container .mini-countdown-name {
+  white-space: nowrap;
+}
+.daggerheart.dh-style.countdown .hidden {
+  display: none;
+}
+.daggerheart.dh-style.countdown .window-content > div {
+  height: 100%;
+}
+.daggerheart.dh-style.countdown .window-content > div .expanded-view {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.daggerheart.dh-style.countdown .window-content > div .expanded-view .countdowns-menu {
+  display: flex;
+  gap: 8px;
+}
+.daggerheart.dh-style.countdown .window-content > div .expanded-view .countdowns-menu .flex {
+  flex: 1;
+}
+.daggerheart.dh-style.countdown .window-content > div .expanded-view .countdowns-container {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  overflow: auto;
+  max-height: 100%;
+}
+.daggerheart.dh-style.countdown .window-content > div .expanded-view .countdowns-container .countdown-fieldset {
+  width: 340px;
+  height: min-content;
+  position: relative;
+}
+.daggerheart.dh-style.countdown .window-content > div .expanded-view .countdowns-container .countdown-fieldset .ownership-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 18px;
+}
+.daggerheart.dh-style.countdown .window-content > div .expanded-view .countdowns-container .countdown-fieldset .countdown-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.daggerheart.dh-style.countdown .window-content > div .expanded-view .countdowns-container .countdown-fieldset .countdown-container img {
+  width: 150px;
+  height: 150px;
+  cursor: pointer;
+}
+.daggerheart.dh-style.countdown .window-content > div .expanded-view .countdowns-container .countdown-fieldset .countdown-container img.disabled {
+  cursor: initial;
+}
+.daggerheart.dh-style.countdown .window-content > div .expanded-view .countdowns-container .countdown-fieldset .countdown-container .countdown-inner-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.daggerheart.dh-style.countdown .window-content > div .expanded-view .countdowns-container .countdown-fieldset .countdown-container .countdown-inner-container .countdown-value-container {
+  display: flex;
+  gap: 4px;
+}
+.daggerheart.dh-style.countdown .window-content > div .expanded-view .countdowns-container .countdown-fieldset .countdown-container .countdown-inner-container .countdown-value-container input {
+  max-width: 80px;
+}
+.daggerheart.dh-style.setting fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.daggerheart.dh-style.setting fieldset.two-columns {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 10px;
+}
+.daggerheart.dh-style.setting fieldset.two-columns.even {
+  grid-template-columns: 1fr 1fr;
+}
+.daggerheart.dh-style.setting .setting-group-field {
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.daggerheart.dh-style.setting .settings-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.daggerheart.dh-style.setting .settings-items .settings-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid;
+  border-radius: 8px;
+  padding: 0 8px 0 0;
+}
+.daggerheart.dh-style.setting .settings-items .settings-item .settings-sub-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.daggerheart.dh-style.setting .settings-items .settings-item .settings-sub-item img {
+  width: 60px;
+  border-radius: 8px 0 0 8px;
+}
+.daggerheart.dh-style.setting .settings-items .settings-item .settings-sub-item i {
+  font-size: 18px;
+}
+.daggerheart.dh-style.setting .settings-item-header {
+  display: flex;
+  align-items: center;
+}
+.daggerheart.dh-style.setting .settings-item-header .profile {
+  height: 100px;
+  width: 100px;
+  object-fit: cover;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+.daggerheart.dh-style.setting .settings-item-header .item-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  text-align: center;
+  width: 80%;
+}
+.daggerheart.dh-style.setting .settings-item-header .item-info .item-name input[type='text'] {
+  font-size: 32px;
+  height: 42px;
+  text-align: center;
+  width: 90%;
+  transition: all 0.3s ease;
+  outline: 2px solid transparent;
+  border: 1px solid transparent;
+}
+.daggerheart.dh-style.setting .settings-item-header .item-info .item-name input[type='text']:hover[type='text'],
+.daggerheart.dh-style.setting .settings-item-header .item-info .item-name input[type='text']:focus[type='text'] {
+  box-shadow: none;
+  outline: 2px solid light-dark(#18162e, #f3c267);
+}
+.daggerheart.dh-style.setting .settings-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.daggerheart.dh-style.setting .trait-array-container {
+  display: flex;
+  justify-content: space-evenly;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.daggerheart.dh-style.setting .trait-array-container .trait-array-item {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+.daggerheart.dh-style.setting .trait-array-container .trait-array-item label {
+  position: absolute;
+  top: -7px;
+  font-size: 12px;
+  font-variant: petite-caps;
+}
+.daggerheart.dh-style.setting .trait-array-container .trait-array-item input {
+  text-align: center;
 }
 .application.sheet.daggerheart.actor.dh-style.adversary .window-content {
   overflow: auto;

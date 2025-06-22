@@ -16,6 +16,9 @@ jobs:
     - name: Build Packs
       run: npm run pullYMLtoLDB
 
+    - name: Build daggerheart.js
+      run: npm run build
+
     # get part of the tag after the `v`
     - name: Extract tag version number
       id: get_version
@@ -34,7 +37,7 @@ jobs:
         download: https://github.com/${{github.repository}}/releases/download/${{github.event.release.tag_name}}/system.zip
 
     # Create a zip file with all files required by the module to add to the release
-    - run: zip -r ./system.zip system.json README.md LICENSE daggerheart.mjs templates/ styles/daggerheart.css packs/ lang/
+    - run: zip -r ./system.zip system.json README.md LICENSE build/daggerheart.js assets/ templates/ styles/daggerheart.css packs/ lang/
 
     # Create a release for this specific version
     - name: Update Release with Files
@@ -46,6 +49,6 @@ jobs:
         draft: ${{ github.event.release.unpublished }}
         prerelease: ${{ github.event.release.prerelease }}
         token: ${{ secrets.GITHUB_TOKEN }}
-        artifacts: './module.json, ./module.zip'
+        artifacts: './system.json, ./system.zip'
         tag: ${{ github.event.release.tag_name }}
         body: ${{ github.event.release.body }}

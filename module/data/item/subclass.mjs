@@ -1,11 +1,11 @@
 import ActionField from '../fields/actionField.mjs';
-import ForeignDocumentUUIDField from '../fields/foreignDocumentUUIDField.mjs';
+import ForeignDocumentUUIDArrayField from '../fields/foreignDocumentUUIDArrayField.mjs';
 import BaseDataItem from './base.mjs';
 
 const featureSchema = () => {
     return new foundry.data.fields.SchemaField({
         name: new foundry.data.fields.StringField({ required: true }),
-        effects: new foundry.data.fields.ArrayField(new ForeignDocumentUUIDField({ type: 'ActiveEffect' })),
+        effects: new ForeignDocumentUUIDArrayField({ type: 'ActiveEffect', required: false }),
         actions: new foundry.data.fields.ArrayField(new ActionField())
     });
 };
@@ -64,7 +64,7 @@ export default class DHSubclass extends BaseDataItem {
             } else if (subclassData) {
                 ui.notifications.error(game.i18n.localize('DAGGERHEART.Item.Errors.SubclassAlreadySelected'));
                 return false;
-            } else if (classData.system.subclasses.every(x => x.uuid !== `Item.${data._id}`)) {
+            } else if (classData.system.subclasses.every(x => x.uuid !== (data.uuid ?? `Item.${data._id}`))) {
                 ui.notifications.error(game.i18n.localize('DAGGERHEART.Item.Errors.SubclassNotInClass'));
                 return false;
             }

@@ -3,9 +3,9 @@ import * as DOMAIN from './domainConfig.mjs';
 import * as ACTOR from './actorConfig.mjs';
 import * as ITEM from './itemConfig.mjs';
 import * as SETTINGS from './settingsConfig.mjs';
+import { hooks as HOOKS } from './hooksConfig.mjs';
 import * as EFFECTS from './effectConfig.mjs';
 import * as ACTIONS from './actionConfig.mjs';
-import pseudoDocuments from "./pseudoConfig.mjs";
 
 export const SYSTEM_ID = 'daggerheart';
 
@@ -16,7 +16,7 @@ export const SYSTEM = {
     ACTOR,
     ITEM,
     SETTINGS,
+    HOOKS,
     EFFECTS,
-    ACTIONS,
-    pseudoDocuments
+    ACTIONS
 };
