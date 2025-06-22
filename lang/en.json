@@ -928,6 +928,7 @@
             "AttackRoll": {
                 "Title": "Attack - {attack}",
                 "RollDamage": "Roll Damage",
+                "RollHealing": "Roll Healing",
                 "ApplyEffect": "Apply Effects"
             },
             "DamageRoll": {
@@ -939,6 +940,7 @@
                 "Title": "Apply Effects - {name}"
             },
             "HealingRoll": {
+                "Title": "Heal - {healing}",
                 "Heal": "Heal"
             },
             "DeathMove": {

@@ -73,11 +73,14 @@ export class DHRoll extends Roll {
         const cls = getDocumentClass("ChatMessage"),
             msg = {
                 type: this.messageType,
+                user: game.user.id,
                 sound: config.mute ? null : CONFIG.sounds.dice,
                 system: config,
-                content: config.chatMessage.template,
+                // content: this.messageTemplate,
+                content: await this.messageTemplate(config),
                 rolls: [roll]
             };
+            console.log(msg)
         await cls.create(msg);
     }
 
@@ -116,6 +119,12 @@ export class D20Roll extends DHRoll {
     };
 
     static messageType = 'adversaryRoll';
+
+    // static messageTemplate = 'systems/daggerheart/templates/chat/adversary-roll.hbs';
+
+    static messageTemplate = async (config) => {
+        return 'systems/daggerheart/templates/chat/adversary-roll.hbs';
+    }
 
     static CRITICAL_TRESHOLD = 20;
 
@@ -215,11 +224,15 @@ export class D20Roll extends DHRoll {
 
     static async postEvaluate(roll, config={}) {
         if (config.targets?.length) {
-            targets = config.targets.map(target => {
+            /* targets = config.targets.map(target => {
                 const difficulty = config.roll.difficulty ??  target.difficulty ?? target.evasion
                 target.hit = roll.total >= difficulty;
                 return target;
-            });
+            }); */
+            config.targets.forEach(target => {
+                const difficulty = config.roll.difficulty ??  target.difficulty ?? target.evasion
+                target.hit = roll.total >= difficulty;
+            })
         } else if(config.roll.difficulty) roll.success = roll.total >= config.roll.difficulty;
         // config.roll.advantage = {
         //     dice: roll.dHope.faces,
@@ -255,6 +268,12 @@ export class DualityRoll extends D20Roll {
     }
 
     static messageType = 'dualityRoll';
+
+    // static messageTemplate = 'systems/daggerheart/templates/chat/duality-roll.hbs';
+    
+    static messageTemplate = async (config) => {
+        return 'systems/daggerheart/templates/chat/duality-roll.hbs';
+    }
 
     static DefaultDialog = D20RollDialog;
 
@@ -358,11 +377,12 @@ export class DualityRoll extends D20Roll {
                     value: this.options.actor.traits[this.options.roll.trait].total
                 }
             );
+            console.log(this.options)
         // } else if(this.options.trait) this.terms.push(...this.formatModifier(this.options.actor.system.traits[this.options.roll.trait].total));
     }
 
     static async postEvaluate(roll, config={}) {
-        console.log(roll,config)
+        console.log(roll,config);
         super.postEvaluate(roll, config);
         config.roll.hope = {
             dice: roll.dHope.denomination,
@@ -387,9 +407,41 @@ export class DamageRoll extends DHRoll {
 
     static messageType = 'damageRoll';
 
-    static DefaultDialog = DamageDialog;
+    // static messageTemplate = 'systems/daggerheart/templates/chat/damage-roll.hbs';
+    static messageTemplate = async (config) => {
+        return await foundry.applications.handlebars.renderTemplate(
+            config.messageTemplate ?? 'systems/daggerheart/templates/chat/damage-roll.hbs',
+            config
+        )
+    }
 
-    get messageTemplate() {
-        return 'systems/daggerheart/templates/chat/damage-roll.hbs';
+    static DefaultDialog = DamageDialog;
+    
+    static async postEvaluate(roll, config={}) {
+        console.log(roll, config)
+        config.roll = {
+            // formula : config.formula,
+            result: roll.total,
+            dice: roll.dice
+        }
+        if(roll.healing) config.roll.type = roll.healing.type
+        /* const dice = [];
+        const modifiers = [];
+        for (var i = 0; i < roll.terms.length; i++) {
+            const term = roll.terms[i];
+            if (term.faces) {
+                dice.push({
+                    type: `d${term.faces}`,
+                    rolls: term.results.map(x => x.result),
+                    total: term.results.reduce((acc, x) => acc + x.result, 0)
+                });
+            } else if (term.operator) {
+            } else if (term.number) {
+                const operator = i === 0 ? '' : roll.terms[i - 1].operator;
+                modifiers.push({ value: term.number, operator: operator });
+            }
+        }
+        config.roll.dice = dice;
+        config.roll.modifiers = modifiers; */
     }
 }

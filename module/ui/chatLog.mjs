@@ -17,6 +17,9 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
         html.querySelectorAll('.duality-action-damage').forEach(element =>
             element.addEventListener('click', event => this.onRollDamage(event, data.message))
         );
+        html.querySelectorAll('.duality-action-healing').forEach(element =>
+            element.addEventListener('click', event => this.onRollHealing(event, data.message))
+        );
         html.querySelectorAll('.duality-action-effect').forEach(element =>
             element.addEventListener('click', event => this.onApplyEffect(event, data.message))
         );
@@ -54,9 +57,7 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
 
     onRollDamage = async (event, message) => {
         event.stopPropagation();
-        console.log(message.system)
         const actor = game.actors.get(message.system.source.actor);
-        console.log(message.system)
         if (!actor || !game.user.isGM) return true;
         if(message.system.source.item && message.system.source.action) {
             const item = actor.items.get(message.system.source.item),
@@ -73,6 +74,18 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
         }
     };
 
+    onRollHealing = async (event, message) => {
+        event.stopPropagation();
+        const actor = game.actors.get(message.system.source.actor);
+        if (!actor || !game.user.isGM) return true;
+        if(message.system.source.item && message.system.source.action) {
+            const item = actor.items.get(message.system.source.item),
+                action = item?.system?.actions?.find(a => a._id === message.system.source.action);
+            if(!item || !action || !action?.rollHealing) return;
+            await action.rollHealing(event, message);
+        }
+    };
+
     onApplyEffect = async (event, message) => {
         event.stopPropagation();
         const actor = game.actors.get(message.system.source.actor);
@@ -80,7 +93,7 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
         if(message.system.source.item && message.system.source.action) {
             const item = actor.items.get(message.system.source.item),
                 action = item?.system?.actions?.find(a => a._id === message.system.source.action);
-            if(!item || !action) return;
+            if(!item || !action || !action.applyEffects) return;
             await action.applyEffects(event, message);
         }
     }

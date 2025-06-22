@@ -40,6 +40,7 @@ export default class DHDualityRoll extends foundry.abstract.TypeDataModel {
                 })
             ),
             hasDamage: new fields.BooleanField({ initial: false }),
+            hasHealing: new fields.BooleanField({ initial: false }),
             hasEffect: new fields.BooleanField({ initial: false }),
             source: new fields.SchemaField({
                 actor: new fields.StringField(),

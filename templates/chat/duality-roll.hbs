@@ -107,9 +107,13 @@
         <div class="dice-actions{{#unless (or hasDamage hasEffect)}} duality-alone{{/unless}}">
             {{#if hasDamage}}
                     <button class="duality-action duality-action-damage" data-value="{{roll.total}}"><span>{{localize "DAGGERHEART.Chat.AttackRoll.RollDamage"}}</span></button>
+            {{else}}
+                {{#if hasHealing}}
+                    <button class="duality-action duality-action-healing" data-value="{{roll.total}}"><span>{{localize "DAGGERHEART.Chat.AttackRoll.RollHealing"}}</span></button>
+                {{/if}}
             {{/if}}
             {{#if hasEffect}}
-                    <button class="duality-action{{#if hasDamage}} duality-action-effect{{/if}}" data-value="{{roll.total}}"><span>{{localize "DAGGERHEART.Chat.AttackRoll.ApplyEffect"}}</span></button>
+                    <button class="duality-action{{#if (or hasDamage hasHealing)}} duality-action-effect{{/if}}" data-value="{{roll.total}}"><span>{{localize "DAGGERHEART.Chat.AttackRoll.ApplyEffect"}}</span></button>
             {{/if}}
             <div class="duality-result">
                 <div>{{roll.total}} {{#if (eq roll.result.duality 1)}}With Hope{{else}}{{#if (eq roll.result.duality -1)}}With Fear{{else}}Critical Success{{/if}}{{/if}}</div>

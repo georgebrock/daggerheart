@@ -4,8 +4,9 @@ export default class DHDamageRoll extends foundry.abstract.TypeDataModel {
 
         return {
             title: new fields.StringField(),
-            roll: new fields.StringField({ required: true }),
-            damage: new fields.SchemaField({
+            // roll: new fields.StringField({ required: true }),
+            roll: new fields.DataField({}),
+            /* damage: new fields.SchemaField({
                 total: new fields.NumberField({ required: true, integer: true }),
                 type: new fields.StringField({ choices: Object.keys(SYSTEM.GENERAL.damageTypes), integer: false })
             }),
@@ -21,7 +22,7 @@ export default class DHDamageRoll extends foundry.abstract.TypeDataModel {
                     value: new fields.NumberField({ required: true, integer: true }),
                     operator: new fields.StringField({ required: true, choices: ['+', '-', '*', '/'] })
                 })
-            ),
+            ), */
             targets: new fields.ArrayField(
                 new fields.SchemaField({
                     id: new fields.StringField({ required: true }),

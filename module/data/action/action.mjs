@@ -200,13 +200,11 @@ export class DHBaseAction extends foundry.abstract.DataModel {
             },
             type: this.type,
             hasDamage: !!this.damage?.parts?.length,
-            hasEffect: !!this.effects?.length,
-            chatMessage: {
-                template: this.chatTemplate
-            }
+            hasHealing: !!this.healing,
+            hasEffect: !!this.effects?.length
         };
 
-        this.proceedChatDisplay(config);
+        // this.proceedChatDisplay(config);
         
         // Filter selected targets based on Target parameters
         config.targets = await this.getTarget(config);
@@ -385,6 +383,7 @@ export class DHDamageAction extends DHBaseAction {
     }
 
     async rollDamage(event, data) {
+        console.log(event, data)
         let formula = this.damage.parts.map(p => p.getFormula(this.actor)).join(' + ');
             
         if (!formula || formula == '') return;
@@ -394,9 +393,6 @@ export class DHDamageAction extends DHBaseAction {
         const config = {
             title: game.i18n.format('DAGGERHEART.Chat.DamageRoll.Title', { damage: this.name }),
             formula,
-            chatMessage: {
-                template: 'systems/daggerheart/templates/chat/damage-roll.hbs'
-            },
             targets: (data.system?.targets ?? data.targets).map(x => ({ id: x.id, name: x.name, img: x.img, hit: true }))
         }
 
@@ -458,10 +454,6 @@ export class DHDamageAction extends DHBaseAction {
 
         cls.create(msg.toObject()); */
     }
-
-    get chatTemplate() {
-        return 'systems/daggerheart/templates/chat/damage-roll.hbs';
-    }
 }
 
 export class DHAttackAction extends DHDamageAction {
@@ -497,9 +489,20 @@ export class DHAttackAction extends DHDamageAction {
 }
 
 export class DHHealingAction extends DHBaseAction {
-    static extraSchemas = ['target', 'effects', 'healing'];
+    static extraSchemas = ['target', 'effects', 'healing', 'roll'];
+
+    static getRollType(parent) {
+        return 'spellcast';
+    }
 
     async use(event, ...args) {
+        const config = await super.use(event, args);
+        if(['error', 'warning'].includes(config.type)) return;
+        if(this.hasRoll()) return;
+        return await this.rollHealing(event, config);
+    }
+
+    /* async use(event, ...args) {
         const config = await super.use(event, args);
         if(['error', 'warning'].includes(config.type)) return;
         const roll = await this.rollHealing(),
@@ -516,10 +519,25 @@ export class DHHealingAction extends DHBaseAction {
             });
 
         cls.create(msg.toObject());
-    }
+    } */
 
-    async rollHealing() {
-        const formula = this.healing.value.getFormula(this.actor);
+    async rollHealing(event, data) {
+        console.log(event, data)
+        let formula = this.healing.value.getFormula(this.actor);
+            
+        if (!formula || formula == '') return;
+        let roll = { formula: formula, total: formula },
+            bonusDamage = [];
+
+        const config = {
+            title: game.i18n.format('DAGGERHEART.Chat.HealingRoll.Title', { healing: game.i18n.localize(SYSTEM.GENERAL.healingTypes[this.healing.type].label) }),
+            formula,
+            targets: (data.system?.targets ?? data.targets).map(x => ({ id: x.id, name: x.name, img: x.img, hit: true })),
+            messageTemplate: 'systems/daggerheart/templates/chat/healing-roll.hbs'
+        }
+
+        roll = CONFIG.Dice.daggerheart.DamageRoll.build(config)
+        /* const formula = this.healing.value.getFormula(this.actor);
         if (!formula || formula == '') return;
 
         let roll = { formula: formula, total: formula };
@@ -531,7 +549,7 @@ export class DHHealingAction extends DHBaseAction {
             total: roll.total,
             dice: roll.dice,
             type: this.healing.type
-        }
+        } */
     }
 
     get chatTemplate() {

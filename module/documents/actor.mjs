@@ -271,7 +271,8 @@ export default class DhpActor extends Actor {
             // data: {
                 ...config,
                 /* action, */
-                actor: this.getRollData(),
+                // actor: this.getRollData(),
+                actor: this.system
             // },
             // options: {
                 // dialog: false,
@@ -507,13 +508,13 @@ export default class DhpActor extends Actor {
     async takeDamage(damage, type) {
         const hpDamage =
             damage >= this.system.damageThresholds.severe
-                ? 3
+                ? -3
                 : damage >= this.system.damageThresholds.major
-                  ? 2
+                  ? -2
                   : damage >= this.system.damageThresholds.minor
-                    ? 1
+                    ? -1
                     : 0;
-        await this.modifyResource({value: hpDamage, type});
+        await this.modifyResource([{value: hpDamage, type}]);
         /* const update = {
             'system.resources.hitPoints.value': Math.min(
                 this.system.resources.hitPoints.value + hpDamage,
