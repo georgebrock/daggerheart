@@ -214,16 +214,20 @@ export class DHBaseAction extends foundry.abstract.DataModel {
         config.range = await this.checkRange(config);
         if(!config.range.hasRange) return ui.notifications.warn("No Target within range.");
 
-        // Display Costs Dialog & Check if Actor get enough resources
-        config.costs = await this.getCost(config);
-        if(!this.hasRoll() && !config.costs.hasCost) return ui.notifications.warn("You don't have the resources to use that action.");
+        // Display Uses/Costs Dialog & Check if Actor get enough resources
+        config = {
+            ...config,
+            ...await this.getCost(config)
+        }
+        if(!this.hasRoll() && (!config.costs.hasCost || !this.hasUses(config.uses))) return ui.notifications.warn("You don't have the resources to use that action.");
 
         // Proceed with Roll
         config = await this.proceedRoll(config);
-        if(!config) return;
+        if(this.roll && !config.roll.result) return;
         
         // Update Actor resources based on Action Cost configuration
         this.spendCost(config.costs.values);
+        this.spendUses(config.uses);
 
         // console.log(config)
 
@@ -238,31 +242,32 @@ export class DHBaseAction extends foundry.abstract.DataModel {
     async proceedRoll(config) {
         if (!this.hasRoll()) return config;
         const modifierValue = this.actor.system.traits[this.roll.trait].value;
-            config = {
-                ...config,
-                roll: {
-                    modifiers: [],
-                    trait: this.roll?.trait,
-                    label: game.i18n.localize(abilities[this.roll.trait].label),
-                    type: this.actionType,
-                    difficulty: this.roll?.difficulty
-                }
+        config = {
+            ...config,
+            roll: {
+                modifiers: [],
+                trait: this.roll?.trait,
+                label: game.i18n.localize(abilities[this.roll.trait].label),
+                type: this.actionType,
+                difficulty: this.roll?.difficulty
             }
-        return await this.actor.diceRoll(config, this);
+        }
+        // config = await this.actor.diceRoll(config, this);
+        return this.actor.diceRoll(config, this);
     }
     /* ROLL */
 
     /* COST */
     async getCost(config) {
-        if(!this.cost?.length || !this.actor) return {values: [], hasCost: true};
-        let cost = foundry.utils.deepClone(this.cost);
+        let costs = this.cost?.length ? foundry.utils.deepClone(this.cost) : {values: [], hasCost: true};
+        let uses = this.getUses();
         if (!config.event.shiftKey && !this.hasRoll()) {
             const dialogClosed = new Promise((resolve, _) => {
-                new CostSelectionDialog(cost, this, resolve).render(true);
+                new CostSelectionDialog(costs, uses, this, resolve).render(true);
             });
-            cost = await dialogClosed;
+            ({costs, uses} = await dialogClosed);
         }
-        return cost;
+        return {costs, uses};
     }
 
     getRealCosts(costs) {
@@ -292,8 +297,28 @@ export class DHBaseAction extends foundry.abstract.DataModel {
 
     /* USES */
     async spendUses(config) {
-        if(!this.uses.max) return;
+        if(!this.uses.max || config.enabled === false) return;
+        const newActions = foundry.utils.getProperty(this.item.system, this.systemPath).map(x => x.toObject());
+        newActions[this.index].uses.value++;
+        await this.item.update({ [`system.${this.systemPath}`]: newActions });
+    }
 
+    getUses() {
+        if(!this.uses) return {hasUse: true}
+        const uses = foundry.utils.deepClone(this.uses);
+        if(!uses.value) uses.value = 0;
+        return uses;
+    }
+
+    calcUses(uses) {
+        return {
+            ...uses,
+            enabled: uses.hasOwnProperty('enabled') ? uses.enabled : true
+        };
+    }
+
+    hasUses(uses) {
+        return !uses.enabled || uses.value + 1 <= uses.max;
     }
     /* USES */
 
@@ -385,13 +410,12 @@ export class DHDamageAction extends DHBaseAction {
 
     async use(event, ...args) {
         const config = await super.use(event, args);
-        if(['error', 'warning'].includes(config.type)) return;
+        if(!config || ['error', 'warning'].includes(config.type)) return;
         if(!this.directDamage) return;
         return await this.rollDamage(event, config);
     }
 
     async rollDamage(event, data) {
-        console.log(event, data)
         let formula = this.damage.parts.map(p => p.getFormula(this.actor)).join(' + ');
             
         if (!formula || formula == '') return;
@@ -449,7 +473,7 @@ export class DHHealingAction extends DHBaseAction {
 
     async use(event, ...args) {
         const config = await super.use(event, args);
-        if(['error', 'warning'].includes(config.type)) return;
+        if(!config || ['error', 'warning'].includes(config.type)) return;
         if(this.hasRoll()) return;
         return await this.rollHealing(event, config);
     }

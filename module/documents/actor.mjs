@@ -268,19 +268,10 @@ export default class DhpActor extends Actor {
         // console.log(config)
         config.source = {...(config.source ?? {}), actor: this.id};
         const newConfig = {
-            // data: {
-                ...config,
-                /* action, */
-                // actor: this.getRollData(),
-                actor: this.system
-            // },
-            // options: {
-                // dialog: false,
-            // },
-            // event: config.event
+            ...config,
+            actor: this.system
         }
-        // console.log(this, newConfig)
-        const roll = CONFIG.Dice.daggerheart[this.type === 'character' ? 'DualityRoll' : 'D20Roll'].build(newConfig)
+        const roll = await CONFIG.Dice.daggerheart[this.type === 'character' ? 'DualityRoll' : 'D20Roll'].build(newConfig)
         return config;
         /* let hopeDice = 'd12',
             fearDice = 'd12',

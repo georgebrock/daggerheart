@@ -7,8 +7,10 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
         this.config = config;
         this.config.experiences = [];
         
-        this.item = config.actor.parent.items.get(config.source.item);
-        this.action = this.item.system.actions.find(a => a._id === config.source.action);
+        if(config.source?.action) {
+            this.item = config.actor.parent.items.get(config.source.item);
+            this.action = this.item.system.actions.find(a => a._id === config.source.action);
+        }
     }
 
     static DEFAULT_OPTIONS = {
@@ -55,13 +57,17 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
             context.costs = updatedCosts
             context.canRoll = this.action.getRealCosts(updatedCosts)?.hasCost;
         }
+        if(this.config.uses?.max) {
+            context.uses = this.action.calcUses(this.config.uses);
+            context.canRoll = context.canRoll && this.action.hasUses(context.uses);
+        }
         return context;
     }
 
     static updateRollConfiguration(event, _, formData) {
         const { ...rest } = foundry.utils.expandObject(formData.object);
-        console.log(formData.object, rest)
-        this.config.costs = foundry.utils.mergeObject(this.config.costs, rest.costs);
+        if(this.config.costs) this.config.costs = foundry.utils.mergeObject(this.config.costs, rest.costs);
+        if(this.config.uses) this.config.uses = foundry.utils.mergeObject(this.config.uses, rest.uses);
         this.render();
     }
 

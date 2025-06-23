@@ -69,7 +69,6 @@ export class DHRoll extends Roll {
     static async postEvaluate(roll, config={}) {}
 
     static async toMessage(roll, config) {
-        console.log(config)
         const cls = getDocumentClass("ChatMessage"),
             msg = {
                 type: this.messageType,
@@ -80,7 +79,6 @@ export class DHRoll extends Roll {
                 content: await this.messageTemplate(config),
                 rolls: [roll]
             };
-            console.log(msg)
         await cls.create(msg);
     }
 
