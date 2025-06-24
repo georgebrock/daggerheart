@@ -1,5 +1,5 @@
-import DhpActor from "../../documents/actor.mjs";
-import ActionField from "../fields/actionField.mjs";
+import DhpActor from '../../documents/actor.mjs';
+import ActionField from '../fields/actionField.mjs';
 
 export default class DHAdversaryRoll extends foundry.abstract.TypeDataModel {
     static defineSchema() {

@@ -11,7 +11,7 @@ export class DHActionDiceData extends foundry.abstract.DataModel {
                 initial: 'proficiency',
                 label: 'Multiplier'
             }),
-            flatMultiplier : new fields.NumberField({ nullable: true, initial: 1, label: 'Flat Multiplier' }),
+            flatMultiplier: new fields.NumberField({ nullable: true, initial: 1, label: 'Flat Multiplier' }),
             dice: new fields.StringField({ choices: SYSTEM.GENERAL.diceTypes, initial: 'd6', label: 'Formula' }),
             bonus: new fields.NumberField({ nullable: true, initial: null, label: 'Bonus' }),
             custom: new fields.SchemaField({

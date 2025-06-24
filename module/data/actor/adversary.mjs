@@ -90,9 +90,11 @@ export default class DhpAdversary extends BaseDataActor {
                         type: 'weapon'
                     },
                     damage: {
-                        parts: [{
-                            multiplier: 'flat'
-                        }]
+                        parts: [
+                            {
+                                multiplier: 'flat'
+                            }
+                        ]
                     }
                 }
             }),

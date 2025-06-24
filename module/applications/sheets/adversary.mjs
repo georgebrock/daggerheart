@@ -55,7 +55,7 @@ export default class AdversarySheet extends DaggerheartSheet(ActorSheetV2) {
         context.tabs = super._getTabs(this.constructor.TABS);
         context.systemFields.attack.fields = this.document.system.attack.schema.fields;
         context.isNPC = true;
-        console.log(context)
+        console.log(context);
         return context;
     }
 
