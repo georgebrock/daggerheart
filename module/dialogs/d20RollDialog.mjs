@@ -8,8 +8,8 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
         this.config.experiences = [];
         
         if(config.source?.action) {
-            this.item = config.actor.parent.items.get(config.source.item);
-            this.action = this.item.system.actions.find(a => a._id === config.source.action);
+            this.item = config.data.parent.items.get(config.source.item);
+            this.action = config.data.attack?._id == config.source.action ? config.data.attack : this.item.system.actions.find(a => a._id === config.source.action);
         }
     }
 
@@ -47,7 +47,7 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
 
     async _prepareContext(_options) {
         const context = await super._prepareContext(_options);
-        context.experiences = Object.keys(this.config.actor.experiences).map(id => ({ id, ...this.config.actor.experiences[id] }));
+        context.experiences = Object.keys(this.config.data.experiences).map(id => ({ id, ...this.config.data.experiences[id] }));
         context.selectedExperiences = this.config.experiences;
         context.advantage = this.config.advantage;
         /* context.diceOptions = this.diceOptions; */
