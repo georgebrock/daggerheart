@@ -79,7 +79,7 @@ export default class DamageReductionDialog extends HandlebarsApplicationMixin(Ap
 
     /** @inheritDoc */
     get title() {
-        return `Damage Options`;
+        return game.i18n.localize('DAGGERHEART.DamageReduction.Title');
     }
 
     async _prepareContext(_options) {
@@ -167,12 +167,30 @@ export default class DamageReductionDialog extends HandlebarsApplicationMixin(Ap
     static useStressReduction(_, target) {
         const damageValue = Number(target.dataset.reduction);
         const stressReduction = this.availableStressReductions[damageValue];
-        const { currentDamage } = this.getDamageInfo();
+        const { currentDamage, selectedStressMarks, stressReductions } = this.getDamageInfo();
 
         if (stressReduction.selected) {
             stressReduction.selected = false;
+
+            const currentDamageLabel = getDamageLabel(currentDamage);
+            for (let reduction of stressReductions) {
+                if (reduction.selected && reduction.to === currentDamageLabel) {
+                    reduction.selected = false;
+                }
+            }
+
             this.render();
         } else {
+            const stressReductionStress = this.availableStressReductions
+                ? stressReductions.reduce((acc, red) => acc + red.cost, 0)
+                : 0;
+            const currentStress =
+                this.actor.system.resources.stress.value + selectedStressMarks.length + stressReductionStress;
+            if (currentStress + stressReduction.cost > this.actor.system.resources.stress.maxTotal) {
+                ui.notifications.info(game.i18n.localize('DAGGERHEART.DamageReduction.Notifications.NotEnoughStress'));
+                return;
+            }
+
             const reducedDamage = currentDamage !== this.damage ? getDamageLabel(currentDamage) : null;
             const currentDamageLabel = reducedDamage ?? getDamageLabel(this.damage);
 

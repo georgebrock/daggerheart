@@ -1101,6 +1101,7 @@
             "Notifications": {
                 "DamageAlreadyNone": "The damage has already been reduced to none",
                 "NoAvailableArmorMarks": "You have no more available armor marks",
+                "NotEnoughStress": "You don't have enough stress",
                 "DamageIgnore": "{character} did not take damage"
             }
         },
