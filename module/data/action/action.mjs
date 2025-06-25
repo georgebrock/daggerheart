@@ -87,7 +87,7 @@ export class DHBaseAction extends foundry.abstract.DataModel {
             range: new fields.StringField({
                 choices: SYSTEM.GENERAL.range,
                 required: false,
-                blank: true,
+                blank: true
                 // initial: null
             }),
             ...this.defineExtraSchema()
@@ -111,7 +111,8 @@ export class DHBaseAction extends foundry.abstract.DataModel {
                     type: new fields.StringField({
                         choices: SYSTEM.ACTIONS.targetTypes,
                         initial: SYSTEM.ACTIONS.targetTypes.any.id,
-                        nullable: true, initial: null
+                        nullable: true,
+                        initial: null
                     }),
                     amount: new fields.NumberField({ nullable: true, initial: null, integer: true, min: 0 })
                 }),
@@ -132,8 +133,8 @@ export class DHBaseAction extends foundry.abstract.DataModel {
                 })
             },
             extraSchemas = {};
-        
-        this.extraSchemas.forEach(s => extraSchemas[s] = extraFields[s]);
+
+        this.extraSchemas.forEach(s => (extraSchemas[s] = extraFields[s]));
         return extraSchemas;
     }
 
@@ -172,8 +173,8 @@ export class DHBaseAction extends foundry.abstract.DataModel {
                 trait: parent.system.trait
             };
         }
-        if(parent?.type === 'weapon' && !!this.schema.fields.damage) {
-            updateSource['damage'] = {includeBase: true};
+        if (parent?.type === 'weapon' && !!this.schema.fields.damage) {
+            updateSource['damage'] = { includeBase: true };
         }
         if (parent?.system?.range) {
             updateSource['range'] = parent?.system?.range;
@@ -187,9 +188,14 @@ export class DHBaseAction extends foundry.abstract.DataModel {
             ...actorData.toObject(),
             prof: actorData.proficiency?.value ?? 1,
             cast: actorData.spellcast?.value ?? 1,
-            scale: this.cost.length ? this.cost.reduce((a,c) => {a[c.type] = c.value; return a},{}) : 1,
+            scale: this.cost.length
+                ? this.cost.reduce((a, c) => {
+                      a[c.type] = c.value;
+                      return a;
+                  }, {})
+                : 1,
             roll: {}
-        }
+        };
     }
 
     async use(event, ...args) {
@@ -208,26 +214,27 @@ export class DHBaseAction extends foundry.abstract.DataModel {
         };
 
         // this.proceedChatDisplay(config);
-        
+
         // Filter selected targets based on Target parameters
         config.targets = await this.getTarget(config);
-        if(!config.targets) return ui.notifications.warn("Too many targets selected for that actions.");
-        
+        if (!config.targets) return ui.notifications.warn('Too many targets selected for that actions.');
+
         // Filter selected targets based on Range parameters
         config.range = await this.checkRange(config);
-        if(!config.range.hasRange) return ui.notifications.warn("No Target within range.");
+        if (!config.range.hasRange) return ui.notifications.warn('No Target within range.');
 
         // Display Uses/Costs Dialog & Check if Actor get enough resources
         config = {
             ...config,
-            ...await this.getCost(config)
-        }
-        if(!this.hasRoll() && (!config.costs.hasCost || !this.hasUses(config.uses))) return ui.notifications.warn("You don't have the resources to use that action.");
+            ...(await this.getCost(config))
+        };
+        if (!this.hasRoll() && (!config.costs.hasCost || !this.hasUses(config.uses)))
+            return ui.notifications.warn("You don't have the resources to use that action.");
 
         // Proceed with Roll
         config = await this.proceedRoll(config);
-        if(this.roll && !config.roll.result) return;
-        
+        if (this.roll && !config.roll.result) return;
+
         // Update Actor resources based on Action Cost configuration
         this.spendCost(config.costs.values);
         this.spendUses(config.uses);
@@ -254,7 +261,7 @@ export class DHBaseAction extends foundry.abstract.DataModel {
                 type: this.actionType,
                 difficulty: this.roll?.difficulty
             }
-        }
+        };
         // config = await this.actor.diceRoll(config, this);
         return this.actor.diceRoll(config, this);
     }
@@ -262,20 +269,20 @@ export class DHBaseAction extends foundry.abstract.DataModel {
 
     /* COST */
     async getCost(config) {
-        let costs = this.cost?.length ? foundry.utils.deepClone(this.cost) : {values: [], hasCost: true};
+        let costs = this.cost?.length ? foundry.utils.deepClone(this.cost) : { values: [], hasCost: true };
         let uses = this.getUses();
         if (!config.event.shiftKey && !this.hasRoll()) {
             const dialogClosed = new Promise((resolve, _) => {
                 new CostSelectionDialog(costs, uses, this, resolve).render(true);
             });
-            ({costs, uses} = await dialogClosed);
+            ({ costs, uses } = await dialogClosed);
         }
-        return {costs, uses};
+        return { costs, uses };
     }
 
     getRealCosts(costs) {
         const realCosts = costs?.length ? costs.filter(c => c.enabled) : [];
-        return {values: realCosts, hasCost: this.hasCost(realCosts)}
+        return { values: realCosts, hasCost: this.hasCost(realCosts) };
     }
 
     calcCosts(costs) {
@@ -284,32 +291,32 @@ export class DHBaseAction extends foundry.abstract.DataModel {
             c.step = c.step ?? 1;
             c.total = c.value * c.scale * c.step;
             c.enabled = c.hasOwnProperty('enabled') ? c.enabled : true;
-            return c
-        })
+            return c;
+        });
     }
 
     hasCost(costs) {
-        return costs.reduce((a, c) => a && this.actor.system.resources[c.type]?.value >= (c.total ?? c.value), true)
+        return costs.reduce((a, c) => a && this.actor.system.resources[c.type]?.value >= (c.total ?? c.value), true);
     }
 
     async spendCost(config) {
-        if(!config.costs?.values?.length) return;
+        if (!config.costs?.values?.length) return;
         return await this.actor.modifyResource(config.costs.values);
     }
     /* COST */
 
     /* USES */
     async spendUses(config) {
-        if(!this.uses.max || config.enabled === false) return;
+        if (!this.uses.max || config.enabled === false) return;
         const newActions = foundry.utils.getProperty(this.item.system, this.systemPath).map(x => x.toObject());
         newActions[this.index].uses.value++;
         await this.item.update({ [`system.${this.systemPath}`]: newActions });
     }
 
     getUses() {
-        if(!this.uses) return {hasUse: true}
+        if (!this.uses) return { hasUse: true };
         const uses = foundry.utils.deepClone(this.uses);
-        if(!uses.value) uses.value = 0;
+        if (!uses.value) uses.value = 0;
         return uses;
     }
 
@@ -325,23 +332,28 @@ export class DHBaseAction extends foundry.abstract.DataModel {
     }
     /* USES */
 
-
     /* TARGET */
     async getTarget(config) {
-        if(this.target?.type === SYSTEM.ACTIONS.targetTypes.self.id) return this.formatTarget(this.actor.token ?? this.actor.prototypeToken);
+        if (this.target?.type === SYSTEM.ACTIONS.targetTypes.self.id)
+            return this.formatTarget(this.actor.token ?? this.actor.prototypeToken);
         let targets = Array.from(game.user.targets);
         // foundry.CONST.TOKEN_DISPOSITIONS.FRIENDLY
-        if(this.target?.type && this.target.type !== SYSTEM.ACTIONS.targetTypes.any.id) {
+        if (this.target?.type && this.target.type !== SYSTEM.ACTIONS.targetTypes.any.id) {
             targets = targets.filter(t => this.isTargetFriendly(t));
-            if(this.target.amount && targets.length > this.target.amount) return false;
+            if (this.target.amount && targets.length > this.target.amount) return false;
         }
         return targets.map(t => this.formatTarget(t));
     }
 
     isTargetFriendly(target) {
-        const actorDisposition = this.actor.token ? this.actor.token.disposition : this.actor.prototypeToken.disposition,
+        const actorDisposition = this.actor.token
+                ? this.actor.token.disposition
+                : this.actor.prototypeToken.disposition,
             targetDisposition = target.document.disposition;
-        return (this.target.type === SYSTEM.ACTIONS.targetTypes.friendly.id && actorDisposition === targetDisposition) || (this.target.type === SYSTEM.ACTIONS.targetTypes.hostile.id && (actorDisposition + targetDisposition === 0))
+        return (
+            (this.target.type === SYSTEM.ACTIONS.targetTypes.friendly.id && actorDisposition === targetDisposition) ||
+            (this.target.type === SYSTEM.ACTIONS.targetTypes.hostile.id && actorDisposition + targetDisposition === 0)
+        );
     }
 
     formatTarget(actor) {
@@ -351,56 +363,57 @@ export class DHBaseAction extends foundry.abstract.DataModel {
             img: actor.actor.img,
             difficulty: actor.actor.system.difficulty,
             evasion: actor.actor.system.evasion?.total
-        }
+        };
     }
     /* TARGET */
-    
+
     /* RANGE */
     async checkRange(config) {
-        if(!this.range || !this.actor) return true;
-        return {values: [], hasRange: true};
+        if (!this.range || !this.actor) return true;
+        return { values: [], hasRange: true };
     }
     /* RANGE */
 
     /* EFFECTS */
-    async applyEffects(event, data, force=false) {
-        if(!this.effects?.length || !data.system.targets.length) return;
-        data.system.targets.forEach(async (token) => {
-            if(!token.hit && !force) return;
-            this.effects.forEach(async (e) => {
+    async applyEffects(event, data, force = false) {
+        if (!this.effects?.length || !data.system.targets.length) return;
+        data.system.targets.forEach(async token => {
+            if (!token.hit && !force) return;
+            this.effects.forEach(async e => {
                 const actor = canvas.tokens.get(token.id)?.actor,
                     effect = this.item.effects.get(e._id);
-                if(!actor || !effect) return;
+                if (!actor || !effect) return;
                 await this.applyEffect(effect, actor);
-            })
-        })
-
+            });
+        });
     }
 
     async applyEffect(effect, actor) {
-            // Enable an existing effect on the target if it originated from this effect
-            const existingEffect = actor.effects.find(e => e.origin === origin.uuid);
-            if ( existingEffect ) {
-                return existingEffect.update(foundry.utils.mergeObject({
+        // Enable an existing effect on the target if it originated from this effect
+        const existingEffect = actor.effects.find(e => e.origin === origin.uuid);
+        if (existingEffect) {
+            return existingEffect.update(
+                foundry.utils.mergeObject({
                     ...effect.constructor.getInitialDuration(),
                     disabled: false
-                }));
-            }
-            
-            // Otherwise, create a new effect on the target
-            const effectData = foundry.utils.mergeObject({
-                ...effect.toObject(),
-                disabled: false,
-                transfer: false,
-                origin: origin.uuid
-            });
-            await ActiveEffect.implementation.create(effectData, { parent: actor });
+                })
+            );
+        }
+
+        // Otherwise, create a new effect on the target
+        const effectData = foundry.utils.mergeObject({
+            ...effect.toObject(),
+            disabled: false,
+            transfer: false,
+            origin: origin.uuid
+        });
+        await ActiveEffect.implementation.create(effectData, { parent: actor });
     }
     /* EFFECTS */
 
     /* CHAT */
     async proceedChatDisplay(config) {
-        if(!this.chatDisplay) return;
+        if (!this.chatDisplay) return;
     }
     /* CHAT */
 }
@@ -412,14 +425,14 @@ export class DHDamageAction extends DHBaseAction {
 
     async use(event, ...args) {
         const config = await super.use(event, args);
-        if(!config || ['error', 'warning'].includes(config.type)) return;
-        if(!this.directDamage) return;
+        if (!config || ['error', 'warning'].includes(config.type)) return;
+        if (!this.directDamage) return;
         return await this.rollDamage(event, config);
     }
 
     async rollDamage(event, data) {
         let formula = this.damage.parts.map(p => p.getFormula(this.actor)).join(' + ');
-        
+
         if (!formula || formula == '') return;
         let roll = { formula: formula, total: formula },
             bonusDamage = [];
@@ -427,10 +440,15 @@ export class DHDamageAction extends DHBaseAction {
         const config = {
             title: game.i18n.format('DAGGERHEART.Chat.DamageRoll.Title', { damage: this.name }),
             formula,
-            targets: (data.system?.targets ?? data.targets).map(x => ({ id: x.id, name: x.name, img: x.img, hit: true }))
-        }
-        
-        roll = CONFIG.Dice.daggerheart.DamageRoll.build(config)
+            targets: (data.system?.targets ?? data.targets).map(x => ({
+                id: x.id,
+                name: x.name,
+                img: x.img,
+                hit: true
+            }))
+        };
+
+        roll = CONFIG.Dice.daggerheart.DamageRoll.build(config);
     }
 }
 
@@ -475,24 +493,31 @@ export class DHHealingAction extends DHBaseAction {
 
     async use(event, ...args) {
         const config = await super.use(event, args);
-        if(!config || ['error', 'warning'].includes(config.type)) return;
-        if(this.hasRoll()) return;
+        if (!config || ['error', 'warning'].includes(config.type)) return;
+        if (this.hasRoll()) return;
         return await this.rollHealing(event, config);
     }
 
     async rollHealing(event, data) {
         let formula = this.healing.value.getFormula(this.actor);
-            
+
         if (!formula || formula == '') return;
         let roll = { formula: formula, total: formula },
             bonusDamage = [];
 
         const config = {
-            title: game.i18n.format('DAGGERHEART.Chat.HealingRoll.Title', { healing: game.i18n.localize(SYSTEM.GENERAL.healingTypes[this.healing.type].label) }),
+            title: game.i18n.format('DAGGERHEART.Chat.HealingRoll.Title', {
+                healing: game.i18n.localize(SYSTEM.GENERAL.healingTypes[this.healing.type].label)
+            }),
             formula,
-            targets: (data.system?.targets ?? data.targets).map(x => ({ id: x.id, name: x.name, img: x.img, hit: true })),
+            targets: (data.system?.targets ?? data.targets).map(x => ({
+                id: x.id,
+                name: x.name,
+                img: x.img,
+                hit: true
+            })),
             messageTemplate: 'systems/daggerheart/templates/chat/healing-roll.hbs'
-        }
+        };
 
         roll = CONFIG.Dice.daggerheart.DamageRoll.build(config);
     }
@@ -511,13 +536,12 @@ export class DHSummonAction extends DHBaseAction {
     }
 
     async use(event, ...args) {
-        if ( !this.canSummon || !canvas.scene ) return;
+        if (!this.canSummon || !canvas.scene) return;
         const config = await super.use(event, args);
-
     }
 
     get canSummon() {
-        return game.user.can("TOKEN_CREATE");
+        return game.user.can('TOKEN_CREATE');
     }
 }
 
@@ -526,7 +550,7 @@ export class DHEffectAction extends DHBaseAction {
 
     async use(event, ...args) {
         const config = await super.use(event, args);
-        if(['error', 'warning'].includes(config.type)) return;
+        if (['error', 'warning'].includes(config.type)) return;
         return await this.chatApplyEffects(event, config);
     }
 
@@ -570,7 +594,7 @@ export class DHMacroAction extends DHBaseAction {
 
     async use(event, ...args) {
         const config = await super.use(event, args);
-        if(['error', 'warning'].includes(config.type)) return;
+        if (['error', 'warning'].includes(config.type)) return;
         const fixUUID = !this.documentUUID.includes('Macro.') ? `Macro.${this.documentUUID}` : this.documentUUID,
             macro = await fromUuid(fixUUID);
         try {

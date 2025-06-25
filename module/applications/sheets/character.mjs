@@ -372,7 +372,7 @@ export default class CharacterSheet extends DaggerheartSheet(ActorSheetV2) {
                 trait: button.dataset.attribute
                 /* label: abilityLabel,
                 modifier: button.dataset.value */
-            },
+            }
             /* chatMessage: {
                 template: 'systems/daggerheart/templates/chat/duality-roll.hbs'
             } */

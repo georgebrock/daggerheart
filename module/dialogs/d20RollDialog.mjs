@@ -1,15 +1,18 @@
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 export default class D20RollDialog extends HandlebarsApplicationMixin(ApplicationV2) {
-    constructor(config={}, options={}) {
+    constructor(config = {}, options = {}) {
         super(options);
 
         this.config = config;
         this.config.experiences = [];
-        
-        if(config.source?.action) {
+
+        if (config.source?.action) {
             this.item = config.data.parent.items.get(config.source.item);
-            this.action = config.data.attack?._id == config.source.action ? config.data.attack : this.item.system.actions.find(a => a._id === config.source.action);
+            this.action =
+                config.data.attack?._id == config.source.action
+                    ? config.data.attack
+                    : this.item.system.actions.find(a => a._id === config.source.action);
         }
     }
 
@@ -47,17 +50,20 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
 
     async _prepareContext(_options) {
         const context = await super._prepareContext(_options);
-        context.experiences = Object.keys(this.config.data.experiences).map(id => ({ id, ...this.config.data.experiences[id] }));
+        context.experiences = Object.keys(this.config.data.experiences).map(id => ({
+            id,
+            ...this.config.data.experiences[id]
+        }));
         context.selectedExperiences = this.config.experiences;
         context.advantage = this.config.advantage;
         /* context.diceOptions = this.diceOptions; */
         context.canRoll = true;
-        if(this.config.costs?.length) {
+        if (this.config.costs?.length) {
             const updatedCosts = this.action.calcCosts(this.config.costs);
-            context.costs = updatedCosts
+            context.costs = updatedCosts;
             context.canRoll = this.action.getRealCosts(updatedCosts)?.hasCost;
         }
-        if(this.config.uses?.max) {
+        if (this.config.uses?.max) {
             context.uses = this.action.calcUses(this.config.uses);
             context.canRoll = context.canRoll && this.action.hasUses(context.uses);
         }
@@ -66,8 +72,8 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
 
     static updateRollConfiguration(event, _, formData) {
         const { ...rest } = foundry.utils.expandObject(formData.object);
-        if(this.config.costs) this.config.costs = foundry.utils.mergeObject(this.config.costs, rest.costs);
-        if(this.config.uses) this.config.uses = foundry.utils.mergeObject(this.config.uses, rest.uses);
+        if (this.config.costs) this.config.costs = foundry.utils.mergeObject(this.config.costs, rest.costs);
+        if (this.config.uses) this.config.uses = foundry.utils.mergeObject(this.config.uses, rest.uses);
         this.render();
     }
 
@@ -87,18 +93,18 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
     }
 
     static async submitRoll() {
-        await this.close({ submitted: true  });
+        await this.close({ submitted: true });
     }
 
     /** @override */
-    _onClose(options={}) {
-        if ( !options.submitted ) this.config = false;
+    _onClose(options = {}) {
+        if (!options.submitted) this.config = false;
     }
 
-    static async configure(config={}) {
+    static async configure(config = {}) {
         return new Promise(resolve => {
             const app = new this(config);
-            app.addEventListener("close", () => resolve(app.config), { once: true });
+            app.addEventListener('close', () => resolve(app.config), { once: true });
             app.render({ force: true });
         });
     }

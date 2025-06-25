@@ -42,7 +42,7 @@ export default class CostSelectionDialog extends HandlebarsApplicationMixin(Appl
     }
 
     async _prepareContext(_options) {
-        console.log(this.costs)
+        console.log(this.costs);
         const updatedCosts = this.action.calcCosts(this.costs),
             updatedUses = this.action.calcUses(this.uses);
         return {
@@ -56,12 +56,12 @@ export default class CostSelectionDialog extends HandlebarsApplicationMixin(Appl
         const data = foundry.utils.expandObject(formData.object);
         this.costs = foundry.utils.mergeObject(this.costs, data.costs);
         this.uses = foundry.utils.mergeObject(this.uses, data.uses);
-        this.render(true)
+        this.render(true);
     }
 
     static sendCost(event) {
         event.preventDefault();
-        this.resolve({ costs: this.action.getRealCosts(this.costs), uses: this.uses});
+        this.resolve({ costs: this.action.getRealCosts(this.costs), uses: this.uses });
         this.close();
     }
 }
