@@ -68,8 +68,8 @@ export const damageTypes = {
 };
 
 export const healingTypes = {
-    health: {
-        id: 'health',
+    hitPoints: {
+        id: 'hitPoints',
         label: 'DAGGERHEART.HealingType.HitPoints.Name',
         abbreviation: 'DAGGERHEART.HealingType.HitPoints.Abbreviation'
     },

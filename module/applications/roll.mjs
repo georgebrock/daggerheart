@@ -412,8 +412,8 @@ export class DamageRoll extends DHRoll {
     static async postEvaluate(roll, config = {}) {
         config.roll = {
             result: roll.total,
-            dice: roll.dice
+            dice: roll.dice,
+            type: config.type
         };
-        if (roll.healing) config.roll.type = roll.healing.type;
     }
 }

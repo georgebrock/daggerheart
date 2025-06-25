@@ -126,7 +126,7 @@ export class DHBaseAction extends foundry.abstract.DataModel {
                         choices: SYSTEM.GENERAL.healingTypes,
                         required: true,
                         blank: false,
-                        initial: SYSTEM.GENERAL.healingTypes.health.id,
+                        initial: SYSTEM.GENERAL.healingTypes.hitPoints.id,
                         label: 'Healing'
                     }),
                     value: new fields.EmbeddedDataField(DHActionDiceData)
@@ -516,7 +516,8 @@ export class DHHealingAction extends DHBaseAction {
                 img: x.img,
                 hit: true
             })),
-            messageTemplate: 'systems/daggerheart/templates/chat/healing-roll.hbs'
+            messageTemplate: 'systems/daggerheart/templates/chat/healing-roll.hbs',
+            type: this.healing.type
         };
 
         roll = CONFIG.Dice.daggerheart.DamageRoll.build(config);

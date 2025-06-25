@@ -401,22 +401,27 @@ export default class DhpActor extends Actor {
         }
     }
 
+    async takeHealing(resources) {
+        resources.forEach(r => r.value *= -1);
+        await this.modifyResource(resources);
+    }
+
     async modifyResource(resources) {
         if (!resources.length) return;
         let updates = { actor: { target: this, resources: {} }, armor: { target: this.system.armor, resources: {} } };
         resources.forEach(r => {
             switch (r.type) {
                 case 'armorStack':
-                    updates.armor.resources['system.marks.value'] = Math.min(
+                    updates.armor.resources['system.marks.value'] = Math.max(Math.min(
                         this.system.armor.system.marks.value + r.value,
                         this.system.armorScore
-                    );
+                    ), 0);
                     break;
                 default:
-                    updates.actor.resources[`system.resources.${r.type}.value`] = Math.min(
+                    updates.actor.resources[`system.resources.${r.type}.value`] = Math.max(Math.min(
                         this.system.resources[r.type].value + r.value,
                         this.system.resources[r.type].max
-                    );
+                    ), 0);
                     break;
             }
         });

@@ -33,7 +33,9 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
         html.querySelectorAll('.damage-button').forEach(element =>
             element.addEventListener('click', event => this.onDamage(event, data.message))
         );
-        html.querySelectorAll('.healing-button').forEach(element => element.addEventListener('click', this.onHealing));
+        html.querySelectorAll('.healing-button').forEach(element =>
+            element.addEventListener('click', event => this.onHealing(event, data.message))
+        );
         html.querySelectorAll('.target-indicator').forEach(element =>
             element.addEventListener('click', this.onToggleTargets)
         );
@@ -87,7 +89,7 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
 
     onRollHealing = async (event, message) => {
         event.stopPropagation();
-        const actor = this.getActor(message.system.source.actor);
+        const actor = await this.getActor(message.system.source.actor);
         if (!actor || !game.user.isGM) return true;
         if (message.system.source.item && message.system.source.action) {
             const action = this.getAction(actor, message.system.source.item, message.system.source.action);
@@ -98,7 +100,7 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
 
     onApplyEffect = async (event, message) => {
         event.stopPropagation();
-        const actor = this.getActor(message.system.source.actor);
+        const actor = await this.getActor(message.system.source.actor);
         if (!actor || !game.user.isGM) return true;
         if (message.system.source.item && message.system.source.action) {
             const action = this.getAction(actor, message.system.source.item, message.system.source.action);
@@ -137,22 +139,20 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
 
         if (targets.length === 0)
             ui.notifications.info(game.i18n.localize('DAGGERHEART.Notification.Info.NoTargetsSelected'));
-
         for (var target of targets) {
-            await target.actor.takeDamage(message.system.damage.total, message.system.damage.type);
+            await target.actor.takeDamage(message.system.roll.result, message.system.roll.type);
         }
     };
 
-    onHealing = async event => {
+    onHealing = async (event, message) => {
         event.stopPropagation();
-        const healing = Number.parseInt(event.currentTarget.dataset.value);
         const targets = Array.from(game.user.targets);
 
         if (targets.length === 0)
             ui.notifications.info(game.i18n.localize('DAGGERHEART.Notification.Info.NoTargetsSelected'));
-
+        
         for (var target of targets) {
-            await target.actor.modifyResource([{ value: healing, type: event.currentTarget.dataset.type }]);
+            await target.actor.takeHealing([{ value: message.system.roll.result, type: message.system.roll.type }]);
         }
     };
 
