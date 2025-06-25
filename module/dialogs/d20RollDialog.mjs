@@ -61,7 +61,7 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
         if (this.config.costs?.length) {
             const updatedCosts = this.action.calcCosts(this.config.costs);
             context.costs = updatedCosts;
-            context.canRoll = this.action.getRealCosts(updatedCosts)?.hasCost;
+            context.canRoll = this.action.hasCost(updatedCosts);
         }
         if (this.config.uses?.max) {
             context.uses = this.action.calcUses(this.config.uses);

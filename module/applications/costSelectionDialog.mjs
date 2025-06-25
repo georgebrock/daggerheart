@@ -42,13 +42,12 @@ export default class CostSelectionDialog extends HandlebarsApplicationMixin(Appl
     }
 
     async _prepareContext(_options) {
-        console.log(this.costs);
         const updatedCosts = this.action.calcCosts(this.costs),
             updatedUses = this.action.calcUses(this.uses);
         return {
             costs: updatedCosts,
             uses: updatedUses,
-            canUse: this.action.getRealCosts(updatedCosts)?.hasCost && this.action.hasUses(updatedUses)
+            canUse: this.action.hasCost(updatedCosts) && this.action.hasUses(updatedUses)
         };
     }
 

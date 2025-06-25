@@ -67,6 +67,8 @@ export default class DHActionConfig extends DaggerheartSheet(ApplicationV2) {
         context.getRealIndex = this.getRealIndex.bind(this);
         context.disableOption = this.disableOption.bind(this);
         context.isNPC = this.action.actor && this.action.actor.type !== 'character';
+        context.hasRoll = this.action.hasRoll();
+        console.log(context)
         return context;
     }
 

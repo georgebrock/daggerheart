@@ -40,11 +40,11 @@ export class DHDamageField extends fields.SchemaField {
     }
 }
 
-export class DHDamageData extends DHActionDiceData {
+export class DHDamageData extends foundry.abstract.DataModel {
     /** @override */
     static defineSchema() {
         return {
-            ...super.defineSchema(),
+            // ...super.defineSchema(),
             base: new fields.BooleanField({ initial: false, readonly: true, label: 'Base' }),
             type: new fields.StringField({
                 choices: SYSTEM.GENERAL.damageTypes,
@@ -52,7 +52,10 @@ export class DHDamageData extends DHActionDiceData {
                 label: 'Type',
                 nullable: false,
                 required: true
-            })
+            }),
+            resultBased: new fields.BooleanField({ initial: false, label: "DAGGERHEART.Actions.Settings.ResultBased.label" }),
+            value: new fields.EmbeddedDataField(DHActionDiceData),
+            valueAlt: new fields.EmbeddedDataField(DHActionDiceData),
         };
     }
 }

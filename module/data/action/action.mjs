@@ -129,7 +129,9 @@ export class DHBaseAction extends foundry.abstract.DataModel {
                         initial: SYSTEM.GENERAL.healingTypes.hitPoints.id,
                         label: 'Healing'
                     }),
-                    value: new fields.EmbeddedDataField(DHActionDiceData)
+                    resultBased: new fields.BooleanField({ initial: false, label: "DAGGERHEART.Actions.Settings.ResultBased.label" }),
+                    value: new fields.EmbeddedDataField(DHActionDiceData),
+                    valueAlt: new fields.EmbeddedDataField(DHActionDiceData),
                 })
             },
             extraSchemas = {};
@@ -228,7 +230,8 @@ export class DHBaseAction extends foundry.abstract.DataModel {
             ...config,
             ...(await this.getCost(config))
         };
-        if (!this.hasRoll() && (!config.costs.hasCost || !this.hasUses(config.uses)))
+        
+        if ((!this.hasRoll() || config.event.shiftKey) && (!this.hasCost(config.costs) || !this.hasUses(config.uses)))
             return ui.notifications.warn("You don't have the resources to use that action.");
 
         // Proceed with Roll
@@ -245,7 +248,7 @@ export class DHBaseAction extends foundry.abstract.DataModel {
     /* ROLL */
     hasRoll() {
         // return this.roll?.type && this.roll?.trait;
-        return this.roll?.type;
+        return !!this.roll?.type;
     }
 
     async proceedRoll(config) {
@@ -269,9 +272,9 @@ export class DHBaseAction extends foundry.abstract.DataModel {
 
     /* COST */
     async getCost(config) {
-        let costs = this.cost?.length ? foundry.utils.deepClone(this.cost) : { values: [], hasCost: true };
+        let costs = this.cost?.length ? foundry.utils.deepClone(this.cost) : [];
         let uses = this.getUses();
-        if (!config.event.shiftKey && !this.hasRoll()) {
+        if (!config.event.shiftKey && !this.hasRoll() && !(!costs.length && !uses)) {
             const dialogClosed = new Promise((resolve, _) => {
                 new CostSelectionDialog(costs, uses, this, resolve).render(true);
             });
@@ -282,7 +285,7 @@ export class DHBaseAction extends foundry.abstract.DataModel {
 
     getRealCosts(costs) {
         const realCosts = costs?.length ? costs.filter(c => c.enabled) : [];
-        return { values: realCosts, hasCost: this.hasCost(realCosts) };
+        return realCosts;
     }
 
     calcCosts(costs) {
@@ -296,7 +299,8 @@ export class DHBaseAction extends foundry.abstract.DataModel {
     }
 
     hasCost(costs) {
-        return costs.reduce((a, c) => a && this.actor.system.resources[c.type]?.value >= (c.total ?? c.value), true);
+        const realCosts = this.getRealCosts(costs);
+        return realCosts.reduce((a, c) => a && this.actor.system.resources[c.type]?.value >= (c.total ?? c.value), true);
     }
 
     async spendCost(config) {
@@ -314,13 +318,14 @@ export class DHBaseAction extends foundry.abstract.DataModel {
     }
 
     getUses() {
-        if (!this.uses) return { hasUse: true };
+        if (!this.uses?.max) return null;
         const uses = foundry.utils.deepClone(this.uses);
         if (!uses.value) uses.value = 0;
         return uses;
     }
 
     calcUses(uses) {
+        if(!uses) return null;
         return {
             ...uses,
             enabled: uses.hasOwnProperty('enabled') ? uses.enabled : true
@@ -328,7 +333,8 @@ export class DHBaseAction extends foundry.abstract.DataModel {
     }
 
     hasUses(uses) {
-        return !uses.enabled || uses.value + 1 <= uses.max;
+        if(!uses) return true;
+        return (uses.hasOwnProperty('enabled') && !uses.enabled) || uses.value + 1 <= uses.max;
     }
     /* USES */
 
@@ -430,8 +436,14 @@ export class DHDamageAction extends DHBaseAction {
         return await this.rollDamage(event, config);
     }
 
+    getFormulaValue(part, data) {
+        let formulaValue = part.value;
+        if(this.hasRoll() && part.resultBased && data.system.roll.result.duality === -1) return part.valueAlt;
+        return formulaValue;
+    }
+
     async rollDamage(event, data) {
-        let formula = this.damage.parts.map(p => p.getFormula(this.actor)).join(' + ');
+        let formula = this.damage.parts.map(p => this.getFormulaValue(p, data).getFormula(this.actor)).join(' + ');
 
         if (!formula || formula == '') return;
         let roll = { formula: formula, total: formula },
@@ -475,9 +487,11 @@ export class DHAttackAction extends DHDamageAction {
 
     getParentDamage() {
         return {
-            multiplier: 'proficiency',
-            dice: this.item?.system?.damage.value,
-            bonus: this.item?.system?.damage.bonus ?? 0,
+            value: {
+                multiplier: 'proficiency',
+                dice: this.item?.system?.damage.value,
+                bonus: this.item?.system?.damage.bonus ?? 0
+            },
             type: this.item?.system?.damage.type,
             base: true
         };
@@ -498,13 +512,20 @@ export class DHHealingAction extends DHBaseAction {
         return await this.rollHealing(event, config);
     }
 
+    getFormulaValue(data) {
+        let formulaValue = this.healing.value;
+        if(this.hasRoll() && this.healing.resultBased && data.system.roll.result.duality === -1) return this.healing.valueAlt;
+        return formulaValue;
+    }
+
     async rollHealing(event, data) {
-        let formula = this.healing.value.getFormula(this.actor);
+        let formulaValue = this.getFormulaValue(data),
+            formula = formulaValue.getFormula(this.actor);
 
         if (!formula || formula == '') return;
         let roll = { formula: formula, total: formula },
             bonusDamage = [];
-
+        
         const config = {
             title: game.i18n.format('DAGGERHEART.Chat.HealingRoll.Title', {
                 healing: game.i18n.localize(SYSTEM.GENERAL.healingTypes[this.healing.type].label)

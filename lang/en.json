@@ -1519,6 +1519,11 @@
                 "Macro": {
                     "Name": "Macro"
                 }
+            },
+            "Settings": {
+                "ResultBased": {
+                    "label": "Formula based on Hope/Fear result."
+                }
             }
         },
         "RollTypes": {

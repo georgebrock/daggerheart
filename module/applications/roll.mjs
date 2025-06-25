@@ -28,10 +28,6 @@ export class DHRoll extends Roll {
 
         this.applyKeybindings(config);
 
-        // let roll;
-        // if(config.dialog?.configure === false) {
-        //     roll = new this('', config.actor, config);
-        // } else {
         if (config.dialog.configure !== false) {
             // Open Roll Dialog
             const DialogClass = config.dialog?.class ?? this.DefaultDialog;
