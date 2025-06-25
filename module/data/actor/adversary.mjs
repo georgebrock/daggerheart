@@ -1,6 +1,4 @@
-import DhpItem from '../../documents/item.mjs';
 import ActionField from '../fields/actionField.mjs';
-import DHWeapon from '../item/weapon.mjs';
 import BaseDataActor from './base.mjs';
 
 const resourceField = () =>
@@ -42,39 +40,6 @@ export default class DhpAdversary extends BaseDataActor {
                 hitPoints: resourceField(),
                 stress: resourceField()
             }),
-            /* attack: new fields.SchemaField({
-                name: new fields.StringField({}),
-                modifier: new fields.NumberField({ required: true, integer: true, initial: 0 }),
-                range: new fields.StringField({
-                    required: true,
-                    choices: SYSTEM.GENERAL.range,
-                    initial: SYSTEM.GENERAL.range.melee.id
-                }),
-                damage: new fields.SchemaField({
-                    value: new fields.StringField(),
-                    type: new fields.StringField({
-                        required: true,
-                        choices: SYSTEM.GENERAL.damageTypes,
-                        initial: SYSTEM.GENERAL.damageTypes.physical.id
-                    })
-                })
-            }), */
-            /* attack: new fields.EmbeddedDocumentField(DhpItem,
-                {
-                    // type: 'weapon'
-                //    initial: new DhpItem(
-                //         {
-                //             name: 'Attack',
-                //             type: 'weapon'
-                //         },
-                //         {
-                //             parent: this.parent,
-                //             parentCollection: 'items'
-                //         }
-                //     )
-                    // initial: {type: 'weapon'}
-                }
-            ), */
             attack: new ActionField({
                 initial: {
                     name: 'Attack',
@@ -91,7 +56,10 @@ export default class DhpAdversary extends BaseDataActor {
                     },
                     damage: {
                         parts: [{
-                            multiplier: 'flat'
+                            multiplier: 'flat',
+                            dice: 'd20',
+                            bonus: 2,
+                            flatMultiplier: 3
                         }]
                     }
                 }
@@ -102,24 +70,6 @@ export default class DhpAdversary extends BaseDataActor {
                     value: new fields.NumberField({ required: true, integer: true, initial: 1 })
                 })
             )
-            /* Features waiting on pseudo-document data model addition */
         };
-    }
-
-    prepareBaseData() {
-        // console.log(this.attack)
-        /* if(!this.attack) {
-            this.attack = new DhpItem(
-                {
-                    name: 'Attack',
-                    type: 'weapon',
-                    _id: foundry.utils.randomID()
-                },
-                {
-                    parent: this.parent,
-                    parentCollection: 'items'
-                }
-            )
-        } */
     }
 }

@@ -71,7 +71,6 @@ export class DHRoll extends Roll {
                 user: game.user.id,
                 sound: config.mute ? null : CONFIG.sounds.dice,
                 system: config,
-                // content: this.messageTemplate,
                 content: await this.messageTemplate(config),
                 rolls: [roll]
             };

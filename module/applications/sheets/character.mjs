@@ -32,7 +32,7 @@ export default class CharacterSheet extends DaggerheartSheet(ActorSheetV2) {
             selectSubclass: this.selectSubclass,
             selectAncestry: this.selectAncestry,
             selectCommunity: this.selectCommunity,
-            viewObject: this.viewObject,
+            // viewObject: this.viewObject,
             useItem: this.useItem,
             useFeature: this.useFeature,
             takeShortRest: this.takeShortRest,
@@ -537,7 +537,7 @@ export default class CharacterSheet extends DaggerheartSheet(ActorSheetV2) {
         item.use(event);
     }
 
-    static async viewObject(_, button) {
+    /* static async viewObject(_, button) {
         const object = await fromUuid(button.dataset.value);
         if (!object) return;
 
@@ -547,7 +547,7 @@ export default class CharacterSheet extends DaggerheartSheet(ActorSheetV2) {
         if (object.sheet.editMode) object.sheet.editMode = false;
 
         object.sheet.render(true);
-    }
+    } */
 
     editItem(event) {
         const uuid = event.target.closest('[data-item-id]').dataset.itemId,

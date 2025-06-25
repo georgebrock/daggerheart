@@ -16,15 +16,18 @@
         {{#each source.parts as |dmg index|}}
             {{#if @root.isNPC}}
                 {{formField ../fields.custom.fields.enabled value=dmg.custom.enabled name=(concat ../path "damage.parts." index ".custom.enabled")}}
+                {{!-- {{formField ../fields.multiplier value=dmg.multiplier name=(concat ../path "damage.parts." index ".multiplier") localize=true}} --}}
+                <input type="hidden" name="{{../path}}damage.parts.{{index}}.multiplier" value="{{dmg.multiplier}}">
                 {{#if dmg.custom.enabled}}
                     {{formField ../fields.custom.fields.formula value=dmg.custom.formula name=(concat ../path "damage.parts." index ".custom.formula") localize=true}}
                 {{else}}
                     <div class="multi-display">
-                        {{formField ../fields.flatMultiplier value=dmg.flatMultiplier name=(concat "damage.parts." realIndex ".flatMultiplier") label="Multiplier" }}
+                        {{formField ../fields.flatMultiplier value=dmg.flatMultiplier name=(concat ../path "damage.parts." index ".flatMultiplier") label="Multiplier" }}
                         {{formField ../fields.dice value=dmg.dice name=(concat ../path "damage.parts." index ".dice")}}
                         {{formField ../fields.bonus value=dmg.bonus name=(concat ../path "damage.parts." index ".bonus") localize=true}}
                     </div>
                 {{/if}}
+                {{formField ../fields.type value=dmg.type name=(concat ../path "damage.parts." index ".type") localize=true}}
             {{else}}
                 {{#with (@root.getRealIndex index) as | realIndex |}}
                 <fieldset{{#if dmg.base}} disabled{{/if}}>

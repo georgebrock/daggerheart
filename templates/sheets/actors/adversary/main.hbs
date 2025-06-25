@@ -63,7 +63,7 @@
             <div>
                 <fieldset class="action-category">
                     <legend class="action-category-label" data-action="toggleSection" data-section="range">
-                        <div>Bonus</div>
+                        <div>Bonus to Hit</div>
                     </legend>
                     <div class="action-category-data open">
                         {{formField systemFields.attack.fields.roll.fields.bonus value=source.system.attack.roll.bonus name="system.attack.roll.bonus"}}
@@ -75,17 +75,6 @@
             <div style="grid-column: 1 / -1;">
                 {{> 'systems/daggerheart/templates/views/actionTypes/effect.hbs'}}
             </div>
-
-
-
-            {{!-- <legend>{{localize "DAGGERHEART.Sheets.Adversary.Attack"}}</legend>
-
-            {{formGroup systemFields.attack.fields.name value=source.system.attack.name}}
-            <button data-action="attackRoll">Attack</button>
-            {{formGroup systemFields.attack.fields.modifier value=source.system.attack.modifier}}
-            {{formGroup systemFields.attack.fields.range value=source.system.attack.range localize=true}}
-            {{formGroup systemFields.attack.fields.damage.fields.value value=source.system.attack.damage.value}}
-            {{formGroup systemFields.attack.fields.damage.fields.type value=source.system.attack.damage.type localize=true}} --}}
         </fieldset> 
     </div>
 </section>

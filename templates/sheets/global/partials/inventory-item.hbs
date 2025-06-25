@@ -1,5 +1,5 @@
-<li class="inventory-item">
-    <img src="{{item.img}}" data-action="viewObject" data-value="{{item.uuid}}" class="item-img" />
+<li class="inventory-item" data-item-id="{{item.uuid}}">
+    <img src="{{item.img}}" data-action="useItem" class="item-img" />
     <div class="item-label">
         <div class="item-name">{{item.name}}</div>
         {{#if  (eq type 'weapon')}}

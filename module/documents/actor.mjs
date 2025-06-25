@@ -265,7 +265,8 @@ export default class DhpActor extends Actor {
      * @param {object} [config.costs]
      */
     async diceRoll(config, action) {
-        config.source = {...(config.source ?? {}), actor: this._id};
+        // config.source = {...(config.source ?? {}), actor: this._id};
+        config.source = {...(config.source ?? {}), actor: this.uuid};
         config.data = this.getRollData()
         const roll = await CONFIG.Dice.daggerheart[this.type === 'character' ? 'DualityRoll' : 'D20Roll'].build(config)
         return config;

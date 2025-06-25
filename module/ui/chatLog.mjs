@@ -60,8 +60,9 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
         super.close(options);
     }
 
-    getActor(id) {
-        return game.actors.get(id);
+    async getActor(id) {
+        // return game.actors.get(id);
+        return await fromUuid(id);
     }
 
     getAction(actor, itemId, actionId) {
@@ -72,7 +73,7 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
 
     onRollDamage = async (event, message) => {
         event.stopPropagation();
-        const actor = this.getActor(message.system.source.actor);
+        const actor = await this.getActor(message.system.source.actor);
         if (!actor || !game.user.isGM) return true;
         if(message.system.source.item && message.system.source.action) {
             const action = this.getAction(actor, message.system.source.item, message.system.source.action);

@@ -38,6 +38,8 @@ export default class DHActionConfig extends DaggerheartSheet(ApplicationV2) {
         }
     };
 
+    static CLEAN_ARRAYS = ["damage.parts", "cost", "effects"];
+
     _getTabs() {
         const tabs = {
             base: { active: true, cssClass: '', group: 'primary', id: 'base', icon: null, label: 'Base' },
@@ -64,7 +66,6 @@ export default class DHActionConfig extends DaggerheartSheet(ApplicationV2) {
         context.getRealIndex = this.getRealIndex.bind(this);
         context.disableOption = this.disableOption.bind(this);
         context.isNPC = this.action.actor.type !== 'character';
-        
         return context;
     }
 
@@ -88,6 +89,19 @@ export default class DHActionConfig extends DaggerheartSheet(ApplicationV2) {
 
     _prepareSubmitData(event, formData) {
         const submitData = foundry.utils.expandObject(formData.object);
+        for ( const keyPath of this.constructor.CLEAN_ARRAYS ) {
+            const data = foundry.utils.getProperty(submitData, keyPath);
+            if ( data ) foundry.utils.setProperty(submitData, keyPath, Object.values(data));
+            /* const data = foundry.utils.getProperty(submitData, keyPath),
+                originalData = foundry.utils.getProperty(this.action.toObject(), keyPath);
+            if ( data ) {
+                const aData = Object.values(data);
+                originalData.forEach((v,i) => {
+                    aData[i] = {...originalData[i], ...aData[i]};
+                })
+                foundry.utils.setProperty(submitData, keyPath, aData);
+            } */
+        }
         // this.element.querySelectorAll("fieldset[disabled] :is(input, select)").forEach(input => {
         //     foundry.utils.setProperty(submitData, input.name, input.value);
         // });
@@ -96,7 +110,7 @@ export default class DHActionConfig extends DaggerheartSheet(ApplicationV2) {
 
     static async updateForm(event, _, formData) {
         const submitData = this._prepareSubmitData(event, formData),
-            data = foundry.utils.expandObject(foundry.utils.mergeObject(this.action.toObject(), submitData)),
+            data = foundry.utils.mergeObject(this.action.toObject(), submitData),
             container = foundry.utils.getProperty(this.action.parent, this.action.systemPath);
         let newActions;
         if(Array.isArray(container)) {
