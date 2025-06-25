@@ -4,6 +4,10 @@ export default class DhActiveEffect extends ActiveEffect {
             return !this.parent.system.equipped;
         }
 
+        if (this.parent.type === 'domainCard') {
+            return this.parent.system.inVault;
+        }
+
         return super.isSuppressed;
     }
 

@@ -33,10 +33,22 @@ export default class DhpActor extends Actor {
         if (this.type !== 'character' || newLevel === this.system.levelData.level.changed) return;
 
         if (newLevel > this.system.levelData.level.current) {
-            await this.update({ 'system.levelData.level.changed': newLevel });
+            const maxLevel = Object.values(
+                game.settings.get(SYSTEM.id, SYSTEM.SETTINGS.gameSettings.LevelTiers).tiers
+            ).reduce((acc, tier) => Math.max(acc, tier.levels.end), 0);
+            if (newLevel > maxLevel) {
+                ui.notifications.warn(game.i18n.localize('DAGGERHEART.Sheets.PC.Errors.tooHighLevel'));
+            }
+
+            await this.update({ 'system.levelData.level.changed': Math.min(newLevel, maxLevel) });
         } else {
+            const usedLevel = Math.max(newLevel, 1);
+            if (newLevel < 1) {
+                ui.notifications.warn(game.i18n.localize('DAGGERHEART.Sheets.PC.Errors.tooLowLevel'));
+            }
+
             const updatedLevelups = Object.keys(this.system.levelData.levelups).reduce((acc, level) => {
-                if (Number(level) > newLevel) acc[`-=${level}`] = null;
+                if (Number(level) > usedLevel) acc[`-=${level}`] = null;
 
                 return acc;
             }, {});
@@ -46,7 +58,7 @@ export default class DhpActor extends Actor {
             const subclassFeatureState = { class: null, multiclass: null };
             let multiclass = null;
             Object.keys(this.system.levelData.levelups)
-                .filter(x => x > newLevel)
+                .filter(x => x > usedLevel)
                 .forEach(levelKey => {
                     const level = this.system.levelData.levelups[levelKey];
                     const achievementCards = level.achievements.domainCards.map(x => x.itemUuid);
@@ -107,8 +119,8 @@ export default class DhpActor extends Actor {
                 system: {
                     levelData: {
                         level: {
-                            current: newLevel,
-                            changed: newLevel
+                            current: usedLevel,
+                            changed: usedLevel
                         },
                         levelups: updatedLevelups
                     }
@@ -267,9 +279,9 @@ export default class DhpActor extends Actor {
      */
     async diceRoll(config, action) {
         // config.source = {...(config.source ?? {}), actor: this._id};
-        config.source = {...(config.source ?? {}), actor: this.uuid};
-        config.data = this.getRollData()
-        const roll = await CONFIG.Dice.daggerheart[this.type === 'character' ? 'DualityRoll' : 'D20Roll'].build(config)
+        config.source = { ...(config.source ?? {}), actor: this.uuid };
+        config.data = this.getRollData();
+        const roll = await CONFIG.Dice.daggerheart[this.type === 'character' ? 'DualityRoll' : 'D20Roll'].build(config);
         return config;
     }
 
@@ -402,7 +414,7 @@ export default class DhpActor extends Actor {
     }
 
     async takeHealing(resources) {
-        resources.forEach(r => r.value *= -1);
+        resources.forEach(r => (r.value *= -1));
         await this.modifyResource(resources);
     }
 
@@ -412,16 +424,16 @@ export default class DhpActor extends Actor {
         resources.forEach(r => {
             switch (r.type) {
                 case 'armorStack':
-                    updates.armor.resources['system.marks.value'] = Math.max(Math.min(
-                        this.system.armor.system.marks.value + r.value,
-                        this.system.armorScore
-                    ), 0);
+                    updates.armor.resources['system.marks.value'] = Math.max(
+                        Math.min(this.system.armor.system.marks.value + r.value, this.system.armorScore),
+                        0
+                    );
                     break;
                 default:
-                    updates.actor.resources[`system.resources.${r.type}.value`] = Math.max(Math.min(
-                        this.system.resources[r.type].value + r.value,
-                        this.system.resources[r.type].max
-                    ), 0);
+                    updates.actor.resources[`system.resources.${r.type}.value`] = Math.max(
+                        Math.min(this.system.resources[r.type].value + r.value, this.system.resources[r.type].max),
+                        0
+                    );
                     break;
             }
         });
