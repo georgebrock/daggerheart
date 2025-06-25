@@ -51,6 +51,24 @@ export default class DHWeapon extends BaseDataItem {
         };
     }
 
+    async _preCreate(data, options, user) {
+        const actionType = 'attack',
+            cls = actionsTypes.attack,
+            action = new cls(
+                {
+                    _id: foundry.utils.randomID(),
+                    type: actionType,
+                    name: game.i18n.localize(SYSTEM.ACTIONS.actionTypes[actionType].name),
+                    ...cls.getSourceConfig(this.parent)
+                },
+                {
+                    parent: this.parent
+                }
+            );
+        this.updateSource({actions: [action]});
+        return super._preCreate(data, options, user);
+    }
+
     async _preUpdate(changes, options, user) {
         const allowed = await super._preUpdate(changes, options, user);
         if (allowed === false) return false;

@@ -66,7 +66,7 @@ export default class DHActionConfig extends DaggerheartSheet(ApplicationV2) {
             context.hasBaseDamage = !!this.action.parent.damage;
         context.getRealIndex = this.getRealIndex.bind(this);
         context.disableOption = this.disableOption.bind(this);
-        context.isNPC = this.action.actor.type !== 'character';
+        context.isNPC = this.action.actor && this.action.actor.type !== 'character';
         return context;
     }
 

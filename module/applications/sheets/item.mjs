@@ -90,13 +90,11 @@ export default function DHItemMixin(Base) {
         }
 
         static async addAction() {
-            const actionType = await DHItemSheetV2.selectActionType(),
-                actionIndexes = this.document.system.actions.map(x => x._id.split('-')[2]).sort((a, b) => a - b);
+            const actionType = await DHItemSheetV2.selectActionType();
             try {
                 const cls = actionsTypes[actionType?.type] ?? actionsTypes.attack,
                     action = new cls(
                         {
-                            // id: `${this.document.id}-Action-${actionIndexes.length > 0 ? actionIndexes[0] + 1 : 1}`
                             _id: foundry.utils.randomID(),
                             type: actionType.type,
                             name: game.i18n.localize(SYSTEM.ACTIONS.actionTypes[actionType.type].name),
@@ -107,9 +105,7 @@ export default function DHItemMixin(Base) {
                         }
                     );
                 await this.document.update({ 'system.actions': [...this.document.system.actions, action] });
-                await new DHActionConfig(this.document.system.actions[this.document.system.actions.length - 1]).render(
-                    true
-                );
+                await new DHActionConfig(this.document.system.actions[this.document.system.actions.length - 1]).render(true);
             } catch (error) {
                 console.log(error);
             }
