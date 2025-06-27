@@ -59,3 +59,21 @@ export const targetTypes = {
         label: 'Any'
     }
 };
+
+export const damageOnSave = {
+    none: {
+        id: 'none',
+        label: 'None',
+        mod: 0
+    },
+    half: {
+        id: 'half',
+        label: 'Half Damage',
+        mod: 0.5
+    },
+    full: {
+        id: 'full',
+        label: 'Full damage',
+        mod: 1
+    }
+}

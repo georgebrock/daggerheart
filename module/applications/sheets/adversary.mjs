@@ -54,7 +54,9 @@ export default class AdversarySheet extends DaggerheartSheet(ActorSheetV2) {
         context.document = this.document;
         context.tabs = super._getTabs(this.constructor.TABS);
         context.systemFields.attack.fields = this.document.system.attack.schema.fields;
+        context.getEffectDetails = this.getEffectDetails.bind(this);
         context.isNPC = true;
+        console.log(context)
         return context;
     }
 
@@ -78,6 +80,10 @@ export default class AdversarySheet extends DaggerheartSheet(ActorSheetV2) {
             }
         };
         this.actor.diceRoll(config);
+    }
+
+    getEffectDetails(id) {
+        return {};
     }
 
     static async attackRoll(event) {

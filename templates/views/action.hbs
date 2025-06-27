@@ -41,11 +41,12 @@
         </div>
         <div class="tab {{this.tabs.effect.cssClass}}" data-group="primary" data-tab="effect">
             {{#if fields.roll}}{{> 'systems/daggerheart/templates/views/actionTypes/roll.hbs' fields=fields.roll.fields source=source.roll}}{{/if}}
+            {{#if fields.save}}{{> 'systems/daggerheart/templates/views/actionTypes/save.hbs' fields=fields.save.fields source=source.save}}{{/if}}
             {{#if fields.damage}}{{> 'systems/daggerheart/templates/views/actionTypes/damage.hbs' fields=fields.damage.fields.parts.element.fields source=source.damage}}{{/if}}
             {{#if fields.healing}}{{> 'systems/daggerheart/templates/views/actionTypes/healing.hbs' fields=fields.healing.fields source=source.healing}}{{/if}}
             {{#if fields.resource}}{{> 'systems/daggerheart/templates/views/actionTypes/resource.hbs' fields=fields.resource.fields source=source.resource}}{{/if}}
             {{#if fields.documentUUID}}{{> 'systems/daggerheart/templates/views/actionTypes/uuid.hbs' fields=fields.documentUUID source=source.documentUUID}}{{/if}}
-             {{#if fields.effects}}{{> 'systems/daggerheart/templates/views/actionTypes/effect.hbs'}}{{/if}}
+             {{#if fields.effects}}{{> 'systems/daggerheart/templates/views/actionTypes/effect.hbs' fields=fields.effects.element.fields source=source.effects}}{{/if}}
         </div>
     </section>
 </div>

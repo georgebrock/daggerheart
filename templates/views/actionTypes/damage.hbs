@@ -14,15 +14,15 @@
         {{/unless}}
         {{#each source.parts as |dmg index|}}
             {{#if @root.isNPC}}
-                {{formField ../fields.custom.fields.enabled value=dmg.custom.enabled name=(concat ../path "damage.parts." index ".custom.enabled")}}
-                <input type="hidden" name="{{../path}}damage.parts.{{index}}.multiplier" value="{{dmg.multiplier}}">
-                {{#if dmg.custom.enabled}}
-                    {{formField ../fields.custom.fields.formula value=dmg.custom.formula name=(concat ../path "damage.parts." index ".custom.formula") localize=true}}
+                {{formField ../fields.value.fields.custom.fields.enabled value=dmg.value.custom.enabled name=(concat ../path "damage.parts." index ".value.custom.enabled")}}
+                <input type="hidden" name="{{../path}}damage.parts.{{index}}.value.multiplier" value="{{dmg.value.multiplier}}">
+                {{#if dmg.value.custom.enabled}}
+                    {{formField ../fields.value.fields.custom.fields.formula value=dmg.value.custom.formula name=(concat ../path "damage.parts." index ".value.custom.formula") localize=true}}
                 {{else}}
                     <div class="multi-display">
-                        {{formField ../fields.flatMultiplier value=dmg.flatMultiplier name=(concat ../path "damage.parts." index ".flatMultiplier") label="Multiplier" }}
-                        {{formField ../fields.dice value=dmg.dice name=(concat ../path "damage.parts." index ".dice")}}
-                        {{formField ../fields.bonus value=dmg.bonus name=(concat ../path "damage.parts." index ".bonus") localize=true}}
+                        {{formField ../fields.value.fields.flatMultiplier value=dmg.value.flatMultiplier name=(concat ../path "damage.parts." index ".value.flatMultiplier") label="Multiplier" }}
+                        {{formField ../fields.value.fields.dice value=dmg.value.dice name=(concat ../path "damage.parts." index ".value.dice")}}
+                        {{formField ../fields.value.fields.bonus value=dmg.value.bonus name=(concat ../path "damage.parts." index ".value.bonus") localize=true}}
                     </div>
                 {{/if}}
                 {{formField ../fields.type value=dmg.type name=(concat ../path "damage.parts." index ".type") localize=true}}

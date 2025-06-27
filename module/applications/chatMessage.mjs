@@ -1,18 +1,13 @@
-import { DualityRollColor } from '../data/settings/Appearance.mjs';
-import DHDualityRoll from '../data/chat-message/dualityRoll.mjs';
-
 export default class DhpChatMessage extends foundry.documents.ChatMessage {
     async renderHTML() {
-        if (this.type === 'dualityRoll' || this.type === 'adversaryRoll') {
-            this.content = await foundry.applications.handlebars.renderTemplate(this.content, this.system);
-        }
+        if(this.system.messageTemplate) this.content = await foundry.applications.handlebars.renderTemplate(this.system.messageTemplate, this.system);
 
         /* We can change to fully implementing the renderHTML function if needed, instead of augmenting it. */
         const html = await super.renderHTML();
+        this.applyPermission(html);
 
         if (this.type === 'dualityRoll') {
             html.classList.add('duality');
-            /* const dualityResult = this.system.dualityResult; */
             switch (this.system.roll.result.duality) {
                 case 1:
                     html.classList.add('hope');
@@ -24,11 +19,18 @@ export default class DhpChatMessage extends foundry.documents.ChatMessage {
                     html.classList.add('critical');
                     break;
             }
-            /* if (dualityResult === DHDualityRoll.dualityResult.hope) html.classList.add('hope');
-            else if (dualityResult === DHDualityRoll.dualityResult.fear) html.classList.add('fear');
-            else html.classList.add('critical'); */
         }
 
         return html;
+    }
+
+    applyPermission(html) {
+        const elements = html.querySelectorAll('[data-perm-id]');
+        elements.forEach(e => {
+            const uuid = e.dataset.permId,
+                document = fromUuidSync(uuid);
+            e.setAttribute('data-view-perm', document.testUserPermission(game.user, 'OBSERVER'));
+            e.setAttribute('data-use-perm', document.testUserPermission(game.user, 'OWNER'));
+        });
     }
 }

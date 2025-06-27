@@ -65,9 +65,10 @@ export default class DHActionConfig extends DaggerheartSheet(ApplicationV2) {
         if (this.action.damage?.hasOwnProperty('includeBase') && this.action.type === 'attack')
             context.hasBaseDamage = !!this.action.parent.damage;
         context.getRealIndex = this.getRealIndex.bind(this);
+        context.getEffectDetails = this.getEffectDetails.bind(this);
         context.disableOption = this.disableOption.bind(this);
         context.isNPC = this.action.actor && this.action.actor.type !== 'character';
-        context.hasRoll = this.action.hasRoll();
+        context.hasRoll = this.action.hasRoll;
         console.log(context)
         return context;
     }
@@ -90,24 +91,16 @@ export default class DHActionConfig extends DaggerheartSheet(ApplicationV2) {
         return data.damage.parts.find(d => d.base) ? index - 1 : index;
     }
 
+    getEffectDetails(id) {
+        return this.action.item.effects.get(id);
+    }
+
     _prepareSubmitData(event, formData) {
         const submitData = foundry.utils.expandObject(formData.object);
         for ( const keyPath of this.constructor.CLEAN_ARRAYS ) {
             const data = foundry.utils.getProperty(submitData, keyPath);
             if ( data ) foundry.utils.setProperty(submitData, keyPath, Object.values(data));
-            /* const data = foundry.utils.getProperty(submitData, keyPath),
-                originalData = foundry.utils.getProperty(this.action.toObject(), keyPath);
-            if ( data ) {
-                const aData = Object.values(data);
-                originalData.forEach((v,i) => {
-                    aData[i] = {...originalData[i], ...aData[i]};
-                })
-                foundry.utils.setProperty(submitData, keyPath, aData);
-            } */
         }
-        // this.element.querySelectorAll("fieldset[disabled] :is(input, select)").forEach(input => {
-        //     foundry.utils.setProperty(submitData, input.name, input.value);
-        // });
         return submitData;
     }
 
@@ -138,6 +131,7 @@ export default class DHActionConfig extends DaggerheartSheet(ApplicationV2) {
     }
 
     static removeElement(event) {
+        event.stopPropagation();
         const data = this.action.toObject(),
             key = event.target.closest('.action-category-data').dataset.key,
             index = event.target.dataset.index;
@@ -192,5 +186,8 @@ export default class DHActionConfig extends DaggerheartSheet(ApplicationV2) {
         this.action.item.deleteEmbeddedDocuments('ActiveEffect', [effectId]);
     }
 
-    static editEffect(event) {}
+    static editEffect(event) {
+        const id = event.target.closest('[data-effect-id]')?.dataset?.effectId;
+        this.action.item.effects.get(id).sheet.render(true);
+    }
 }

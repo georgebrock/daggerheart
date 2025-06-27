@@ -22,6 +22,9 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
         html.querySelectorAll('.duality-action-healing').forEach(element =>
             element.addEventListener('click', event => this.onRollHealing(event, data.message))
         );
+        html.querySelectorAll('.target-save-container').forEach(element =>
+            element.addEventListener('click', event => this.onRollSave(event, data.message))
+        );
         html.querySelectorAll('.duality-action-effect').forEach(element =>
             element.addEventListener('click', event => this.onApplyEffect(event, data.message))
         );
@@ -98,6 +101,20 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
         }
     };
 
+    onRollSave = async (event, message) => {
+        event.stopPropagation();
+        const actor = await this.getActor(message.system.source.actor),
+            tokenId = event.target.closest('[data-token]')?.dataset.token,
+            token = game.canvas.tokens.get(tokenId);
+        if (!token?.actor || !token.isOwner) return true;
+        console.log(token.actor.canUserModify(game.user, 'update'));
+        if (message.system.source.item && message.system.source.action) {
+            const action = this.getAction(actor, message.system.source.item, message.system.source.action);
+            if (!action || !action?.hasSave) return;
+            action.rollSave(token, event, message);
+        }
+    };
+
     onApplyEffect = async (event, message) => {
         event.stopPropagation();
         const actor = await this.getActor(message.system.source.actor);
@@ -137,10 +154,24 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
             ? message.system.targets.map(target => game.canvas.tokens.get(target.id))
             : Array.from(game.user.targets);
 
+        if(message.system.onSave && event.currentTarget.dataset.targetHit) {
+            console.log(message.system.targets)
+            const pendingingSaves = message.system.targets.filter(target => target.hit && target.saved.success === null);
+            if(pendingingSaves.length) {
+                const confirm = await foundry.applications.api.DialogV2.confirm({
+                    window: {title: "Pending Reaction Rolls found"},
+                    content: `<p>Some Tokens still need to roll their Reaction Roll.</p><p>Are you sure you want to continue ?</p><p><i>Undone reaction rolls will be considered as failed</i></p>`
+                });
+                if ( !confirm ) return;
+            }
+        }
+
         if (targets.length === 0)
             ui.notifications.info(game.i18n.localize('DAGGERHEART.Notification.Info.NoTargetsSelected'));
-        for (var target of targets) {
-            await target.actor.takeDamage(message.system.roll.result, message.system.roll.type);
+        for (let target of targets) {
+            let damage = message.system.roll.total;
+            if(message.system.onSave && message.system.targets.find(t => t.id === target.id)?.saved?.success === true) damage = Math.ceil(damage * (SYSTEM.ACTIONS.damageOnSave[message.system.onSave]?.mod ?? 1));
+            await target.actor.takeDamage(damage, message.system.roll.type);
         }
     };
 
@@ -152,7 +183,7 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
             ui.notifications.info(game.i18n.localize('DAGGERHEART.Notification.Info.NoTargetsSelected'));
         
         for (var target of targets) {
-            await target.actor.takeHealing([{ value: message.system.roll.result, type: message.system.roll.type }]);
+            await target.actor.takeHealing([{ value: message.system.roll.total, type: message.system.roll.type }]);
         }
     };
 

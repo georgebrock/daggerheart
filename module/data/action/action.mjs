@@ -1,52 +1,24 @@
-import DamageSelectionDialog from '../../applications/damageSelectionDialog.mjs';
 import CostSelectionDialog from '../../applications/costSelectionDialog.mjs';
-import { abilities } from '../../config/actorConfig.mjs';
 import { DHActionDiceData, DHDamageData, DHDamageField } from './actionDice.mjs';
 import DhpActor from '../../documents/actor.mjs';
+import D20RollDialog from '../../dialogs/d20RollDialog.mjs';
 
 const fields = foundry.data.fields;
 
 /*
+    !!! I'm currently refactoring the whole Action thing, it's a WIP !!!
+*/
+
+/*
     ToDo
-    - Add setting for Hope/Fear result on Damage, Heal, Resource (Handle Roll result as part of formula if needed)
     - Add setting and/or checkbox for cost and damage like
     - Target Check / Target Picker
     - Range Check
     - Area of effect and measurement placement
     - Summon Action create method
 
-    - Create classes form Target, Cost, etc ?
-
     Other
-    - Add optionnal Role for Healing ?
     - Auto use action   <= Into Roll
-
-    Done
-    - Cost Check
-    - Auto use costs
-    - Auto disable selected Cost from other cost list
-    - Apply ActiveEffect => Add to Chat message like Damage Button ?
-    - Add Drag & Drop for documentUUID field (Macro & Summon)
-
-    Activity Types List
-    - Attack => Weapon Attack, Spell Attack, etc...
-    - Effects => Like Attack without damage
-    - Damage => Like Attack without roll
-    - Healing
-    - Resource => Merge Healing & Resource ?
-    - Summon
-    - Sequencer => Trigger a list of Activities set on the item one by one
-    - Macro
-
-    Actor Modifier
-    - Weapon Attack
-    - Spell Attack
-    - Weapon Damage
-    - Magical Damage
-    - Physical Damage ?
-    - Magical Damage ?
-    - Healing
-    - Bard Rally (Math.ceil(LeveL / 5))
 */
 
 export class DHBaseAction extends foundry.abstract.DataModel {
@@ -105,7 +77,8 @@ export class DHBaseAction extends foundry.abstract.DataModel {
                 }),
                 save: new fields.SchemaField({
                     trait: new fields.StringField({ nullable: true, initial: null, choices: SYSTEM.ACTOR.abilities }),
-                    difficulty: new fields.NumberField({ nullable: true, initial: null, integer: true, min: 0 })
+                    difficulty: new fields.NumberField({ nullable: true, initial: 10, integer: true, min: 0 }),
+                    damageMod: new fields.StringField({ initial: SYSTEM.ACTIONS.damageOnSave.none.id, choices: SYSTEM.ACTIONS.damageOnSave })
                 }),
                 target: new fields.SchemaField({
                     type: new fields.StringField({
@@ -118,7 +91,8 @@ export class DHBaseAction extends foundry.abstract.DataModel {
                 }),
                 effects: new fields.ArrayField( // ActiveEffect
                     new fields.SchemaField({
-                        _id: new fields.DocumentIdField()
+                        _id: new fields.DocumentIdField(),
+                        onSave: new fields.BooleanField({ initial: false })
                     })
                 ),
                 healing: new fields.SchemaField({
@@ -186,22 +160,122 @@ export class DHBaseAction extends foundry.abstract.DataModel {
 
     getRollData() {
         const actorData = this.actor.getRollData(false);
-        return {
-            ...actorData.toObject(),
-            prof: actorData.proficiency?.value ?? 1,
-            cast: actorData.spellcast?.value ?? 1,
-            scale: this.cost.length
+
+        // Remove when included directly in Actor getRollData
+        actorData.prof = actorData.proficiency?.value ?? 1,
+        actorData.cast = actorData.spellcast?.value ?? 1,
+        actorData.scale = this.cost.length
                 ? this.cost.reduce((a, c) => {
                       a[c.type] = c.value;
                       return a;
                   }, {})
                 : 1,
-            roll: {}
-        };
+        actorData.roll = {}
+
+        return actorData;
     }
 
     async use(event, ...args) {
+        const isFastForward = event.shiftKey || (!this.hasRoll && !this.hasSave);
+        // Prepare base Config
+        const initConfig = this.initActionConfig(event);
+        // let config = this.initActionConfig(event);
+
+        // Prepare Targets
+        const targetConfig = this.prepareTarget();
+        if (isFastForward && !targetConfig) return ui.notifications.warn('Too many targets selected for that actions.');
+        // config = this.prepareTarget(config);
+
+        // Prepare Range
+        const rangeConfig = this.prepareRange();
+        // config = this.prepareRange(config);
+
+        // Prepare Costs
+        const costsConfig = this.prepareCost();
+        if(isFastForward && !this.hasCost(costsConfig)) return ui.notifications.warn("You don't have the resources to use that action.");
+        // config = this.prepareUseCost(config)
+
+        // Prepare Uses
+        const usesConfig = this.prepareUse();
+        if(isFastForward && !this.hasUses(usesConfig)) return ui.notifications.warn("That action doesn't have remaining uses.");
+        // config = this.prepareUseCost(config)
+
+        // Prepare Roll Data
+        const actorData = this.getRollData();
+
         let config = {
+            ...initConfig,
+            targets: targetConfig,
+            range: rangeConfig,
+            costs: costsConfig,
+            uses: usesConfig,
+            data: actorData
+        }
+        
+        if ( Hooks.call(`${SYSTEM.id}.preUseAction`, this, config) === false ) return;
+
+        // Display configuration window if necessary
+        if ( config.dialog.configure && this.requireConfigurationDialog(config) ) {
+            config = await D20RollDialog.configure(config);
+            if (!config) return;
+        }
+
+        if ( this.hasRoll ) {
+            const rollConfig = this.prepareRoll(config);
+            config.roll = rollConfig;
+            config = await this.actor.diceRoll(config);
+            if (!config) return;
+        }
+
+        if( this.hasSave ) {
+            /* config.targets.forEach((t) => {
+                if(t.hit) {
+                    const target = game.canvas.tokens.get(t.id),
+                        actor = target?.actor;
+                    console.log(actor)
+                    if(!actor) return;
+                    actor.saveRoll({
+                        event,
+                        title: 'Roll Save',
+                        roll: {
+                            trait: this.save.trait,
+                            difficulty: this.save.difficulty
+                        },
+                        dialog: {
+                            configure: false
+                        },
+                        data: actor.getRollData()
+                    }).then(async (result) => {
+                        t.saved = result;
+                        setTimeout(async () => {
+                            const message = ui.chat.collection.get(config.message.id),
+                                msgTargets = message.system.targets,
+                                msgTarget = msgTargets.find(mt => mt.id === t.id);
+                            msgTarget.saved = result;
+                            await message.update({'system.targets': msgTargets});
+                        },100)
+                    })
+                }
+            }) */
+        }
+
+        if ( this.doFollowUp() ) {
+            if(this.rollDamage) await this.rollDamage(event, config);
+            if(this.rollHealing) await this.rollHealing(event, config);
+            if(this.trigger) await this.trigger(event, config);
+        }
+
+        // Consume resources
+        await this.consume(config);
+        
+        if ( Hooks.call(`${SYSTEM.id}.postUseAction`, this, config) === false ) return;
+
+        return config;
+    }
+
+    /* */
+    initActionConfig(event) {
+        return {
             event,
             title: this.item.name,
             source: {
@@ -209,79 +283,93 @@ export class DHBaseAction extends foundry.abstract.DataModel {
                 action: this._id
                 // action: this
             },
+            dialog: {
+                configure: true
+            },
             type: this.type,
             hasDamage: !!this.damage?.parts?.length,
             hasHealing: !!this.healing,
-            hasEffect: !!this.effects?.length
-        };
-
-        // this.proceedChatDisplay(config);
-
-        // Filter selected targets based on Target parameters
-        config.targets = await this.getTarget(config);
-        if (!config.targets) return ui.notifications.warn('Too many targets selected for that actions.');
-
-        // Filter selected targets based on Range parameters
-        config.range = await this.checkRange(config);
-        if (!config.range.hasRange) return ui.notifications.warn('No Target within range.');
-
-        // Display Uses/Costs Dialog & Check if Actor get enough resources
-        config = {
-            ...config,
-            ...(await this.getCost(config))
-        };
-        
-        if ((!this.hasRoll() || config.event.shiftKey) && (!this.hasCost(config.costs) || !this.hasUses(config.uses)))
-            return ui.notifications.warn("You don't have the resources to use that action.");
-
-        // Proceed with Roll
-        config = await this.proceedRoll(config);
-        if (this.roll && !config.roll.result) return;
-
-        // Update Actor resources based on Action Cost configuration
-        this.spendCost(config.costs.values);
-        this.spendUses(config.uses);
-
-        return config;
+            hasEffect: !!this.effects?.length,
+            hasSave: this.hasSave
+        }
     }
 
+    requireConfigurationDialog(config) {
+        return !config.event.shiftkey && !this.hasRoll && (config.costs?.length || config.uses);
+    }
+
+    prepareCost() {
+        const costs = this.cost?.length ? foundry.utils.deepClone(this.cost) : [];
+        return costs;
+    }
+
+    prepareUse() {
+        const uses = this.uses?.max ? foundry.utils.deepClone(this.uses) : null;
+        if (uses && !uses.value) uses.value = 0;
+        return uses;
+    }
+
+    prepareTarget() {
+        let targets;
+        if (this.target?.type === SYSTEM.ACTIONS.targetTypes.self.id)
+            targets = this.formatTarget(this.actor.token ?? this.actor.prototypeToken);
+        targets = Array.from(game.user.targets);
+        // foundry.CONST.TOKEN_DISPOSITIONS.FRIENDLY
+        if (this.target?.type && this.target.type !== SYSTEM.ACTIONS.targetTypes.any.id) {
+            targets = targets.filter(t => this.isTargetFriendly(t));
+            if (this.target.amount && targets.length > this.target.amount) targets = [];
+        }
+        targets = targets.map(t => this.formatTarget(t));
+        return targets;
+
+    }
+
+    prepareRange() {
+        const range = this.range ?? null;
+        return range;
+    }
+
+    prepareRoll() {
+       const roll = {
+            modifiers: [],
+            trait: this.roll?.trait,
+            label: 'Attack',
+            type: this.actionType,
+            difficulty: this.roll?.difficulty
+        };
+        return roll;
+    }
+
+    doFollowUp(config) {
+        return !this.hasRoll;
+    }
+
+    async consume(config) {
+        const resources = config.costs.filter(c => c.enabled !== false).map(c => {
+            return { type: c.type, value: c.total * -1 };
+        });
+        await this.actor.modifyResource(resources);
+        if(config.uses?.enabled) {
+            const newActions = foundry.utils.getProperty(this.item.system, this.systemPath).map(x => x.toObject());
+            newActions[this.index].uses.value++;
+            await this.item.update({ [`system.${this.systemPath}`]: newActions });
+        }
+    }
+    /* */
+
     /* ROLL */
-    hasRoll() {
-        // return this.roll?.type && this.roll?.trait;
+    get hasRoll() {
         return !!this.roll?.type;
     }
-
-    async proceedRoll(config) {
-        if (!this.hasRoll()) return config;
-        // const modifierValue = this.actor.system.traits[this.roll.trait].value;
-        config = {
-            ...config,
-            roll: {
-                modifiers: [],
-                trait: this.roll?.trait,
-                // label: game.i18n.localize(abilities[this.roll.trait].label),
-                label: 'Attack',
-                type: this.actionType,
-                difficulty: this.roll?.difficulty
-            }
-        };
-        // config = await this.actor.diceRoll(config, this);
-        return this.actor.diceRoll(config, this);
-    }
     /* ROLL */
 
-    /* COST */
-    async getCost(config) {
-        let costs = this.cost?.length ? foundry.utils.deepClone(this.cost) : [];
-        let uses = this.getUses();
-        if (!config.event.shiftKey && !this.hasRoll() && !(!costs.length && !uses)) {
-            const dialogClosed = new Promise((resolve, _) => {
-                new CostSelectionDialog(costs, uses, this, resolve).render(true);
-            });
-            ({ costs, uses } = await dialogClosed);
-        }
-        return { costs, uses };
+    /* SAVE */
+    get hasSave() {
+        return !!this.save?.trait;
     }
+    /* SAVE */
+
+    /* COST */
 
     getRealCosts(costs) {
         const realCosts = costs?.length ? costs.filter(c => c.enabled) : [];
@@ -302,28 +390,9 @@ export class DHBaseAction extends foundry.abstract.DataModel {
         const realCosts = this.getRealCosts(costs);
         return realCosts.reduce((a, c) => a && this.actor.system.resources[c.type]?.value >= (c.total ?? c.value), true);
     }
-
-    async spendCost(config) {
-        if (!config.costs?.values?.length) return;
-        return await this.actor.modifyResource(config.costs.values);
-    }
     /* COST */
 
     /* USES */
-    async spendUses(config) {
-        if (!this.uses.max || config.enabled === false) return;
-        const newActions = foundry.utils.getProperty(this.item.system, this.systemPath).map(x => x.toObject());
-        newActions[this.index].uses.value++;
-        await this.item.update({ [`system.${this.systemPath}`]: newActions });
-    }
-
-    getUses() {
-        if (!this.uses?.max) return null;
-        const uses = foundry.utils.deepClone(this.uses);
-        if (!uses.value) uses.value = 0;
-        return uses;
-    }
-
     calcUses(uses) {
         if(!uses) return null;
         return {
@@ -339,18 +408,6 @@ export class DHBaseAction extends foundry.abstract.DataModel {
     /* USES */
 
     /* TARGET */
-    async getTarget(config) {
-        if (this.target?.type === SYSTEM.ACTIONS.targetTypes.self.id)
-            return this.formatTarget(this.actor.token ?? this.actor.prototypeToken);
-        let targets = Array.from(game.user.targets);
-        // foundry.CONST.TOKEN_DISPOSITIONS.FRIENDLY
-        if (this.target?.type && this.target.type !== SYSTEM.ACTIONS.targetTypes.any.id) {
-            targets = targets.filter(t => this.isTargetFriendly(t));
-            if (this.target.amount && targets.length > this.target.amount) return false;
-        }
-        return targets.map(t => this.formatTarget(t));
-    }
-
     isTargetFriendly(target) {
         const actorDisposition = this.actor.token
                 ? this.actor.token.disposition
@@ -365,6 +422,7 @@ export class DHBaseAction extends foundry.abstract.DataModel {
     formatTarget(actor) {
         return {
             id: actor.id,
+            actorId: actor.actor.uuid,
             name: actor.actor.name,
             img: actor.actor.img,
             difficulty: actor.actor.system.difficulty,
@@ -374,18 +432,20 @@ export class DHBaseAction extends foundry.abstract.DataModel {
     /* TARGET */
 
     /* RANGE */
-    async checkRange(config) {
-        if (!this.range || !this.actor) return true;
-        return { values: [], hasRange: true };
-    }
+    
     /* RANGE */
 
     /* EFFECTS */
     async applyEffects(event, data, force = false) {
         if (!this.effects?.length || !data.system.targets.length) return;
+        let effects = this.effects;
         data.system.targets.forEach(async token => {
             if (!token.hit && !force) return;
-            this.effects.forEach(async e => {
+            if(this.hasSave && token.saved.success === true) {
+                effects = this.effects.filter(e => e.onSave === true)
+            }
+            if(!effects.length) return;
+            effects.forEach(async e => {
                 const actor = canvas.tokens.get(token.id)?.actor,
                     effect = this.item.effects.get(e._id);
                 if (!actor || !effect) return;
@@ -417,28 +477,55 @@ export class DHBaseAction extends foundry.abstract.DataModel {
     }
     /* EFFECTS */
 
-    /* CHAT */
-    async proceedChatDisplay(config) {
-        if (!this.chatDisplay) return;
+    /* SAVE */
+    async rollSave(target, event, message) {
+        if(!target?.actor) return;
+        target.actor.diceRoll({
+            event,
+            title: 'Roll Save',
+            roll: {
+                trait: this.save.trait,
+                difficulty: this.save.difficulty,
+                type: "reaction"
+            },
+            data: target.actor.getRollData()
+        }).then(async (result) => {
+            this.updateChatMessage(message, target.id, {result: result.roll.total, success: result.roll.success});
+        })
     }
-    /* CHAT */
+
+    async updateChatMessage(message, targetId, changes, chain=true) {
+        setTimeout(async () => {
+            const chatMessage = ui.chat.collection.get(message._id),
+                msgTargets = chatMessage.system.targets,
+                msgTarget = msgTargets.find(mt => mt.id === targetId);
+            msgTarget.saved = changes;
+            await chatMessage.update({'system.targets': msgTargets});
+        },100);
+        if(chain) {
+            if(message.system.source.message) this.updateChatMessage(ui.chat.collection.get(message.system.source.message), targetId, changes, false);
+            const relatedChatMessages = ui.chat.collection.filter(c => c.system.source.message === message._id);
+            relatedChatMessages.forEach(c => {
+                this.updateChatMessage(c, targetId, changes, false);
+            })
+        }
+    }
+    /* SAVE */
 }
 
 export class DHDamageAction extends DHBaseAction {
-    directDamage = true;
-
     static extraSchemas = ['damage', 'target', 'effects'];
 
-    async use(event, ...args) {
+    /* async use(event, ...args) {
         const config = await super.use(event, args);
         if (!config || ['error', 'warning'].includes(config.type)) return;
         if (!this.directDamage) return;
         return await this.rollDamage(event, config);
-    }
+    } */
 
     getFormulaValue(part, data) {
         let formulaValue = part.value;
-        if(this.hasRoll() && part.resultBased && data.system.roll.result.duality === -1) return part.valueAlt;
+        if(this.hasRoll && part.resultBased && data.system.roll.result.duality === -1) return part.valueAlt;
         return formulaValue;
     }
 
@@ -448,25 +535,25 @@ export class DHDamageAction extends DHBaseAction {
         if (!formula || formula == '') return;
         let roll = { formula: formula, total: formula },
             bonusDamage = [];
-
+        
         const config = {
             title: game.i18n.format('DAGGERHEART.Chat.DamageRoll.Title', { damage: this.name }),
             formula,
-            targets: (data.system?.targets ?? data.targets).map(x => ({
-                id: x.id,
-                name: x.name,
-                img: x.img,
-                hit: true
-            }))
+            targets: (data.system?.targets.filter(t => t.hit) ?? data.targets),
+            hasSave: this.hasSave,
+            source: data.system?.source
         };
+        if(this.hasSave) config.onSave = this.save.damageMod;
+        if(data.system) {
+            config.source.message = data._id;
+            config.directDamage = false;
+        }
 
         roll = CONFIG.Dice.daggerheart.DamageRoll.build(config);
     }
 }
 
 export class DHAttackAction extends DHDamageAction {
-    directDamage = false;
-
     static extraSchemas = [...super.extraSchemas, ...['roll', 'save']];
 
     static getRollType(parent) {
@@ -505,16 +592,9 @@ export class DHHealingAction extends DHBaseAction {
         return 'spellcast';
     }
 
-    async use(event, ...args) {
-        const config = await super.use(event, args);
-        if (!config || ['error', 'warning'].includes(config.type)) return;
-        if (this.hasRoll()) return;
-        return await this.rollHealing(event, config);
-    }
-
     getFormulaValue(data) {
         let formulaValue = this.healing.value;
-        if(this.hasRoll() && this.healing.resultBased && data.system.roll.result.duality === -1) return this.healing.valueAlt;
+        if(this.hasRoll && this.healing.resultBased && data.system.roll.result.duality === -1) return this.healing.valueAlt;
         return formulaValue;
     }
 
@@ -531,13 +611,8 @@ export class DHHealingAction extends DHBaseAction {
                 healing: game.i18n.localize(SYSTEM.GENERAL.healingTypes[this.healing.type].label)
             }),
             formula,
-            targets: (data.system?.targets ?? data.targets).map(x => ({
-                id: x.id,
-                name: x.name,
-                img: x.img,
-                hit: true
-            })),
-            messageTemplate: 'systems/daggerheart/templates/chat/healing-roll.hbs',
+            targets: (data.system?.targets ?? data.targets).filter(t => t.hit),
+            messageType: 'healing',
             type: this.healing.type
         };
 
@@ -557,9 +632,9 @@ export class DHSummonAction extends DHBaseAction {
         };
     }
 
-    async use(event, ...args) {
+    async trigger(event, ...args) {
         if (!this.canSummon || !canvas.scene) return;
-        const config = await super.use(event, args);
+        // const config = await super.use(event, args);
     }
 
     get canSummon() {
@@ -614,9 +689,9 @@ export class DHMacroAction extends DHBaseAction {
         };
     }
 
-    async use(event, ...args) {
-        const config = await super.use(event, args);
-        if (['error', 'warning'].includes(config.type)) return;
+    async trigger(event, ...args) {
+        // const config = await super.use(event, args);
+        // if (['error', 'warning'].includes(config.type)) return;
         const fixUUID = !this.documentUUID.includes('Macro.') ? `Macro.${this.documentUUID}` : this.documentUUID,
             macro = await fromUuid(fixUUID);
         try {

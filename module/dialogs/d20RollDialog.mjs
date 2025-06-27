@@ -50,6 +50,7 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
 
     async _prepareContext(_options) {
         const context = await super._prepareContext(_options);
+        context.hasRoll = !!this.config.roll;
         context.experiences = Object.keys(this.config.data.experiences).map(id => ({
             id,
             ...this.config.data.experiences[id]
@@ -67,6 +68,7 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
             context.uses = this.action.calcUses(this.config.uses);
             context.canRoll = context.canRoll && this.action.hasUses(context.uses);
         }
+        console.log(context, _options)
         return context;
     }
 
@@ -101,9 +103,9 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
         if (!options.submitted) this.config = false;
     }
 
-    static async configure(config = {}) {
+    static async configure(config = {}, options={}) {
         return new Promise(resolve => {
-            const app = new this(config);
+            const app = new this(config, options);
             app.addEventListener('close', () => resolve(app.config), { once: true });
             app.render({ force: true });
         });

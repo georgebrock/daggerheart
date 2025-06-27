@@ -1,9 +1,5 @@
 import DamageSelectionDialog from '../applications/damageSelectionDialog.mjs';
-import NpcRollSelectionDialog from '../applications/npcRollSelectionDialog.mjs';
-import RollSelectionDialog from '../applications/rollSelectionDialog.mjs';
 import { GMUpdateEvent, socketEvent } from '../helpers/socket.mjs';
-import { setDiceSoNiceForDualityRoll } from '../helpers/utils.mjs';
-import DHDualityRoll from '../data/chat-message/dualityRoll.mjs';
 import DamageReductionDialog from '../applications/damageReductionDialog.mjs';
 
 export default class DhpActor extends Actor {
@@ -265,12 +261,14 @@ export default class DhpActor extends Actor {
      * @param {object} [config.targets]
      * @param {object} [config.costs]
      */
-    async diceRoll(config, action) {
-        // config.source = {...(config.source ?? {}), actor: this._id};
+    async diceRoll(config) {
         config.source = {...(config.source ?? {}), actor: this.uuid};
-        config.data = this.getRollData()
-        const roll = await CONFIG.Dice.daggerheart[this.type === 'character' ? 'DualityRoll' : 'D20Roll'].build(config)
-        return config;
+        config.data = this.getRollData();
+        return await this.rollClass.build(config);
+    }
+
+    get rollClass() {
+        return CONFIG.Dice.daggerheart[this.type === 'character' ? 'DualityRoll' : 'D20Roll'];
     }
 
     getRollData() {

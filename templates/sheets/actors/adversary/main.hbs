@@ -73,7 +73,7 @@
             </div>
             {{> 'systems/daggerheart/templates/views/actionTypes/damage.hbs' fields=systemFields.attack.fields.damage.fields.parts.element.fields source=source.system.attack.damage path="system.attack."}}
             <div style="grid-column: 1 / -1;">
-                {{> 'systems/daggerheart/templates/views/actionTypes/effect.hbs'}}
+                {{> 'systems/daggerheart/templates/views/actionTypes/effect.hbs' fields=systemFields.attack.fields.effects.element.fields source=source.system.attack.effects}}
             </div>
         </fieldset> 
     </div>

@@ -26,26 +26,18 @@
                 </section>
             </div>
         </div>
-
         <div class="dice-total">
             <div class="dice-total-value">{{roll.total}}</div>
         </div>
-        {{#if (gt targets.length 0)}}
-            <div class="target-section">
-                {{#each targets as |target|}}
-                    <div class="dice-total target-container {{#if target.hit}}hit{{else}}miss{{/if}}" data-token="{{target.id}}">
-                        <img src="{{target.img}}" />
-                        <div class="target-inner-container">
-                            {{#if target.hit}}{{localize "Hit"}}{{else}}{{localize "Miss"}}{{/if}}
-                        </div>
-                    </div>
-                {{/each}}
-            </div>
-        {{/if}}
-        {{#if hasDamage}}
+    </div>
+</div>
+{{> 'systems/daggerheart/templates/chat/parts/target-chat.hbs'}}
+{{#if hasDamage}}
+<div class="dice-roll daggerheart chat roll">
+    <div class="dice-result">
         <div class="flexrow">
             <button class="duality-action duality-action-damage" data-value="{{roll.total}}"><span>Roll Damage</span></button>  
         </div>
-        {{/if}}
     </div>
 </div>
+{{/if}}

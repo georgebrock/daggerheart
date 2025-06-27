@@ -1,4 +1,5 @@
 <div>
+    {{#if @root.hasRoll}}
     <div class="roll-dialog-container">
         <div class="flexcol">
             <div class="roll-dialog-experience-container">
@@ -34,8 +35,9 @@
                 </div> --}}
             {{!-- {{/if}} --}}
         </div>
-        <footer>
-            <button data-action="submitRoll"{{#unless canRoll}} disabled{{/unless}}>Roll</button>
-        </footer>
     </div>
+    {{/if}}
+    <footer>
+        <button data-action="submitRoll"{{#unless canRoll}} disabled{{/unless}}>Roll</button>
+    </footer>
 </div>

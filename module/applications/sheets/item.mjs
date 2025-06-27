@@ -111,16 +111,18 @@ export default function DHItemMixin(Base) {
             }
         }
 
-        static async editAction(_, button) {
-            const action = this.document.system.actions[button.dataset.index];
+        static async editAction(event, button) {
+            const index = event.target.closest('[data-index]').dataset.index,
+                action = this.document.system.actions[index];
             await new DHActionConfig(action).render(true);
         }
 
         static async removeAction(event, button) {
             event.stopPropagation();
+            const action = event.target.closest('[data-index]').dataset.index;
             await this.document.update({
                 'system.actions': this.document.system.actions.filter(
-                    (_, index) => index !== Number.parseInt(button.dataset.index)
+                    (_, index) => index !== Number.parseInt(action)
                 )
             });
         }

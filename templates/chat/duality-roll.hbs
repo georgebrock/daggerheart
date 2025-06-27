@@ -92,18 +92,11 @@
                 {{roll.total}}
             </div>
         </div>
-        {{#if (gt targets.length 0)}}
-            <div class="target-section">
-                {{#each targets as |target|}}
-                    <div class="dice-total target-container {{#if target.hit}}hit{{else}}{{#if (not ../total.alternate)}}miss{{/if}}{{/if}}" data-token="{{target.id}}">
-                            <img src="{{target.img}}" />
-                            <div class="target-inner-container">
-                                {{#if target.hit}}{{localize "Hit"}}{{else}}{{#if (not ../total.alternate)}}{{localize "Miss"}}{{else}}?{{/if}}{{/if}}
-                            </div>
-                    </div>
-                {{/each}}
-            </div>
-        {{/if}}
+    </div>
+</div>
+{{> 'systems/daggerheart/templates/chat/parts/target-chat.hbs'}}
+<div class="dice-roll daggerheart chat roll">
+    <div class="dice-result">
         <div class="dice-actions{{#unless (or hasDamage hasHealing)}} duality-alone{{/unless}}">
             {{#if hasDamage}}
                     <button class="duality-action duality-action-damage" data-value="{{roll.total}}"><span>{{localize "DAGGERHEART.Chat.AttackRoll.RollDamage"}}</span></button>

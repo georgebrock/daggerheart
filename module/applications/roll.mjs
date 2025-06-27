@@ -16,7 +16,7 @@ export class DHRoll extends Roll {
         if (!roll) return;
         await this.buildEvaluate(roll, config, (message = {}));
         await this.buildPost(roll, config, (message = {}));
-        return roll;
+        return config;
     }
 
     static async buildConfigure(config = {}, message = {}) {
@@ -58,7 +58,7 @@ export class DHRoll extends Roll {
         if (message.data) {
         } else {
             const messageData = {};
-            await this.toMessage(roll, config);
+            config.message = await this.toMessage(roll, config);
         }
     }
 
@@ -71,10 +71,9 @@ export class DHRoll extends Roll {
                 user: game.user.id,
                 sound: config.mute ? null : CONFIG.sounds.dice,
                 system: config,
-                content: await this.messageTemplate(config),
                 rolls: [roll]
             };
-        await cls.create(msg);
+        return await cls.create(msg);
     }
 
     static applyKeybindings(config) {
@@ -109,12 +108,6 @@ export class D20Roll extends DHRoll {
     };
 
     static messageType = 'adversaryRoll';
-
-    // static messageTemplate = 'systems/daggerheart/templates/chat/adversary-roll.hbs';
-
-    static messageTemplate = async config => {
-        return 'systems/daggerheart/templates/chat/adversary-roll.hbs';
-    };
 
     static CRITICAL_TRESHOLD = 20;
 
@@ -214,9 +207,9 @@ export class D20Roll extends DHRoll {
         if (config.targets?.length) {
             config.targets.forEach(target => {
                 const difficulty = config.roll.difficulty ?? target.difficulty ?? target.evasion;
-                target.hit = roll.total >= difficulty;
+                target.hit = this.isCritical || roll.total >= difficulty;
             });
-        } else if (config.roll.difficulty) roll.success = roll.total >= config.roll.difficulty;
+        } else if (config.roll.difficulty) config.roll.success = roll.isCritical || roll.total >= config.roll.difficulty;
         config.roll.total = roll.total;
         config.roll.formula = roll.formula;
         config.roll.advantage = {
@@ -259,12 +252,6 @@ export class DualityRoll extends D20Roll {
     }
 
     static messageType = 'dualityRoll';
-
-    // static messageTemplate = 'systems/daggerheart/templates/chat/duality-roll.hbs';
-
-    static messageTemplate = async config => {
-        return 'systems/daggerheart/templates/chat/duality-roll.hbs';
-    };
 
     static DefaultDialog = D20RollDialog;
 
@@ -395,21 +382,22 @@ export class DamageRoll extends DHRoll {
 
     static messageType = 'damageRoll';
 
-    // static messageTemplate = 'systems/daggerheart/templates/chat/damage-roll.hbs';
-    static messageTemplate = async config => {
-        return await foundry.applications.handlebars.renderTemplate(
-            config.messageTemplate ?? 'systems/daggerheart/templates/chat/damage-roll.hbs',
-            config
-        );
-    };
-
     static DefaultDialog = DamageDialog;
 
     static async postEvaluate(roll, config = {}) {
         config.roll = {
-            result: roll.total,
-            dice: roll.dice,
+            total: roll.total,
+            formula: roll.formula,
             type: config.type
         };
+        config.roll.dice = [];
+        roll.dice.forEach(d => {
+            config.roll.dice.push({
+                dice: d.denomination,
+                total: d.total,
+                formula: d.formula,
+                results: d.results
+            });
+        });
     }
 }

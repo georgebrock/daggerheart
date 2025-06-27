@@ -5,7 +5,6 @@ import AncestrySelectionDialog from '../ancestrySelectionDialog.mjs';
 import DaggerheartSheet from './daggerheart-sheet.mjs';
 import { abilities } from '../../config/actorConfig.mjs';
 import DhlevelUp from '../levelup.mjs';
-import DHDualityRoll from '../../data/chat-message/dualityRoll.mjs';
 
 const { ActorSheetV2 } = foundry.applications.sheets;
 const { TextEditor } = foundry.applications.ux;
@@ -370,47 +369,9 @@ export default class CharacterSheet extends DaggerheartSheet(ActorSheetV2) {
             title: game.i18n.format('DAGGERHEART.Chat.DualityRoll.AbilityCheckTitle', { ability: abilityLabel }),
             roll: {
                 trait: button.dataset.attribute
-                /* label: abilityLabel,
-                modifier: button.dataset.value */
             }
-            /* chatMessage: {
-                template: 'systems/daggerheart/templates/chat/duality-roll.hbs'
-            } */
         };
         this.document.diceRoll(config);
-
-        // Delete when new roll logic test done
-        /* const { roll, hope, fear, advantage, disadvantage, modifiers } = await this.document.dualityRoll(
-            { title: game.i18n.localize(abilities[button.dataset.attribute].label), value: button.dataset.value },
-            event.shiftKey
-        );
-
-        const cls = getDocumentClass('ChatMessage');
-
-        const systemContent = new DHDualityRoll({
-            title: game.i18n.format('DAGGERHEART.Chat.DualityRoll.AbilityCheckTitle', {
-                ability: game.i18n.localize(abilities[button.dataset.attribute].label)
-            }),
-            origin: this.document.id,
-            roll: roll._formula,
-            modifiers: modifiers,
-            hope: hope,
-            fear: fear,
-            advantage: advantage,
-            disadvantage: disadvantage
-        });
-
-        await cls.create({
-            type: 'dualityRoll',
-            sound: CONFIG.sounds.dice,
-            system: systemContent,
-            user: game.user.id,
-            content: await foundry.applications.handlebars.renderTemplate(
-                'systems/daggerheart/templates/chat/duality-roll.hbs',
-                systemContent
-            ),
-            rolls: [roll]
-        }); */
     }
 
     static async toggleMarks(_, button) {
