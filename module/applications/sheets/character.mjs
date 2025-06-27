@@ -5,6 +5,7 @@ import AncestrySelectionDialog from '../ancestrySelectionDialog.mjs';
 import DaggerheartSheet from './daggerheart-sheet.mjs';
 import { abilities } from '../../config/actorConfig.mjs';
 import DhlevelUp from '../levelup.mjs';
+import DhCharacterCreation from '../characterCreation.mjs';
 
 const { ActorSheetV2 } = foundry.applications.sheets;
 const { TextEditor } = foundry.applications.ux;
@@ -46,7 +47,7 @@ export default class CharacterSheet extends DaggerheartSheet(ActorSheetV2) {
             useAdvancementCard: this.useAdvancementCard,
             useAdvancementAbility: this.useAdvancementAbility,
             toggleEquipItem: this.toggleEquipItem,
-            levelup: this.openLevelUp,
+            levelManagement: this.levelManagement,
             editImage: this._onEditImage
         },
         window: {
@@ -216,7 +217,7 @@ export default class CharacterSheet extends DaggerheartSheet(ActorSheetV2) {
     _attachPartListeners(partId, htmlElement, options) {
         super._attachPartListeners(partId, htmlElement, options);
 
-        // htmlElement.querySelector('.level-value').addEventListener('change', this.onLevelChange.bind(this));
+        htmlElement.querySelector('.level-value')?.addEventListener('change', this.onLevelChange.bind(this));
         // To Remove when ContextMenu Handler is made
         htmlElement
             .querySelectorAll('[data-item-id]')
@@ -417,7 +418,19 @@ export default class CharacterSheet extends DaggerheartSheet(ActorSheetV2) {
         }
     }
 
-    static openLevelUp() {
+    static levelManagement() {
+        if (this.document.system.needsCharacterSetup) {
+            this.characterSetup();
+        } else {
+            this.openLevelUp();
+        }
+    }
+
+    characterSetup() {
+        new DhCharacterCreation(this.document).render(true);
+    }
+
+    openLevelUp() {
         if (!this.document.system.class.value || !this.document.system.class.subclass) {
             ui.notifications.error(game.i18n.localize('DAGGERHEART.Sheets.PC.Errors.missingClassOrSubclass'));
             return;
