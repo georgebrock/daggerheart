@@ -1,5 +1,5 @@
 import DamageSelectionDialog from '../applications/damageSelectionDialog.mjs';
-import { GMUpdateEvent, socketEvent } from '../helpers/socket.mjs';
+import { ClientInputEvent, GMUpdateEvent, socketEvent } from '../helpers/socket.mjs';
 import DamageReductionDialog from '../applications/damageReductionDialog.mjs';
 
 export default class DhpActor extends Actor {
@@ -274,7 +274,7 @@ export default class DhpActor extends Actor {
      * @param {object} [config.costs]
      */
     async diceRoll(config) {
-        config.source = {...(config.source ?? {}), actor: this.uuid};
+        config.source = { ...(config.source ?? {}), actor: this.uuid };
         config.data = this.getRollData();
         return await this.rollClass.build(config);
     }
@@ -385,8 +385,16 @@ export default class DhpActor extends Actor {
             this.system.armor &&
             this.system.armor.system.marks.value < this.system.armorScore
         ) {
-            new Promise((resolve, reject) => {
-                new DamageReductionDialog(resolve, reject, this, hpDamage).render(true);
+            new Promise(async resolve => {
+                const answer = await game.socket.emit(`system.${SYSTEM.id}`, {
+                    action: socketEvent.ClientInput,
+                    data: {
+                        action: ClientInputEvent.DamageReduction,
+                        user: game.users.find(user => !user.isGM && this.ownership[user.id] === 3)?.id ?? game.user.id,
+                        hpDamage: hpDamage
+                    }
+                });
+                resolve(answer);
             })
                 .then(async ({ modifiedDamage, armorSpent, stressSpent }) => {
                     const resources = [

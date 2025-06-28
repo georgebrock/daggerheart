@@ -1,3 +1,5 @@
+import DamageReductionDialog from '../applications/damageReductionDialog.mjs';
+
 export function handleSocketEvent({ action = null, data = {} } = {}) {
     switch (action) {
         case socketEvent.GMUpdate:
@@ -9,19 +11,27 @@ export function handleSocketEvent({ action = null, data = {} } = {}) {
         case socketEvent.Refresh:
             Hooks.call(socketEvent.Refresh, data);
             break;
+        case socketEvent.ClientInput:
+            Hooks.call(socketEvent.ClientInput, data);
+            break;
     }
 }
 
 export const socketEvent = {
     GMUpdate: 'DhGMUpdate',
     Refresh: 'DhRefresh',
-    DhpFearUpdate: 'DhFearUpdate'
+    DhpFearUpdate: 'DhFearUpdate',
+    ClientInput: 'DhClientInput'
 };
 
 export const GMUpdateEvent = {
     UpdateDocument: 'DhGMUpdateDocument',
     UpdateSetting: 'DhGMUpdateSetting',
     UpdateFear: 'DhGMUpdateFear'
+};
+
+export const ClientInputEvent = {
+    DamageReduction: 'DhDamageReduction'
 };
 
 export const RefreshType = {
@@ -63,6 +73,17 @@ export const registerSocketHooks = () => {
                 });
                 Hooks.call(socketEvent.Refresh, data.refresh);
             }
+        }
+    });
+
+    Hooks.on(socketEvent.ClientInput, async data => {
+        if (game.user.id !== data.user) return;
+
+        switch (data.action) {
+            case ClientInputEvent.DamageReduction:
+                return await new Promise((resolve, reject) => {
+                    new DamageReductionDialog(resolve, reject, game.user.character, data.hpDamage).render(true);
+                });
         }
     });
 };
