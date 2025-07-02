@@ -1,1 +1,1 @@
-export { default as PropertyFilter} from "./property-filter.mjs";
+export { default as FilterMenu} from "./filter-menu.mjs";

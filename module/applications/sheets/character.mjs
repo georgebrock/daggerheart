@@ -6,7 +6,7 @@ import DaggerheartSheet from './daggerheart-sheet.mjs';
 import { abilities } from '../../config/actorConfig.mjs';
 import DhlevelUp from '../levelup.mjs';
 import DhCharacterCreation from '../characterCreation.mjs';
-import FilterMenu from '../ux/property-filter.mjs';
+import FilterMenu from '../ux/filter-menu.mjs';
 
 const { ActorSheetV2 } = foundry.applications.sheets;
 const { TextEditor } = foundry.applications.ux;
@@ -613,7 +613,7 @@ export default class CharacterSheet extends DaggerheartSheet(ActorSheetV2) {
      * Callback when filters change
      * @param {PointerEvent} event 
      * @param {HTMLElement} html 
-     * @param {import('../ux/property-filter.mjs').FilterItem[]} filters 
+     * @param {import('../ux/filter-menu.mjs').FilterItem[]} filters 
      */
     _onMenuFilterInventory(event, html, filters) {
         this.#filteredItems.inventory.menu.clear();
@@ -635,7 +635,7 @@ export default class CharacterSheet extends DaggerheartSheet(ActorSheetV2) {
      * Callback when filters change
      * @param {PointerEvent} event 
      * @param {HTMLElement} html 
-     * @param {import('../ux/property-filter.mjs').FilterItem[]} filters 
+     * @param {import('../ux/filter-menu.mjs').FilterItem[]} filters 
      */
     _onMenuFilterLoadout(event, html, filters) {
         this.#filteredItems.loadout.menu.clear();

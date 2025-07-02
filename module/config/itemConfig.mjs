@@ -723,3 +723,7 @@ export const actionTypes = {
         label: 'DAGGERHEART.ActionType.Reaction'
     }
 };
+
+export const invetoryFilters = [
+    
+];
