@@ -16,3 +16,4 @@ export { default as DhActiveEffectConfig } from './sheets/activeEffectConfig.mjs
 export { default as DhContextMenu } from './contextMenu.mjs';
 
 export * as api from './sheets/api/_modules.mjs';
+export * as ux from "./ux/_module.mjs";
