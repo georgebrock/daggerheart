@@ -96,10 +96,10 @@ export default class FilterMenu extends foundry.applications.ux.ContextMenu {
    * @returns {HTMLDivElement} The section DOM element containing the label and buttons.
    */
   #createSection(groupName, items) {
-    const section = document.createElement("div");
+    const section = document.createElement("fieldset");
     section.className = "filter-section";
 
-    const header = document.createElement("label");
+    const header = document.createElement("legend");
     header.textContent = groupName;
     section.appendChild(header);
 

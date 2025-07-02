@@ -4136,6 +4136,10 @@ div.daggerheart.views.multiclass {
 .application.sheet.daggerheart.actor.dh-style.character .tab.loadout .search-section .search-bar input:placeholder {
   color: light-dark(#18162e50, #efe6d850);
 }
+.application.sheet.daggerheart.actor.dh-style.character .tab.loadout .search-section .search-bar input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  display: none;
+}
 .application.sheet.daggerheart.actor.dh-style.character .tab.loadout .search-section .search-bar .icon {
   align-content: center;
   height: 32px;
@@ -5189,6 +5193,40 @@ div.daggerheart.views.multiclass {
   flex-direction: row;
   gap: 10px;
   align-items: center;
+}
+.filter-menu {
+  width: auto;
+}
+.filter-menu fieldset.filter-section {
+  align-items: center;
+  margin: 5px;
+  border-radius: 6px;
+  border-color: light-dark(#18162e, #f3c267);
+  padding: 5px;
+}
+.filter-menu fieldset.filter-section legend {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: bold;
+  color: light-dark(#18162e, #f3c267);
+}
+.filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.filter-buttons button {
+  background: light-dark(rgba(0, 0, 0, 0.3), #18162e);
+  color: light-dark(#18162e, #f3c267);
+  outline: none;
+  box-shadow: none;
+  border: 1px solid light-dark(#18162e, #18162e);
+}
+.filter-buttons button:hover {
+  background: light-dark(transparent, #f3c267);
+  color: light-dark(#18162e, #18162e);
+}
+.filter-buttons button.active {
+  animation: glow 0.75s infinite alternate;
 }
 .daggerheart {
   /* Flex */
