@@ -217,7 +217,6 @@ export default class CharacterSheet extends DaggerheartSheet(ActorSheetV2) {
 
         this._createContextMenues();
         this._createFilterMenus();
-
     }
 
     /** @inheritDoc */
@@ -474,11 +473,11 @@ export default class CharacterSheet extends DaggerheartSheet(ActorSheetV2) {
     #filteredItems = {
         inventory: {
             search: new Set(),
-            menu: new Set(),
+            menu: new Set()
         },
         loadout: {
             search: new Set(),
-            menu: new Set(),
+            menu: new Set()
         }
     };
 
@@ -571,7 +570,7 @@ export default class CharacterSheet extends DaggerheartSheet(ActorSheetV2) {
                 content: '.items-section',
                 callback: this._onMenuFilterInventory.bind(this),
                 target: '.filter-button',
-                filters: FilterMenu.invetoryFilters,
+                filters: FilterMenu.invetoryFilters
             },
             {
                 key: 'loadout',
@@ -579,25 +578,23 @@ export default class CharacterSheet extends DaggerheartSheet(ActorSheetV2) {
                 content: '.items-section',
                 callback: this._onMenuFilterLoadout.bind(this),
                 target: '.filter-button',
-                filters: FilterMenu.cardsFilters,
+                filters: FilterMenu.cardsFilters
             }
         ];
 
         menus.forEach(m => {
             const container = this.element.querySelector(m.container);
             this.#menu[m.key] = new FilterMenu(container, m.target, m.filters, m.callback, {
-                contentSelector: m.content,
+                contentSelector: m.content
             });
         });
-
     }
-
 
     /**
      * Callback when filters change
-     * @param {PointerEvent} event 
-     * @param {HTMLElement} html 
-     * @param {import('../ux/filter-menu.mjs').FilterItem[]} filters 
+     * @param {PointerEvent} event
+     * @param {HTMLElement} html
+     * @param {import('../ux/filter-menu.mjs').FilterItem[]} filters
      */
     _onMenuFilterInventory(event, html, filters) {
         this.#filteredItems.inventory.menu.clear();
@@ -605,21 +602,20 @@ export default class CharacterSheet extends DaggerheartSheet(ActorSheetV2) {
         for (const li of html.querySelectorAll('.inventory-item')) {
             const item = this.document.items.get(li.dataset.itemId);
 
-            const matchesMenu = filters.length === 0 ||
-                filters.some(f => foundry.applications.ux.SearchFilter.evaluateFilter(item, f));
+            const matchesMenu =
+                filters.length === 0 || filters.some(f => foundry.applications.ux.SearchFilter.evaluateFilter(item, f));
             if (matchesMenu) this.#filteredItems.inventory.menu.add(item.id);
 
             const { search } = this.#filteredItems.inventory;
             li.hidden = !(search.has(item.id) && matchesMenu);
         }
-
     }
 
     /**
      * Callback when filters change
-     * @param {PointerEvent} event 
-     * @param {HTMLElement} html 
-     * @param {import('../ux/filter-menu.mjs').FilterItem[]} filters 
+     * @param {PointerEvent} event
+     * @param {HTMLElement} html
+     * @param {import('../ux/filter-menu.mjs').FilterItem[]} filters
      */
     _onMenuFilterLoadout(event, html, filters) {
         this.#filteredItems.loadout.menu.clear();
@@ -627,14 +623,13 @@ export default class CharacterSheet extends DaggerheartSheet(ActorSheetV2) {
         for (const li of html.querySelectorAll('.items-list .inventory-item, .card-list .card-item')) {
             const item = this.document.items.get(li.dataset.itemId);
 
-            const matchesMenu = filters.length === 0 ||
-                filters.some(f => foundry.applications.ux.SearchFilter.evaluateFilter(item, f));
+            const matchesMenu =
+                filters.length === 0 || filters.some(f => foundry.applications.ux.SearchFilter.evaluateFilter(item, f));
             if (matchesMenu) this.#filteredItems.loadout.menu.add(item.id);
 
             const { search } = this.#filteredItems.loadout;
             li.hidden = !(search.has(item.id) && matchesMenu);
         }
-
     }
     /* -------------------------------------------- */
 
@@ -915,8 +910,9 @@ export default class CharacterSheet extends DaggerheartSheet(ActorSheetV2) {
             const cls = getDocumentClass('ChatMessage');
             const systemData = {
                 name: game.i18n.localize('DAGGERHEART.General.Experience.Single'),
-                description: `${experience.description} ${experience.total < 0 ? experience.total : `+${experience.total}`
-                    }`
+                description: `${experience.description} ${
+                    experience.total < 0 ? experience.total : `+${experience.total}`
+                }`
             };
             const msg = new cls({
                 type: 'abilityUse',
