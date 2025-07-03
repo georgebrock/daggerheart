@@ -571,23 +571,7 @@ export default class CharacterSheet extends DaggerheartSheet(ActorSheetV2) {
                 content: '.items-section',
                 callback: this._onMenuFilterInventory.bind(this),
                 target: '.filter-button',
-                filters: [{
-                    group: "Type",
-                    name: "Weapons",
-                    filter: {
-                        field: "type",
-                        operator: foundry.applications.ux.SearchFilter.OPERATORS.EQUALS,
-                        value: "weapon",
-                    }
-                }, {
-                    group: "Type",
-                    name: "Armor",
-                    filter: {
-                        field: "type",
-                        operator: foundry.applications.ux.SearchFilter.OPERATORS.EQUALS,
-                        value: "armor",
-                    }
-                }],
+                filters: FilterMenu.invetoryFilters,
             },
             {
                 key: 'loadout',
@@ -595,7 +579,7 @@ export default class CharacterSheet extends DaggerheartSheet(ActorSheetV2) {
                 content: '.items-section',
                 callback: this._onMenuFilterLoadout.bind(this),
                 target: '.filter-button',
-                filters: [],
+                filters: FilterMenu.cardsFilters,
             }
         ];
 

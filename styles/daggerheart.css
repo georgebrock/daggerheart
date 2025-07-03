@@ -5208,24 +5208,28 @@ div.daggerheart.views.multiclass {
   font-family: 'Montserrat', sans-serif;
   font-weight: bold;
   color: light-dark(#18162e, #f3c267);
+  font-size: var(--font-size-12);
 }
-.filter-buttons {
+.filter-menu fieldset.filter-section .filter-buttons {
   display: flex;
   flex-wrap: wrap;
+  justify-content: space-evenly;
   gap: 5px;
 }
-.filter-buttons button {
+.filter-menu fieldset.filter-section .filter-buttons button {
   background: light-dark(rgba(0, 0, 0, 0.3), #18162e);
   color: light-dark(#18162e, #f3c267);
   outline: none;
   box-shadow: none;
   border: 1px solid light-dark(#18162e, #18162e);
+  padding: 0 0.2rem;
+  font-size: var(--font-size-12);
 }
-.filter-buttons button:hover {
+.filter-menu fieldset.filter-section .filter-buttons button:hover {
   background: light-dark(transparent, #f3c267);
   color: light-dark(#18162e, #18162e);
 }
-.filter-buttons button.active {
+.filter-menu fieldset.filter-section .filter-buttons button.active {
   animation: glow 0.75s infinite alternate;
 }
 .daggerheart {

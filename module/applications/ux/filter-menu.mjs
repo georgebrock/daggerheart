@@ -50,7 +50,7 @@ export default class FilterMenu extends foundry.applications.ux.ContextMenu {
     await super.render(target, { ...options, animate: false });
 
     // Create menu structure
-    const menu = document.createElement("div");
+    const menu = document.createElement("menu");
     menu.className = "filter-menu";
 
     // Group items by their group property
@@ -157,5 +157,88 @@ export default class FilterMenu extends foundry.applications.ux.ContextMenu {
 
     this.callback(event, this.contentElement, filters);
 
+  }
+
+  /**
+   * Generate and return a sorted array of inventory filters.
+   * @returns {Array<Object>} An array of filter objects, sorted by name within each group.
+   */
+  static get invetoryFilters() {
+    const { OPERATORS } = foundry.applications.ux.SearchFilter;
+
+    const typesFilters = Object.entries(CONFIG.Item.dataModels)
+      .filter(([, { metadata }]) => metadata.isInventoryItem)
+      .map(([type, { metadata }]) => ({
+        group: game.i18n.localize("Type"),
+        name: game.i18n.localize(metadata.label),
+        filter: {
+          field: "type",
+          operator: OPERATORS.EQUALS,
+          value: type
+        }
+      }));
+
+    const burdenFilter = Object.values(CONFIG.daggerheart.GENERAL.burden).map(({ value, label }) => ({
+      group: game.i18n.localize("DAGGERHEART.Sheets.Weapon.Burden"),
+      name: game.i18n.localize(label),
+      filter: {
+        field: "system.burden",
+        operator: OPERATORS.EQUALS,
+        value: value
+      }
+    }));
+
+    const damageTypeFilter = Object.values(CONFIG.daggerheart.GENERAL.damageTypes).map(({ id, abbreviation }) => ({
+      group: "Damage Type", //TODO localize
+      name: game.i18n.localize(abbreviation),
+      filter: {
+        field: "system.damage.type",
+        operator: OPERATORS.EQUALS,
+        value: id
+      }
+    }));
+
+
+    return [
+      ...game.i18n.sortObjects(typesFilters, "name"),
+      ...game.i18n.sortObjects(burdenFilter, "name"),
+      ...game.i18n.sortObjects(damageTypeFilter, "name"),
+    ];
+  }
+
+  /**
+   * Generate and return a sorted array of inventory filters.
+   * @returns {Array<Object>} An array of filter objects, sorted by name within each group.
+   */
+  static get cardsFilters() {
+    const { OPERATORS } = foundry.applications.ux.SearchFilter;
+
+    const typesFilters = Object.values(CONFIG.daggerheart.DOMAIN.cardTypes)
+    .map(({ id, label }) => ({
+      group: game.i18n.localize("Type"),
+      name: game.i18n.localize(label),
+      filter: {
+        field: "system.type",
+        operator: OPERATORS.EQUALS,
+        value: id
+      }
+    }));
+
+    const domainFilter = Object.values(CONFIG.daggerheart.DOMAIN.domains).map(({id, label}) => ({
+      group: game.i18n.localize("DAGGERHEART.Sheets.DomainCard.Domain"),
+      name: game.i18n.localize(label),
+      filter: {
+        field: "system.domain",
+        operator: OPERATORS.EQUALS,
+        value: id
+      }
+    }))
+
+    const sort = (arr) => game.i18n.sortObjects(arr, "name");
+
+    return [
+      ...sort(typesFilters),
+      ...sort(domainFilter),
+    ];
   }
 }
