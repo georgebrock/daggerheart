@@ -1,7 +1,7 @@
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 export default class DamageDialog extends HandlebarsApplicationMixin(ApplicationV2) {
-    constructor(roll, config={}, options={}) {
+    constructor(roll, config = {}, options = {}) {
         super(options);
 
         this.roll = roll;
@@ -37,23 +37,30 @@ export default class DamageDialog extends HandlebarsApplicationMixin(Application
     async _prepareContext(_options) {
         const context = await super._prepareContext(_options);
         context.title = this.config.title;
-        context.formula = this.config.roll.formula;
+        context.extraFormula = this.config.extraFormula;
+        context.formula = this.roll.constructFormula(this.config);;
         return context;
     }
 
+    static updateRollConfiguration(event, _, formData) {
+        const { ...rest } = foundry.utils.expandObject(formData.object);
+        this.config.extraFormula = rest.extraFormula;
+        this.render();
+    }
+
     static async submitRoll() {
-        await this.close({ submitted: true  });
+        await this.close({ submitted: true });
     }
 
     /** @override */
-    _onClose(options={}) {
-        if ( !options.submitted ) this.config = false;
+    _onClose(options = {}) {
+        if (!options.submitted) this.config = false;
     }
 
-    static async configure(roll, config={}) {
+    static async configure(roll, config = {}) {
         return new Promise(resolve => {
             const app = new this(roll, config);
-            app.addEventListener("close", () => resolve(app.config), { once: true });
+            app.addEventListener('close', () => resolve(app.config), { once: true });
             app.render({ force: true });
         });
     }

@@ -6,7 +6,7 @@
             <div class="wrapper">
                 <section class="tooltip-part">
                     <div class="dice">
-                        {{#each roll.dice}}
+                        {{#each roll.dice as | dice index |}}
                             <header class="part-header flexrow">
                                 <span class="part-formula">{{formula}}</span>
                                 <span class="part-total">{{total}}</span>
@@ -17,9 +17,11 @@
                                         <li class="roll die {{../dice}}{{#if discarded}} discarded{{/if}} min">{{result}}</li>
                                     {{/each}}
                                 </ol>
+                                {{#if (eq index 0)}}
                                 <div class="attack-roll-advantage-container">
                                     {{#if (eq ../roll.advantage.type 1)}}{{localize "DAGGERHEART.General.Advantage.Full"}}{{/if}}{{#if (eq ../roll.advantage.type -1)}}{{localize "DAGGERHEART.General.Disadvantage.Full"}}{{/if}}
                                 </div>
+                                {{/if}}
                             </div>
                         {{/each}}
                     </div>
@@ -31,13 +33,30 @@
         </div>
     </div>
 </div>
+<fieldset class="dice-roll daggerheart chat roll expanded{{#unless damage.roll}} hidden{{/unless}}" data-action="expandRoll">
+    <legend class="dice-flavor">Damage</legend>
+    <div class="dice-result">
+        <div class="dice-tooltip">
+            <div class="wrapper">
+                {{> 'systems/daggerheart/templates/chat/parts/damage-chat.hbs' damage=damage noTitle=true}}
+            </div>
+        </div>
+    </div>
+</fieldset>
 {{> 'systems/daggerheart/templates/chat/parts/target-chat.hbs'}}
 {{#if hasDamage}}
 <div class="dice-roll daggerheart chat roll">
     <div class="dice-result">
-        <div class="flexrow">
-            <button class="duality-action duality-action-damage" data-value="{{roll.total}}"><span>Roll Damage</span></button>  
+        {{#if damage.roll}}
+        <div class="dice-actions">
+            {{!-- <button class="damage-button" data-target-hit="true" {{#if (eq targets.length 0)}}disabled{{/if}}>{{localize "DAGGERHEART.Chat.DamageRoll.DealDamageToTargets"}}</button>   --}}
+            <button class="damage-button">{{localize "DAGGERHEART.Chat.DamageRoll.DealDamage"}}</button>  
         </div>
+        {{else}}
+        <div class="flexrow">
+            <button class="duality-action duality-action-damage" data-value="{{roll.total}}"><span>{{localize "DAGGERHEART.Chat.DamageRoll.RollDamage"}}</span></button>  
+        </div>
+        {{/if}}
     </div>
 </div>
 {{/if}}

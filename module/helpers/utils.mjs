@@ -1,4 +1,4 @@
-import { getDiceSoNicePresets } from '../config/generalConfig.mjs';
+import { diceTypes, getDiceSoNicePresets, range } from '../config/generalConfig.mjs';
 import Tagify from '@yaireo/tagify';
 
 export const loadCompendiumOptions = async compendiums => {
@@ -124,13 +124,13 @@ export const getCommandTarget = () => {
 
 export const setDiceSoNiceForDualityRoll = (rollResult, advantageState) => {
     const diceSoNicePresets = getDiceSoNicePresets();
-    rollResult.dice[0].options.appearance = diceSoNicePresets.hope;
-    rollResult.dice[1].options.appearance = diceSoNicePresets.fear;
+    rollResult.dice[0].options = { appearance: diceSoNicePresets.hope };
+    rollResult.dice[1].options = { appearance: diceSoNicePresets.fear }; //diceSoNicePresets.fear;
     if (rollResult.dice[2]) {
         if (advantageState === true) {
-            rollResult.dice[2].options.appearance = diceSoNicePresets.advantage;
+            rollResult.dice[2].options = { appearance: diceSoNicePresets.advantage };
         } else if (advantageState === false) {
-            rollResult.dice[2].options.appearance = diceSoNicePresets.disadvantage;
+            rollResult.dice[2].options = { appearance: diceSoNicePresets.disadvantage };
         }
     }
 };
@@ -225,10 +225,10 @@ export const getDeleteKeys = (property, innerProperty, innerPropertyDefaultValue
 
 // Fix on Foundry native formula replacement for DH
 const nativeReplaceFormulaData = Roll.replaceFormulaData;
-Roll.replaceFormulaData = function (formula, data={}, { missing, warn = false } = {}) {
+Roll.replaceFormulaData = function (formula, data = {}, { missing, warn = false } = {}) {
     const terms = Object.keys(SYSTEM.GENERAL.multiplierTypes).map(type => {
-        return { term: type, default: 1}
-    })
+        return { term: type, default: 1 };
+    });
     formula = terms.reduce((a, c) => a.replaceAll(`@${c.term}`, data[c.term] ?? c.default), formula);
     return nativeReplaceFormulaData(formula, data, { missing, warn });
 };
@@ -257,4 +257,40 @@ export const damageKeyToNumber = key => {
         case 'none':
             return 0;
     }
+};
+
+export default function constructHTMLButton({
+    label,
+    dataset = {},
+    classes = [],
+    icon = '',
+    type = 'button',
+    disabled = false
+}) {
+    const button = document.createElement('button');
+    button.type = type;
+
+    for (const [key, value] of Object.entries(dataset)) {
+        button.dataset[key] = value;
+    }
+    button.classList.add(...classes);
+    if (icon) icon = `<i class="${icon}"></i> `;
+    if (disabled) button.disabled = true;
+    button.innerHTML = `${icon}${label}`;
+
+    return button;
+}
+
+export const adjustDice = (dice, decrease) => {
+    const diceKeys = Object.keys(diceTypes);
+    const index = diceKeys.indexOf(dice);
+    const newIndex = decrease ? Math.max(index - 1, 0) : Math.min(index + 1, diceKeys.length - 1);
+    return diceTypes[diceKeys[newIndex]];
+};
+
+export const adjustRange = (rangeVal, decrease) => {
+    const rangeKeys = Object.keys(range);
+    const index = rangeKeys.indexOf(rangeVal);
+    const newIndex = decrease ? Math.max(index - 1, 0) : Math.min(index + 1, rangeKeys.length - 1);
+    return range[rangeKeys[newIndex]];
 };

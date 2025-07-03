@@ -85,6 +85,7 @@ Hooks.once('init', () => {
 
     Actors.unregisterSheet('core', foundry.applications.sheets.ActorSheetV2);
     Actors.registerSheet(SYSTEM.id, applications.DhCharacterSheet, { types: ['character'], makeDefault: true });
+    Actors.registerSheet(SYSTEM.id, applications.DhCompanionSheet, { types: ['companion'], makeDefault: true });
     Actors.registerSheet(SYSTEM.id, applications.DhpAdversarySheet, { types: ['adversary'], makeDefault: true });
     Actors.registerSheet(SYSTEM.id, applications.DhpEnvironment, { types: ['environment'], makeDefault: true });
 
@@ -123,6 +124,7 @@ Hooks.once('init', () => {
 
     CONFIG.ui.resources = Resources;
     CONFIG.ux.ContextMenu = applications.DhContextMenu;
+    CONFIG.ux.TooltipManager = applications.DhTooltipManager;
 
     game.socket.on(`system.${SYSTEM.id}`, handleSocketEvent);
 
@@ -211,46 +213,27 @@ Hooks.on('chatMessage', (_, message) => {
                       })
                     : game.i18n.localize('DAGGERHEART.General.Duality');
 
-                const hopeAndFearRoll = `1${rollCommand.hope ?? 'd12'}+1${rollCommand.fear ?? 'd12'}`;
-                const advantageRoll = `${advantageState === true ? '+d6' : advantageState === false ? '-d6' : ''}`;
-                const attributeRoll = `${trait?.value ? `${trait.value > 0 ? `+${trait.value}` : `${trait.value}`}` : ''}`;
-                const roll = await Roll.create(`${hopeAndFearRoll}${advantageRoll}${attributeRoll}`).evaluate();
-
-                setDiceSoNiceForDualityRoll(roll, advantageState);
-
-                resolve({
-                    roll,
-                    trait: trait
-                        ? {
-                              value: trait.value,
-                              label: `${game.i18n.localize(abilities[traitValue].label)} ${trait.value >= 0 ? `+` : ``}${trait.value}`
-                          }
-                        : undefined,
-                    title
-                });
-            }).then(async ({ roll, trait, title }) => {
-                const cls = getDocumentClass('ChatMessage');
-                const systemData = new DHDualityRoll({
+                const config = {
                     title: title,
-                    origin: target?.id,
-                    roll: roll,
-                    modifiers: trait ? [trait] : [],
-                    hope: { dice: rollCommand.hope ?? 'd12', value: roll.dice[0].total },
-                    fear: { dice: rollCommand.fear ?? 'd12', value: roll.dice[1].total },
-                    advantage: advantageState !== null ? { dice: 'd6', value: roll.dice[2].total } : undefined,
-                    advantageState
-                });
-
-                const msgData = {
-                    type: 'dualityRoll',
-                    sound: CONFIG.sounds.dice,
-                    system: systemData,
-                    user: game.user.id,
-                    content: 'systems/daggerheart/templates/chat/duality-roll.hbs',
-                    rolls: [roll]
+                    roll: {
+                        trait: traitValue
+                    },
+                    data: {
+                        traits: {
+                            [traitValue]: trait
+                        }
+                    },
+                    source: target,
+                    hasSave: false,
+                    dialog: { configure: false },
+                    evaluate: true,
+                    advantage: rollCommand.advantage == true,
+                    disadvantage: rollCommand.disadvantage == true
                 };
 
-                cls.create(msgData);
+                await CONFIG.Dice.daggerheart['DualityRoll'].build(config);
+
+                resolve();
             });
         }
 
@@ -285,9 +268,9 @@ const preloadHandlebarsTemplates = async function () {
     return foundry.applications.handlebars.loadTemplates([
         'systems/daggerheart/templates/sheets/global/tabs/tab-navigation.hbs',
         'systems/daggerheart/templates/sheets/global/partials/inventory-item.hbs',
+        'systems/daggerheart/templates/sheets/global/partials/action-item.hbs',
         'systems/daggerheart/templates/sheets/global/partials/domain-card-item.hbs',
         'systems/daggerheart/templates/sheets/global/partials/inventory-fieldset-items.hbs',
-
         'systems/daggerheart/templates/sheets/parts/attributes.hbs',
         'systems/daggerheart/templates/sheets/parts/defense.hbs',
         'systems/daggerheart/templates/sheets/parts/armor.hbs',
@@ -301,10 +284,6 @@ const preloadHandlebarsTemplates = async function () {
         'systems/daggerheart/templates/sheets/parts/heritage.hbs',
         'systems/daggerheart/templates/sheets/parts/subclassFeature.hbs',
         'systems/daggerheart/templates/sheets/parts/effects.hbs',
-        'systems/daggerheart/templates/sheets/character/sections/inventory.hbs',
-        'systems/daggerheart/templates/sheets/character/sections/loadout.hbs',
-        'systems/daggerheart/templates/sheets/character/parts/heritageCard.hbs',
-        'systems/daggerheart/templates/sheets/character/parts/advancementCard.hbs',
         'systems/daggerheart/templates/sheets/items/subclass/parts/subclass-features.hbs',
         'systems/daggerheart/templates/sheets/items/subclass/parts/subclass-feature.hbs',
         'systems/daggerheart/templates/components/card-preview.hbs',
@@ -322,7 +301,7 @@ const preloadHandlebarsTemplates = async function () {
         'systems/daggerheart/templates/views/actionTypes/range-target.hbs',
         'systems/daggerheart/templates/views/actionTypes/effect.hbs',
         'systems/daggerheart/templates/settings/components/settings-item-line.hbs',
-        
+        'systems/daggerheart/templates/chat/parts/damage-chat.hbs',
         'systems/daggerheart/templates/chat/parts/target-chat.hbs'
     ]);
 };

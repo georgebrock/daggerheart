@@ -9,7 +9,8 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
         this.config.experiences = [];
 
         if (config.source?.action) {
-            this.item = config.data.parent.items.get(config.source.item);
+            console.log(config)
+            this.item = config.data.parent.items.get(config.source.item) ?? config.data.parent;
             this.action =
                 config.data.attack?._id == config.source.action
                     ? config.data.attack
@@ -50,15 +51,18 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
     };
 
     async _prepareContext(_options) {
+        console.log(this.config, this.roll)
         const context = await super._prepareContext(_options);
         context.hasRoll = !!this.config.roll;
+        context.roll = this.roll;
+        context.rollType = this.roll?.constructor.name;
         context.experiences = Object.keys(this.config.data.experiences).map(id => ({
             id,
             ...this.config.data.experiences[id]
         }));
         context.selectedExperiences = this.config.experiences;
-        context.advantage = this.config.advantage;
-        /* context.diceOptions = this.diceOptions; */
+        context.advantage = this.config.roll?.advantage;
+        context.diceOptions = SYSTEM.GENERAL.diceTypes;
         context.canRoll = true;
         context.isLite = this.config.roll?.lite;
         if (this.config.costs?.length) {
@@ -71,7 +75,9 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
             context.uses = this.action.calcUses(this.config.uses);
             context.canRoll = context.canRoll && this.action.hasUses(context.uses);
         }
+        context.extraFormula = this.config.extraFormula;
         context.formula = this.roll.constructFormula(this.config);
+        
         return context;
     }
 
@@ -81,12 +87,18 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
             this.config.costs = foundry.utils.mergeObject(this.config.costs, rest.costs);
         }
         if (this.config.uses) this.config.uses = foundry.utils.mergeObject(this.config.uses, rest.uses);
+        if(rest.roll?.dice) {
+            Object.entries(rest.roll.dice).forEach(([key, value]) => {
+                this.roll[key] = value;
+            })
+        }
+        this.config.extraFormula = rest.extraFormula;
         this.render();
     }
 
     static updateIsAdvantage(_, button) {
         const advantage = Number(button.dataset.advantage);
-        this.config.advantage = this.config.advantage === advantage ? 0 : advantage;
+        this.config.roll.advantage = this.config.roll.advantage === advantage ? 0 : advantage;
         this.render();
     }
 
@@ -96,7 +108,10 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
         } else {
             this.config.experiences = [...this.config.experiences, button.dataset.key];
         } */
-        this.config.experiences = this.config.experiences.indexOf(button.dataset.key) > -1 ? this.config.experiences.filter(x => x !== button.dataset.key) : [...this.config.experiences, button.dataset.key];
+        this.config.experiences =
+            this.config.experiences.indexOf(button.dataset.key) > -1
+                ? this.config.experiences.filter(x => x !== button.dataset.key)
+                : [...this.config.experiences, button.dataset.key];
         this.render();
     }
 
@@ -109,7 +124,7 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
         if (!options.submitted) this.config = false;
     }
 
-    static async configure(roll, config = {}, options={}) {
+    static async configure(roll, config = {}, options = {}) {
         return new Promise(resolve => {
             const app = new this(roll, config, options);
             app.addEventListener('close', () => resolve(app.config), { once: true });

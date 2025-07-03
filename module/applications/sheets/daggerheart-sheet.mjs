@@ -38,7 +38,7 @@ export default function DhpApplicationMixin(Base) {
             const attr = target.dataset.edit;
             const current = foundry.utils.getProperty(this.document, attr);
             const { img } = this.document.constructor.getDefaultArtwork?.(this.document.toObject()) ?? {};
-            const fp = new FilePicker({
+            const fp = new foundry.applications.apps.FilePicker.implementation({
                 current,
                 type: 'image',
                 redirectToRoot: img ? [img] : [],
@@ -60,7 +60,7 @@ export default function DhpApplicationMixin(Base) {
                 //   drop: this._canDragDrop.bind(this)
                 // };
                 d.callbacks = {
-                    // dragstart: this._onDragStart.bind(this),
+                    dragstart: this._onDragStart.bind(this),
                     // dragover: this._onDragOver.bind(this),
                     drop: this._onDrop.bind(this)
                 };
@@ -68,6 +68,7 @@ export default function DhpApplicationMixin(Base) {
             });
         }
 
+        async _onDragStart(event) {}
         _onDrop(event) {}
 
         _getTabs(tabs) {

@@ -1,4 +1,4 @@
-import { actionsTypes } from '../action/_module.mjs';
+// import { actionsTypes } from '../action/_module.mjs';
 
 /**
  * Describes metadata about the item data model type
@@ -20,7 +20,7 @@ export default class BaseDataItem extends foundry.abstract.TypeDataModel {
             type: 'base',
             hasDescription: false,
             isQuantifiable: false,
-            isInventoryItem: false,
+            isInventoryItem: false
         };
     }
 
@@ -54,13 +54,14 @@ export default class BaseDataItem extends foundry.abstract.TypeDataModel {
         const data = { ...actorRollData, item: { ...this } };
         return data;
     }
-    
+
     async _preCreate(data, options, user) {
-        if(!this.constructor.metadata.hasInitialAction || !foundry.utils.isEmpty(this.actions)) return;
+        if (!this.constructor.metadata.hasInitialAction || !foundry.utils.isEmpty(this.actions)) return;
         const actionType = {
                 weapon: 'attack'
             }[this.constructor.metadata.type],
-            cls = actionsTypes.attack,
+            cls = game.system.api.models.actionsTypes[actionType],
+            // cls = actionsTypes.attack,
             action = new cls(
                 {
                     _id: foundry.utils.randomID(),
@@ -72,6 +73,6 @@ export default class BaseDataItem extends foundry.abstract.TypeDataModel {
                     parent: this.parent
                 }
             );
-        this.updateSource({actions: [action]});
+        this.updateSource({ actions: [action] });
     }
 }

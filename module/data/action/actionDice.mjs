@@ -11,7 +11,8 @@ export class DHActionRollData extends foundry.abstract.DataModel {
             type: new fields.StringField({ nullable: true, initial: null, choices: SYSTEM.GENERAL.rollTypes }),
             trait: new fields.StringField({ nullable: true, initial: null, choices: SYSTEM.ACTOR.abilities }),
             difficulty: new fields.NumberField({ nullable: true, initial: null, integer: true, min: 0 }),
-            bonus: new fields.NumberField({ nullable: true, initial: null, integer: true, min: 0 }),
+            bonus: new fields.NumberField({ nullable: true, initial: null, integer: true }),
+            advState: new fields.StringField({ choices: SYSTEM.ACTIONS.advandtageState, initial: 'neutral' }),
             diceRolling: new fields.SchemaField({
                 multiplier: new fields.StringField({
                     choices: SYSTEM.GENERAL.diceSetNumbers,
@@ -25,17 +26,20 @@ export class DHActionRollData extends foundry.abstract.DataModel {
                     initial: 'above',
                     label: 'Should be'
                 }),
-                treshold: new fields.NumberField({ initial: 1, integer: true, min: 1, label: 'Treshold' }),
+                treshold: new fields.NumberField({ initial: 1, integer: true, min: 1, label: 'Treshold' })
             })
         };
     }
 
     getFormula() {
-        if(!this.type) return;
+        if (!this.type) return;
         let formula = '';
         switch (this.type) {
             case 'diceSet':
-                const multiplier = this.diceRolling.multiplier === 'flat' ? this.diceRolling.flatMultiplier : `@${this.diceRolling.multiplier}`;
+                const multiplier =
+                    this.diceRolling.multiplier === 'flat'
+                        ? this.diceRolling.flatMultiplier
+                        : `@${this.diceRolling.multiplier}`;
                 formula = `${multiplier}${this.diceRolling.dice}cs${SYSTEM.ACTIONS.diceCompare[this.diceRolling.compare].operator}${this.diceRolling.treshold}`;
                 break;
             default:
@@ -59,7 +63,7 @@ export class DHActionDiceData extends foundry.abstract.DataModel {
                 label: 'Multiplier'
             }),
             flatMultiplier: new fields.NumberField({ nullable: true, initial: 1, label: 'Flat Multiplier' }),
-            dice: new fields.StringField({ choices: SYSTEM.GENERAL.diceTypes, initial: 'd6', label: 'Formula' }),
+            dice: new fields.StringField({ choices: SYSTEM.GENERAL.diceTypes, initial: 'd6', label: 'Dice' }),
             bonus: new fields.NumberField({ nullable: true, initial: null, label: 'Bonus' }),
             custom: new fields.SchemaField({
                 enabled: new fields.BooleanField({ label: 'Custom Formula' }),
@@ -75,9 +79,7 @@ export class DHActionDiceData extends foundry.abstract.DataModel {
             : `${multiplier ?? 1}${this.dice}${this.bonus ? (this.bonus < 0 ? ` - ${Math.abs(this.bonus)}` : ` + ${this.bonus}`) : ''}`; */
         const multiplier = this.multiplier === 'flat' ? this.flatMultiplier : `@${this.multiplier}`,
             bonus = this.bonus ? (this.bonus < 0 ? ` - ${Math.abs(this.bonus)}` : ` + ${this.bonus}`) : '';
-        return this.custom.enabled
-            ? this.custom.formula
-            : `${multiplier ?? 1}${this.dice}${bonus}`;
+        return this.custom.enabled ? this.custom.formula : `${multiplier ?? 1}${this.dice}${bonus}`;
     }
 }
 
@@ -105,9 +107,12 @@ export class DHDamageData extends foundry.abstract.DataModel {
                 nullable: false,
                 required: true
             }),
-            resultBased: new fields.BooleanField({ initial: false, label: "DAGGERHEART.Actions.Settings.ResultBased.label" }),
+            resultBased: new fields.BooleanField({
+                initial: false,
+                label: 'DAGGERHEART.Actions.Settings.ResultBased.label'
+            }),
             value: new fields.EmbeddedDataField(DHActionDiceData),
-            valueAlt: new fields.EmbeddedDataField(DHActionDiceData),
+            valueAlt: new fields.EmbeddedDataField(DHActionDiceData)
         };
     }
 }
