@@ -77,7 +77,7 @@ export default class DhCharacter extends BaseDataActor {
             scars: new fields.TypedObjectField(
                 new fields.SchemaField({
                     name: new fields.StringField({}),
-                    description: new fields.HTMLField()
+                    description: new fields.StringField()
                 })
             ),
             biography: new fields.SchemaField({

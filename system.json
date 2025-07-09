@@ -207,14 +207,14 @@
     "documentTypes": {
         "Actor": {
             "character": {
-                "htmlFields": ["story", "description", "scars.*.description"]
+                "htmlFields": ["biography.background", "biography.connections"]
             },
             "companion": {},
             "adversary": {
-                "htmlFields": ["description", "motivesAndTactics"]
+                "htmlFields": ["description"]
             },
             "environment": {
-                "htmlFields": ["description", "impulses"]
+                "htmlFields": ["description"]
             }
         },
         "Item": {

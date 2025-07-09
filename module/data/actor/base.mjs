@@ -24,15 +24,6 @@ export default class BaseDataActor extends foundry.abstract.TypeDataModel {
         return this.constructor.metadata;
     }
 
-    /** @inheritDoc */
-    static defineSchema() {
-        const fields = foundry.data.fields;
-
-        return {
-            description: new fields.HTMLField({ required: true, nullable: true })
-        };
-    }
-
     /**
      * Obtain a data object used to evaluate any dice rolls associated with this Item Type
      * @param {object} [options] - Options which modify the getRollData method.

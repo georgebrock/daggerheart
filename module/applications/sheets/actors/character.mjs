@@ -160,16 +160,62 @@ export default class CharacterSheet extends DHBaseActorSheet {
             case 'sidebar':
                 await this._prepareSidebarContext(context, options);
                 break;
+            case 'biography':
+                await this._prepareBiographyContext(context, options);
+                break;
         }
         return context;
     }
 
+    /**
+     * Prepare render context for the Loadout part.
+     * @param {ApplicationRenderContext} context
+     * @param {ApplicationRenderOptions} options
+     * @returns {Promise<void>}
+     * @protected
+     */
     async _prepareLoadoutContext(context, _options) {
         context.listView = game.user.getFlag(CONFIG.DH.id, CONFIG.DH.FLAGS.displayDomainCardsAsList);
     }
 
+    /**
+     * Prepare render context for the Sidebar part.
+     * @param {ApplicationRenderContext} context
+     * @param {ApplicationRenderOptions} options
+     * @returns {Promise<void>}
+     * @protected
+     */
     async _prepareSidebarContext(context, _options) {
         context.isDeath = this.document.system.deathMoveViable;
+    }
+
+    /**
+     * Prepare render context for the Biography part.
+     * @param {ApplicationRenderContext} context
+     * @param {ApplicationRenderOptions} options
+     * @returns {Promise<void>}
+     * @protected
+     */
+    async _prepareBiographyContext(context, _options) {
+        const { system } = this.document;
+        const { TextEditor } = foundry.applications.ux;
+
+        const paths = {
+            background: 'biography.background',
+            connections: 'biography.connections'
+        };
+
+        for (const [key, path] of Object.entries(paths)) {
+            const value = foundry.utils.getProperty(system, path);
+            context[key] = {
+                field: system.schema.getField(path),
+                value,
+                enriched: await TextEditor.implementation.enrichHTML(value, {
+                    secrets: this.document.isOwner,
+                    relativeTo: this.document
+                })
+            };
+        }
     }
 
     /* -------------------------------------------- */

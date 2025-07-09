@@ -41,6 +41,45 @@ export default class AdversarySheet extends DHBaseActorSheet {
         return context;
     }
 
+    /**@inheritdoc */
+    async _preparePartContext(partId, context, options) {
+        context = await super._preparePartContext(partId, context, options);
+        switch (partId) {
+            case 'notes':
+                await this._prepareNotesContext(context, options);
+                break;
+        }
+        return context;
+    }
+
+    /**
+     * Prepare render context for the Biography part.
+     * @param {ApplicationRenderContext} context
+     * @param {ApplicationRenderOptions} options
+     * @returns {Promise<void>}
+     * @protected
+     */
+    async _prepareNotesContext(context, _options) {
+        const { system } = this.document;
+        const { TextEditor } = foundry.applications.ux;
+
+        const paths = {
+            notes: 'notes'
+        };
+
+        for (const [key, path] of Object.entries(paths)) {
+            const value = foundry.utils.getProperty(system, path);
+            context[key] = {
+                field: system.schema.getField(path),
+                value,
+                enriched: await TextEditor.implementation.enrichHTML(value, {
+                    secrets: this.document.isOwner,
+                    relativeTo: this.document
+                })
+            };
+        }
+    }
+
     getItem(element) {
         const itemId = (element.target ?? element).closest('[data-item-id]').dataset.itemId,
             item = this.document.items.get(itemId);
