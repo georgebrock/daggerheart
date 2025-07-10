@@ -302,19 +302,62 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
     };
 
     //Reroll Functionality
-    rerollEvent = async(_,event,message)=> {
-        const originalMessage = message;
+    rerollEvent = async(event,message)=> {
+        let originalMessage = message;
+        let dicetype = "str";
+        let originalobject=originalMessage.rolls.map(roll => JSON.parse(roll));
+        let fear,hope;
 
-        if (originalMessage && originalMessage.isRoll) {
-          console.log("Reroll button clicked for message:", originalMessage.id);
-
-          // Rerolling the original roll and send it to chat.
-          originalMessage.roll.reroll().then(newRoll => {
-            newRoll.toMessage({
-              speaker: ChatMessage.getSpeaker({ actor: originalMessage.speaker.actor }),
-              flavor: `(Reroll) ${originalMessage.flavor}`
-            });
-          });
+        if (originalMessage.rolls.length) {
+          console.log("Reroll button clicked for message:", originalMessage._id,originalMessage,originalobject);
+          if (originalobject[0].class==='DualityRoll') {
+            new foundry.applications.api.DialogV2({
+                    window: { title: 'Reroll' },
+                    content: '<p>Select which die/dice to reroll:</p><label><input type="radio" name="choice" value="fear" checked> Fear</label><label><input type="radio" name="choice" value="hope"> Hope</label><label><input type="radio" name="choice" value="both"> Both</label><p>Confirm option?</p>',
+                    buttons:[{
+                        action: "choice",
+                        label: "Confirm Choice",
+                        default: true,
+                        callback: (event, button, dialog) => button.form.elements.choice.value
+                    },
+                    {
+                       action: "cancel",
+                       label:"Discard Reroll"
+                    }],
+                    submit: result =>{
+                        if (result==="cancel") return;
+                        else dicetype = result;
+                    },
+                }).render({ force: true });
+                console.log('User picked:',dicetype);
+                switch(dicetype) {
+                    case "fear":
+                        console.log('Rerolling fear for user.');
+                        fear=new Roll("1d12");
+                        await fear.evaluate();
+                        console.log('Dice rerolled to',fear.result);
+                    case "hope":
+                        console.log('Rerolling hope for user.');
+                        hope=new Roll("1d12");
+                        await hope.evaluate();
+                        console.log('Dice rerolled to',hope.result);
+                    case "both":
+                        console.log('Rerolling both fear and hope for user.');
+                        await hope.evaluate();
+                        await fear.evaluate();
+                        console.log('Dice rerolled to',hope.result,' in hope and ',fear.result,' in fear');
+                }
+                
+/*            const confirm = await foundry.applications.api.DialogV2.confirm({
+                    window: { title: 'Confirm Reroll' },
+                    content: `<p>You have rerolled your ${dicetype} to ${r.result}</p><p>Apply new roll?</p>`
+                });
+                if (!confirm) return;
+                else{
+                 originalobject[0].;   
+                }   */ 
+          }
+        
         }
     }
 }
