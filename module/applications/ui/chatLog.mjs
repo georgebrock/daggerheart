@@ -58,6 +58,9 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
         html.querySelectorAll('.action-use-button').forEach(element =>
             element.addEventListener('click', event => this.actionUseButton.call(this, event, data.message))
         );
+        html.querySelectorAll('.reroll-button').forEach(element =>
+            element.addEventListener('click', event => this.rerollEvent.call(this, event, data.message))
+        );
     };
 
     setupHooks() {
@@ -297,4 +300,21 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
 
         action.use();
     };
+
+    //Reroll Functionality
+    rerollEvent = async(_,event,message)=> {
+        const originalMessage = message;
+
+        if (originalMessage && originalMessage.isRoll) {
+          console.log("Reroll button clicked for message:", originalMessage.id);
+
+          // Rerolling the original roll and send it to chat.
+          originalMessage.roll.reroll().then(newRoll => {
+            newRoll.toMessage({
+              speaker: ChatMessage.getSpeaker({ actor: originalMessage.speaker.actor }),
+              flavor: `(Reroll) ${originalMessage.flavor}`
+            });
+          });
+        }
+    }
 }
