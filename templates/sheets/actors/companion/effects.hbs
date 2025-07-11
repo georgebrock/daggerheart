@@ -3,6 +3,17 @@
     data-tab='{{tabs.effects.id}}'
     data-group='{{tabs.effects.group}}'
 >
-    {{> 'systems/daggerheart/templates/sheets/global/partials/inventory-fieldset-items.hbs' title=(localize 'DAGGERHEART.GENERAL.activeEffects') type='effect'}}
-    {{> 'systems/daggerheart/templates/sheets/global/partials/inventory-fieldset-items.hbs' title=(localize 'DAGGERHEART.GENERAL.inactiveEffects') type='effect'}}
+    {{> 'daggerheart.inventory-items'
+    title='DAGGERHEART.GENERAL.activeEffects'
+    type='effect'
+    isGlassy=true
+    collection=effects.actives
+    }}
+
+    {{> 'daggerheart.inventory-items'
+    title='DAGGERHEART.GENERAL.inactiveEffects'
+    type='effect'
+    isGlassy=true
+    collection=effects.inactives
+    }}
 </section>

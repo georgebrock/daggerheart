@@ -1,0 +1,59 @@
+{{!--
+Inventory/Domain Card Section
+
+{{> 'daggerheart.inventory-items' }}
+
+Parameters:
+- title {string} : Localization key used for the legend.
+- collection {array} : Array of items to render.
+- type {string} : The type of items in the list:
+- isGlassy {boolean} : If true, applies the 'glassy' class to the fieldset.
+- cardView {boolean} : If true and type is 'domainCard', renders using domain card layout.
+- isActor {boolean} : Passed through to inventory-item partials.
+- canCreate {boolean} : If true, show createDoc anchor on legend
+- categoryAdversary {string} : Category adversary id.
+- showLabels {boolean} : If true, show label-tags else show simple tags.
+- hideTooltip {boolean} : If true, disables the tooltip on the item image.
+- hideControls {boolean} : If true, hides the controls inside inventory-item partials.
+- hideDescription {boolean} : If true, hides the item's description.
+--}}
+
+<fieldset class="{{#if isGlassy}}glassy{{/if}}">
+  <legend>
+    {{localize title}}
+    {{#if canCreate}}
+    <a data-action="createDoc" data-type="{{type}}">
+      <i class="fa-solid fa-plus icon-button"></i>
+    </a>
+    {{/if }}
+  </legend>
+  {{#if (and cardView (eq type 'domainCard'))}}
+  <ul class="card-list">
+    {{#each collection as |item|}}
+
+    {{> 'systems/daggerheart/templates/sheets/global/partials/domain-card-item.hbs'
+    item=item
+    type=../type
+    }}
+
+    {{/each}}
+  </ul>
+  {{else}}
+  <ul class="items-list">
+    {{#each collection as |item|}}
+
+    {{> 'daggerheart.inventory-item'
+    item=item
+    type=../type
+    hideControls=../hideControls
+    isActor=../isActor
+    categoryAdversary=../categoryAdversary
+    hideTooltip=../hideTooltip
+    showLabels=../showLabels
+    isAction=../isAction
+    }}
+
+    {{/each}}
+  </ul>
+  {{/if}}
+</fieldset>

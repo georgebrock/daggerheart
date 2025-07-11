@@ -1,5 +1,10 @@
 const { HandlebarsApplicationMixin } = foundry.applications.api;
-import { tagifyElement } from '../../../helpers/utils.mjs';
+import { getDocFromElement, tagifyElement } from '../../../helpers/utils.mjs';
+import DHActionConfig from '../../sheets-configs/action-config.mjs';
+
+/**
+ * @typedef {import('@client/applications/_types.mjs').ApplicationClickAction}
+ */
 
 /**
  * @typedef {object} DragDropConfig
@@ -73,7 +78,9 @@ export default function DHApplicationMixin(Base) {
             actions: {
                 createDoc: DHSheetV2.#createDoc,
                 editDoc: DHSheetV2.#editDoc,
-                deleteDoc: DHSheetV2.#deleteDoc
+                deleteDoc: DHSheetV2.#deleteDoc,
+                toChat: DHSheetV2.#toChat,
+                useItem: DHSheetV2.#useItem,
             },
             contextMenus: [],
             dragDrop: [],
@@ -162,14 +169,14 @@ export default function DHApplicationMixin(Base) {
          * @param {DragEvent} event
          * @protected
          */
-        _onDragStart(event) {}
+        _onDragStart(event) { }
 
         /**
          * Handle drop event.
          * @param {DragEvent} event
          * @protected
          */
-        _onDrop(event) {}
+        _onDrop(event) { }
 
         /* -------------------------------------------- */
         /*  Context Menu                                */
@@ -213,11 +220,10 @@ export default function DHApplicationMixin(Base) {
 
         /**
          * Create an embedded document.
-         * @param {PointerEvent} event - The originating click event
-         * @param {HTMLElement} button - The capturing HTML element which defines the [data-action="removeAction"]
+         * @type {ApplicationClickAction}
          */
-        static async #createDoc(event, button) {
-            const { documentClass, type } = button.dataset;
+        static async #createDoc(event, target) {
+            const { documentClass, type } = target.dataset;
             const parent = this.document;
 
             const cls = getDocumentClass(documentClass);
@@ -234,39 +240,83 @@ export default function DHApplicationMixin(Base) {
 
         /**
          * Renders an embedded document.
-         * @param {PointerEvent} event - The originating click event
-         * @param {HTMLElement} button - The capturing HTML element which defines the [data-action="removeAction"]
+         * @type {ApplicationClickAction}
          */
-        static #editDoc(_event, button) {
-            const { type, docId } = button.dataset;
-            this.document.getEmbeddedDocument(type, docId, { strict: true }).sheet.render({ force: true });
+        static #editDoc(_event, target) {
+            const doc = getDocFromElement(target);
+
+            // TODO: REDO this
+            if (doc) return doc.sheet.render({ force: true });
+            const { actionId } = target.closest('[data-action-id]').dataset;
+            const { actions, attack } = this.document.system;
+            const action = attack.id === actionId ? attack : actions?.find(a => a.id === actionId);
+            new DHActionConfig(action).render({ force: true })
         }
 
         /**
          * Delete an embedded document.
-         * @param {PointerEvent} _event - The originating click event
-         * @param {HTMLElement} button - The capturing HTML element which defines the [data-action="removeAction"]
+         * @type {ApplicationClickAction}
          */
-        static async #deleteDoc(_event, button) {
-            const { type, docId } = button.dataset;
-            const document = this.document.getEmbeddedDocument(type, docId, { strict: true });
-            const typeName = game.i18n.localize(
-                document.type === 'base' ? `DOCUMENT.${type}` : `TYPES.${type}.${document.type}`
-            );
+        static async #deleteDoc(_event, target) {
+            const doc = getDocFromElement(target);
+
+            // TODO: REDO this
+            if (doc) return await doc.deleteDialog()
+
+            const { actionId } = target.closest('[data-action-id]').dataset;
+            const { actions, attack } = this.document.system;
+            if (attack.id === actionId) return;
+            const action = actions.find(a => a.id === actionId);
 
             const confirmed = await foundry.applications.api.DialogV2.confirm({
                 window: {
                     title: game.i18n.format('DAGGERHEART.APPLICATIONS.DeleteConfirmation.title', {
-                        type: typeName,
-                        name: document.name
+                        type: game.i18n.localize(`DAGGERHEART.GENERAL.Action.single`),
+                        name: action.name
                     })
                 },
-                content: game.i18n.format('DAGGERHEART.APPLICATIONS.DeleteConfirmation.text', { name: document.name })
+                content: game.i18n.format('DAGGERHEART.APPLICATIONS.DeleteConfirmation.text', { name: action.name })
             });
             if (!confirmed) return;
 
-            await document.delete();
+            return await this.document.update({
+                'system.actions': actions.filter((a) => a.id !== action.id)
+            });
         }
+
+        /**
+         * Send item to Chat
+         * @type {ApplicationClickAction}
+         */
+        static async #toChat(_event, target) {
+            let doc = getDocFromElement(target);
+
+            // TODO: REDO this
+            if (!doc) {
+                const { actionId } = target.closest('[data-action-id]').dataset;
+                const { actions, attack } = this.document.system;
+                doc = attack.id === actionId ? attack : actions?.find(a => a.id === actionId);
+            }
+            return doc.toChat(this.document.id);
+        }
+
+        /**
+         * Use a item
+         * @type {ApplicationClickAction}
+         */
+        static async #useItem(event, target) {
+            let doc = getDocFromElement(target);
+
+            // TODO: REDO this
+            if (!doc) {
+                const { actionId } = target.closest('[data-action-id]').dataset;
+                const { actions, attack } = this.document.system;
+                doc = attack.id === actionId ? attack : actions?.find(a => a.id === actionId);
+            }
+
+            await doc.use(event);
+        }
+
     }
 
     return DHSheetV2;

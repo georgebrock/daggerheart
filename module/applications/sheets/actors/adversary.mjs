@@ -9,8 +9,6 @@ export default class AdversarySheet extends DHBaseActorSheet {
         window: { resizable: true },
         actions: {
             reactionRoll: AdversarySheet.#reactionRoll,
-            useItem: this.useItem,
-            toChat: this.toChat
         },
         window: {
             resizable: true
@@ -28,7 +26,7 @@ export default class AdversarySheet extends DHBaseActorSheet {
     /** @inheritdoc */
     static TABS = {
         primary: {
-            tabs: [{ id: 'features' }, { id: 'notes' }, { id: 'effects' }],
+            tabs: [{ id: 'features' }, { id: 'effects' }, { id: 'notes' }],
             initial: 'features',
             labelPrefix: 'DAGGERHEART.GENERAL.Tabs'
         }
@@ -80,12 +78,6 @@ export default class AdversarySheet extends DHBaseActorSheet {
         }
     }
 
-    getItem(element) {
-        const itemId = (element.target ?? element).closest('[data-item-id]').dataset.itemId,
-            item = this.document.items.get(itemId);
-        return item;
-    }
-
     /* -------------------------------------------- */
     /*  Application Clicks Actions                  */
     /* -------------------------------------------- */
@@ -110,43 +102,5 @@ export default class AdversarySheet extends DHBaseActorSheet {
         };
 
         this.actor.diceRoll(config);
-    }
-
-    /**
-     *
-     * @type {ApplicationClickAction}
-     */
-    static async useItem(event) {
-        const action = this.getItem(event) ?? this.actor.system.attack;
-        action.use(event);
-    }
-
-    /**
-     *
-     * @type {ApplicationClickAction}
-     */
-    static async toChat(event, button) {
-        if (button?.dataset?.type === 'experience') {
-            const experience = this.document.system.experiences[button.dataset.uuid];
-            const cls = getDocumentClass('ChatMessage');
-            const systemData = {
-                name: game.i18n.localize('DAGGERHEART.GENERAL.Experience.single'),
-                description: `${experience.name} ${experience.total.signedString()}`
-            };
-            const msg = new cls({
-                type: 'abilityUse',
-                user: game.user.id,
-                system: systemData,
-                content: await foundry.applications.handlebars.renderTemplate(
-                    'systems/daggerheart/templates/ui/chat/ability-use.hbs',
-                    systemData
-                )
-            });
-
-            cls.create(msg.toObject());
-        } else {
-            const item = this.getItem(event) ?? this.document.system.attack;
-            item.toChat(this.document.id);
-        }
     }
 }
