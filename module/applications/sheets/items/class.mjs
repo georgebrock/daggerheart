@@ -10,10 +10,8 @@ export default class ClassSheet extends DHBaseItemSheet {
         actions: {
             removeItemFromCollection: ClassSheet.#removeItemFromCollection,
             removeSuggestedItem: ClassSheet.#removeSuggestedItem,
-            viewDoc: ClassSheet.#viewDoc,
-            addFeature: this.addFeature,
-            editFeature: this.editFeature,
-            deleteFeature: this.deleteFeature
+            addFeature: ClassSheet.#addFeature,
+            deleteFeature: ClassSheet.#deleteFeature
         },
         tagifyConfigs: [
             {
@@ -157,55 +155,27 @@ export default class ClassSheet extends DHBaseItemSheet {
         await this.document.update({ [`system.characterGuide.${target}`]: null });
     }
 
-    /**
-     * Open the sheet of a item by UUID.
-     * @param {PointerEvent} _event -
-     * @param {HTMLElement} button
-     */
-    static async #viewDoc(_event, button) {
-        const doc = await fromUuid(button.dataset.uuid);
-        doc.sheet.render({ force: true });
-    }
+    static async #addFeature(_, target) {
+        const { actionPath } = target.dataset;
+        const cls = foundry.documents.Item.implementation;
 
-    getActionPath(type) {
-        return type === 'hope' ? 'hopeFeatures' : 'classFeatures';
-    }
-
-    static async addFeature(_, target) {
-        const actionPath = this.getActionPath(target.dataset.type);
-        const feature = await game.items.documentClass.create({
+        const feature = await cls.create({
             type: 'feature',
-            name: game.i18n.format('DOCUMENT.New', { type: game.i18n.localize('TYPES.Item.feature') })
+            name: cls.defaultName({ type: 'feature'}),
         });
+
         await this.document.update({
             [`system.${actionPath}`]: [
-                ...this.document.system[actionPath].filter(x => x).map(x => x.uuid),
+                ...this.document.system[actionPath],
                 feature.uuid
             ]
         });
     }
 
-    static async editFeature(_, button) {
-        const target = button.closest('.feature-item');
-        const actionPath = this.getActionPath(button.dataset.type);
-        const feature = this.document.system[actionPath].find(x => x?.id === target.dataset.featureId);
-        if (!feature) {
-            ui.notifications.warn(game.i18n.localize('DAGGERHEART.UI.notifications.featureIsMissing'));
-            return;
-        }
-
-        feature.sheet.render(true);
-    }
-
-    static async deleteFeature(event, button) {
-        event.stopPropagation();
-        const target = button.closest('.feature-item');
-        const actionPath = this.getActionPath(button.dataset.type);
-
+    static async #deleteFeature(_, button) {
+        const { actionPath, itemUuid } = button.dataset;
         await this.document.update({
-            [`system.${actionPath}`]: this.document.system[actionPath]
-                .filter(feature => feature && feature.id !== target.dataset.featureId)
-                .map(x => x.uuid)
+            [`system.${actionPath}`]: this.document.system[actionPath].filter(f => f.uuid !== itemUuid)
         });
     }
 }

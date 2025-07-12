@@ -28,7 +28,22 @@ Parameters:
     {{!-- Weapon Block Start --}}
     {{#if (eq type 'weapon')}}
     {{#if (not hideTags)}}
-    <div class="item-tags"></div>
+    <div class="item-tags">
+      <div class="tag">
+        {{localize (concat 'DAGGERHEART.CONFIG.Traits.' item.system.attack.roll.trait '.name')}}
+      </div>
+      <div class="tag">
+        {{localize (concat 'DAGGERHEART.CONFIG.Range.' item.system.attack.range '.name')}}
+      </div>
+      <div class="tag">
+        {{item.system.attack.damage.parts.0.value.dice}}{{#if item.system.attack.damage.parts.0.value.bonus}} +
+        {{item.system.attack.damage.parts.0.value.bonus}}{{/if}}
+        ({{localize (concat 'DAGGERHEART.CONFIG.DamageType.' item.system.attack.damage.parts.0.type '.abbreviation')}})
+      </div>
+      <div class="tag">
+        {{localize (concat 'DAGGERHEART.CONFIG.Burden.' item.system.burden)}}
+      </div>
+    </div>
     {{else if (not hideLabels)}}
     <div class="item-labels">
       <div class="label">
@@ -158,7 +173,7 @@ Parameters:
       <i class="fa-solid {{ifThen item.system.inVault 'fa-arrow-up' 'fa-arrow-down'}}"></i>
     </a>
     {{/if}}
-  {{!-- I had to use the {{not}} helper because otherwise the function is called when rendering --}}
+    {{!-- I had to use the {{not}} helper because otherwise the function is called when rendering --}}
     {{#unless (not item.toChat)}}
     <a data-action="toChat" data-tooltip="DAGGERHEART.UI.Tooltip.sendToChat">
       <i class="fa-regular fa-message"></i>

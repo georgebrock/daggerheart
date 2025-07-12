@@ -8,7 +8,6 @@ export default class SubclassSheet extends DHBaseItemSheet {
         window: { resizable: false },
         actions: {
             addFeature: this.addFeature,
-            editFeature: this.editFeature,
             deleteFeature: this.deleteFeature
         }
     };
@@ -38,30 +37,20 @@ export default class SubclassSheet extends DHBaseItemSheet {
     };
 
     static async addFeature(_, target) {
-        const feature = await game.items.documentClass.create({
+        const cls = foundry.documents.Item.implementation;
+        const feature = await cls.create({
             type: 'feature',
-            name: game.i18n.format('DOCUMENT.New', { type: game.i18n.localize('TYPES.Item.feature') })
+            name: cls.defaultName({ type: 'feature' }),
         });
+
         await this.document.update({
-            [`system.${target.dataset.type}`]: feature.uuid
+            [`system.${target.dataset.type}`]: feature
         });
     }
 
-    static async editFeature(_, button) {
-        const feature = this.document.system[button.dataset.type];
-        if (!feature) {
-            ui.notifications.warn(game.i18n.localize('DAGGERHEART.UI.notifications.featureIsMissing'));
-            return;
-        }
-
-        feature.sheet.render(true);
-    }
-
-    static async deleteFeature(event, button) {
-        event.stopPropagation();
-
+    static async deleteFeature(_, button) {
         await this.document.update({
-            [`system.${button.dataset.type}`]: null
+            [`system.${button.dataset.actionPath}`]: null
         });
     }
 

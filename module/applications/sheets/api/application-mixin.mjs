@@ -223,19 +223,59 @@ export default function DHApplicationMixin(Base) {
          * @type {ApplicationClickAction}
          */
         static async #createDoc(event, target) {
-            const { documentClass, type } = target.dataset;
-            const parent = this.document;
+            const { documentClass, type, inVault, disabled } = target.dataset;
+            const parentIsItem = this.document.documentName === 'Item';
+            const parent = parentIsItem && documentClass === 'Item' ? null : this.document;
 
-            const cls = getDocumentClass(documentClass);
-            return await cls.createDocuments(
-                [
-                    {
-                        name: cls.defaultName({ type, parent }),
-                        type
+            if (type === 'action') {
+                const { type: actionType } = await foundry.applications.api.DialogV2.input({
+                    window: { title: 'Select Action Type' },
+                    content: await foundry.applications.handlebars.renderTemplate(
+                        'systems/daggerheart/templates/actionTypes/actionType.hbs',
+                        { types: CONFIG.DH.ACTIONS.actionTypes }
+                    ),
+                    ok: {
+                        label: game.i18n.format('DOCUMENT.Create', {
+                            type: game.i18n.localize('DAGGERHEART.GENERAL.Action.single')
+                        }),
                     }
-                ],
-                { parent, renderSheet: !event.shiftKey }
-            );
+                });
+                if (!actionType) return;
+                const cls = game.system.api.models.actions.actionsTypes[actionType]
+                const action = new cls({
+                    _id: foundry.utils.randomID(),
+                    type: actionType,
+                    name: game.i18n.localize(CONFIG.DH.ACTIONS.actionTypes[actionType].name),
+                    ...cls.getSourceConfig(this.document)
+                },
+                    {
+                        parent: this.document
+                    }
+                );
+                await this.document.update({ 'system.actions': [...this.document.system.actions, action] });
+                await new DHActionConfig(this.document.system.actions[this.document.system.actions.length - 1]).render({
+                    force: true
+                });
+                return action;
+
+            } else {
+                const cls = getDocumentClass(documentClass);
+                const data = {
+                    name: cls.defaultName({ type, parent }),
+                    type,
+                }
+                if (inVault) data["system.inVault"] = true;
+                if (disabled) data.disabled = true;
+
+                const doc = await cls.create(data, { parent, renderSheet: !event.shiftKey });
+                if (parentIsItem && type === 'feature') {
+                    await this.document.update({
+                        'system.features': [...this.document.system.features, doc]
+                    });
+                }
+                return doc;
+            }
+
         }
 
         /**
@@ -244,9 +284,9 @@ export default function DHApplicationMixin(Base) {
          */
         static #editDoc(_event, target) {
             const doc = getDocFromElement(target);
+            if (doc) return doc.sheet.render({ force: true });
 
             // TODO: REDO this
-            if (doc) return doc.sheet.render({ force: true });
             const { actionId } = target.closest('[data-action-id]').dataset;
             const { actions, attack } = this.document.system;
             const action = attack.id === actionId ? attack : actions?.find(a => a.id === actionId);

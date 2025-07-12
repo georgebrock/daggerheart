@@ -1,8 +1,5 @@
-<section
-    class='tab {{tabs.inventory.cssClass}} {{tabs.inventory.id}}'
-    data-tab='{{tabs.inventory.id}}'
-    data-group='{{tabs.inventory.group}}'
->
+<section class='tab {{tabs.inventory.cssClass}} {{tabs.inventory.id}}' data-tab='{{tabs.inventory.id}}'
+    data-group='{{tabs.inventory.group}}'>
     <div class="search-section">
         <div class="search-bar">
             <div class="icon">
@@ -16,22 +13,34 @@
     </div>
 
     <div class="items-section">
-        {{> 'daggerheart.inventory-items' title='TYPES.Item.weapon'
+        {{> 'daggerheart.inventory-items'
+        title='TYPES.Item.weapon'
         type='weapon'
         collection=document.itemTypes.weapon
-        isGlassy=true}}
-        {{> 'daggerheart.inventory-items' title='TYPES.Item.armor'
+        isGlassy=true
+        canCreate=true
+        }}
+        {{> 'daggerheart.inventory-items'
+        title='TYPES.Item.armor'
         type='armor'
         collection=document.itemTypes.armor
-        isGlassy=true}}
-        {{> 'daggerheart.inventory-items' title='TYPES.Item.consumable'
+        isGlassy=true
+        canCreate=true
+        }}
+        {{> 'daggerheart.inventory-items'
+        title='TYPES.Item.consumable'
         type='consumable'
         collection=document.itemTypes.consumable
-        isGlassy=true}}
-        {{> 'daggerheart.inventory-items' title='TYPES.Item.miscellaneous'
+        isGlassy=true
+        canCreate=true
+        }}
+        {{> 'daggerheart.inventory-items'
+        title='TYPES.Item.miscellaneous'
         type='miscellaneous'
         collection=document.itemTypes.miscellaneous
-        isGlassy=true}}
+        isGlassy=true
+        canCreate=true
+        }}
     </div>
 
     <div class="currency-section">
