@@ -44,13 +44,17 @@ export default class ClassSheet extends DHBaseItemSheet {
         settings: {
             template: 'systems/daggerheart/templates/sheets/items/class/settings.hbs',
             scrollable: ['.settings']
+        },
+        effects: {
+            template: 'systems/daggerheart/templates/sheets/global/tabs/tab-effects.hbs',
+            scrollable: ['.effects']
         }
     };
 
     /** @inheritdoc */
     static TABS = {
         primary: {
-            tabs: [{ id: 'description' }, { id: 'features' }, { id: 'settings' }],
+            tabs: [{ id: 'description' }, { id: 'features' }, { id: 'settings' }, { id: 'effects' }],
             initial: 'description',
             labelPrefix: 'DAGGERHEART.GENERAL.Tabs'
         }
@@ -161,7 +165,7 @@ export default class ClassSheet extends DHBaseItemSheet {
 
         const feature = await cls.create({
             type: 'feature',
-            name: cls.defaultName({ type: 'feature'}),
+            name: cls.defaultName({ type: 'feature' }),
         });
 
         await this.document.update({
