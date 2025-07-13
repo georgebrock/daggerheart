@@ -3,7 +3,7 @@ import { getDocFromElement, tagifyElement } from '../../../helpers/utils.mjs';
 import DHActionConfig from '../../sheets-configs/action-config.mjs';
 
 /**
- * @typedef {import('@client/applications/_types.mjs').ApplicationClickAction}
+ * @typedef {import('@client/applications/_types.mjs').ApplicationClickAction} ApplicationClickAction
  */
 
 /**
@@ -76,13 +76,30 @@ export default function DHApplicationMixin(Base) {
         static DEFAULT_OPTIONS = {
             classes: ['daggerheart', 'sheet', 'dh-style'],
             actions: {
+                triggerContextMenu: DHSheetV2.#triggerContextMenu,
                 createDoc: DHSheetV2.#createDoc,
                 editDoc: DHSheetV2.#editDoc,
                 deleteDoc: DHSheetV2.#deleteDoc,
                 toChat: DHSheetV2.#toChat,
                 useItem: DHSheetV2.#useItem,
+                toggleEffect: DHSheetV2.#toggleEffect,
             },
-            contextMenus: [],
+            contextMenus: [{
+                handler: DHSheetV2.#getEffectContextOptions,
+                selector: '[data-item-uuid][data-type="effect"]',
+                options: {
+                    parentClassHooks: false,
+                    fixed: true
+                },
+            },
+            {
+                handler: DHSheetV2.#getActionContextOptions,
+                selector: '[data-item-uuid][data-type="action"]',
+                options: {
+                    parentClassHooks: false,
+                    fixed: true
+                }
+            }],
             dragDrop: [],
             tagifyConfigs: []
         };
@@ -192,12 +209,134 @@ export default function DHApplicationMixin(Base) {
         /* -------------------------------------------- */
 
         /**
-         * Get the set of ContextMenu options which should be used for journal entry pages in the sidebar.
-         * @returns {import('@client/applications/ux/context-menu.mjs').ContextMenuEntry[]}
+         * Get the set of ContextMenu options for DomainCards.
+         * @returns {import('@client/applications/ux/context-menu.mjs').ContextMenuEntry[]} - The Array of context options passed to the ContextMenu instance
+         * @this {CharacterSheet}
          * @protected
          */
-        _getEntryContextOptions() {
-            return [];
+        static #getEffectContextOptions() {
+            /**@type {import('@client/applications/ux/context-menu.mjs').ContextMenuEntry[]} */
+            const options = [
+                {
+                    name: 'disableEffect',
+                    icon: 'fa-solid fa-lightbulb',
+                    condition: target => !getDocFromElement(target).disabled,
+                    callback: target => getDocFromElement(target).update({ disabled: true })
+                },
+                {
+                    name: 'enableEffect',
+                    icon: 'fa-regular fa-lightbulb',
+                    condition: target => getDocFromElement(target).disabled,
+                    callback: target => getDocFromElement(target).update({ disabled: false })
+                },
+            ].map(option => ({
+                ...option,
+                name: `DAGGERHEART.APPLICATIONS.ContextMenu.${option.name}`,
+                icon: `<i class="${option.icon}"></i>`
+            }));
+
+            return [...options, ...this._getContextMenuCommonOptions.call(this, { toChat: true })];
+        }
+
+        /**
+         * Get the set of ContextMenu options for Actions.
+         * @returns {import('@client/applications/ux/context-menu.mjs').ContextMenuEntry[]} - The Array of context options passed to the ContextMenu instance
+         * @this {DHSheetV2}
+         * @protected
+         */
+        static #getActionContextOptions() {
+            /**@type {import('@client/applications/ux/context-menu.mjs').ContextMenuEntry[]} */
+            const getAction = (target) => {
+                const { actionId } = target.closest('[data-action-id]').dataset;
+                const { actions, attack } = this.document.system;
+                return attack.id === actionId ? attack : actions?.find(a => a.id === actionId);
+            };
+
+            const options = [
+                {
+                    name: 'DAGGERHEART.APPLICATIONS.ContextMenu.useItem',
+                    icon: 'fa-solid fa-burst',
+                    callback: (target, event) => getAction(target).use(event),
+                },
+                {
+                    name: 'DAGGERHEART.APPLICATIONS.ContextMenu.sendToChat',
+                    icon: 'fa-solid fa-message',
+                    callback: (target) => getAction(target).toChat(this.document.id),
+                },
+                {
+                    name: 'CONTROLS.CommonEdit',
+                    icon: 'fa-solid fa-pen-to-square',
+                    callback: (target) => new DHActionConfig(getAction(target)).render({ force: true })
+                },
+                {
+                    name: 'CONTROLS.CommonDelete',
+                    icon: 'fa-solid fa-trash',
+                    condition: (target) => {
+                        const { actionId } = target.closest('[data-action-id]').dataset;
+                        const { attack } = this.document.system;
+                        return attack.id !== actionId
+                    },
+                    callback: async (target) => {
+                        const action = getAction(target)
+                        const confirmed = await foundry.applications.api.DialogV2.confirm({
+                            window: {
+                                title: game.i18n.format('DAGGERHEART.APPLICATIONS.DeleteConfirmation.title', {
+                                    type: game.i18n.localize(`DAGGERHEART.GENERAL.Action.single`),
+                                    name: action.name
+                                })
+                            },
+                            content: game.i18n.format('DAGGERHEART.APPLICATIONS.DeleteConfirmation.text', { name: action.name })
+                        });
+                        if (!confirmed) return;
+
+                        return this.document.update({
+                            'system.actions': this.document.system.actions.do.filter((a) => a.id !== action.id)
+                        });
+                    }
+                }
+            ].map(option => ({
+                ...option,
+                icon: `<i class="${option.icon}"></i>`
+            }));
+
+            return options;
+        }
+
+        /**
+         * Get the set of ContextMenu options.
+         * @returns {import('@client/applications/ux/context-menu.mjs').ContextMenuEntry[]} - The Array of context options passed to the ContextMenu instance
+         */
+        _getContextMenuCommonOptions({ usable = false, toChat = false, deletable = true }) {
+            const options = [
+                {
+                    name: 'CONTROLS.CommonEdit',
+                    icon: 'fa-solid fa-pen-to-square',
+                    callback: target => getDocFromElement(target).sheet.render({ force: true })
+                },
+            ];
+
+            if (usable) options.unshift({
+                name: 'DAGGERHEART.APPLICATIONS.ContextMenu.useItem',
+                icon: 'fa-solid fa-burst',
+                callback: (target, event) => getDocFromElement(target).use(event),
+            });
+
+            if (toChat) options.unshift({
+                name: 'DAGGERHEART.APPLICATIONS.ContextMenu.sendToChat',
+                icon: 'fa-solid fa-message',
+                callback: (target) => getDocFromElement(target).toChat(this.document.id),
+            });
+
+            if (deletable) options.push({
+                name: 'CONTROLS.CommonDelete',
+                icon: 'fa-solid fa-trash',
+                callback: target => getDocFromElement(target).deleteDialog(),
+            })
+
+            return options.map(option => ({
+                ...option,
+                icon: `<i class="${option.icon}"></i>`
+            }))
         }
 
         /* -------------------------------------------- */
@@ -270,7 +409,7 @@ export default function DHApplicationMixin(Base) {
                 const doc = await cls.create(data, { parent, renderSheet: !event.shiftKey });
                 if (parentIsItem && type === 'feature') {
                     await this.document.update({
-                        'system.features': [...this.document.system.features, doc]
+                        'system.features': this.document.system.toObject().features.concat(doc.uuid)
                     });
                 }
                 return doc;
@@ -355,6 +494,23 @@ export default function DHApplicationMixin(Base) {
             }
 
             await doc.use(event);
+        }
+
+        /**
+         * Toggle a ActiveEffect
+         * @type {ApplicationClickAction}
+         */
+        static async #toggleEffect(_, target) {
+            const doc = getDocFromElement(target);
+            await doc.update({ disabled: !doc.disabled });
+        }
+
+        /**
+         * Trigger the context menu.
+         * @type {ApplicationClickAction}
+         */
+        static #triggerContextMenu(event, _) {
+            return CONFIG.ux.ContextMenu.triggerContextMenu(event);
         }
 
     }

@@ -1,4 +1,4 @@
-import DHActionConfig from '../../sheets-configs/action-config.mjs';
+import { getDocFromElement } from '../../../helpers/utils.mjs';
 import DHApplicationMixin from './application-mixin.mjs';
 
 const { ItemSheetV2 } = foundry.applications.sheets;
@@ -21,12 +21,21 @@ export default class DHBaseItemSheet extends DHApplicationMixin(ItemSheetV2) {
         },
         actions: {
             removeAction: DHBaseItemSheet.#removeAction,
-            addFeature: DHBaseItemSheet.#addFeature,
-            removeFeature: DHBaseItemSheet.#removeFeature
+            addFeature: DHBaseItemSheet.#addFeature
         },
         dragDrop: [
             { dragSelector: null, dropSelector: '.tab.features .drop-section' },
             { dragSelector: '.feature-item', dropSelector: null }
+        ],
+        contextMenus: [
+            {
+                handler: DHBaseItemSheet.#getFeatureContextOptions,
+                selector: '[data-item-uuid][data-type="feature"]',
+                options: {
+                    parentClassHooks: false,
+                    fixed: true
+                }
+            }
         ]
     };
 
@@ -62,6 +71,9 @@ export default class DHBaseItemSheet extends DHApplicationMixin(ItemSheetV2) {
             case "effects":
                 await this._prepareEffectsContext(context, options)
                 break;
+            case "features":
+                context.isGM = game.user.isGM;
+                break;
         }
 
         return context;
@@ -87,9 +99,46 @@ export default class DHBaseItemSheet extends DHApplicationMixin(ItemSheetV2) {
     }
 
     /* -------------------------------------------- */
-    /*  Application Clicks Actions                  */
+    /*  Context Menu                                */
     /* -------------------------------------------- */
 
+    /**
+     * Get the set of ContextMenu options for Features.
+     * @returns {import('@client/applications/ux/context-menu.mjs').ContextMenuEntry[]} - The Array of context options passed to the ContextMenu instance
+     * @this {DHSheetV2}
+     * @protected
+     */
+    static #getFeatureContextOptions() {
+        const options = this._getContextMenuCommonOptions({ usable: true, toChat: true, deletable: false })
+        options.push(
+            {
+                name: 'CONTROLS.CommonDelete',
+                icon: '<i class="fa-solid fa-trash"></i>',
+                callback: async (target) => {
+                    const feature = getDocFromElement(target);
+                    if (!feature) return;
+                    const confirmed = await foundry.applications.api.DialogV2.confirm({
+                        window: {
+                            title: game.i18n.format('DAGGERHEART.APPLICATIONS.DeleteConfirmation.title', {
+                                type: game.i18n.localize(`TYPES.Item.feature`),
+                                name: feature.name
+                            })
+                        },
+                        content: game.i18n.format('DAGGERHEART.APPLICATIONS.DeleteConfirmation.text', { name: feature.name })
+                    });
+                    if (!confirmed) return;
+                    await this.document.update({
+                        'system.features': this.document.system.toObject().features.filter(uuid => uuid !== feature.uuid)
+                    });
+                },
+            }
+        )
+        return options;
+    }
+
+    /* -------------------------------------------- */
+    /*  Application Clicks Actions                  */
+    /* -------------------------------------------- */
 
     /**
      * Remove an action from the item.
@@ -130,36 +179,6 @@ export default class DHBaseItemSheet extends DHApplicationMixin(ItemSheetV2) {
             'system.features': [...this.document.system.features, feature]
         });
     }
-
-    /**
-     * Remove a feature from the item.
-     * @type {ApplicationClickAction}
-     */
-    static async #removeFeature(event, button) {
-        event.stopPropagation();
-        const target = button.closest('.feature-item');
-        const feature = this.document.system.features.find(x => x && x.id === target.id);
-
-        if (feature) {
-            const confirmed = await foundry.applications.api.DialogV2.confirm({
-                window: {
-                    title: game.i18n.format('DAGGERHEART.APPLICATIONS.DeleteConfirmation.title', {
-                        type: game.i18n.localize(`TYPES.Item.feature`),
-                        name: feature.name
-                    })
-                },
-                content: game.i18n.format('DAGGERHEART.APPLICATIONS.DeleteConfirmation.text', { name: feature.name })
-            });
-            if (!confirmed) return;
-        }
-
-        await this.document.update({
-            'system.features': this.document.system.features
-                .filter(feature => feature && feature.id !== target.id)
-                .map(x => x.uuid)
-        });
-    }
-
     /* -------------------------------------------- */
     /*  Application Drag/Drop                       */
     /* -------------------------------------------- */

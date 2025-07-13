@@ -15,7 +15,6 @@ export default class CharacterSheet extends DHBaseActorSheet {
         classes: ['character'],
         position: { width: 850, height: 800 },
         actions: {
-            triggerContextMenu: CharacterSheet.#triggerContextMenu,
             toggleVault: CharacterSheet.#toggleVault,
             rollAttribute: CharacterSheet.#rollAttribute,
             toggleHope: CharacterSheet.#toggleHope,
@@ -29,16 +28,30 @@ export default class CharacterSheet extends DHBaseActorSheet {
             resizable: true
         },
         dragDrop: [],
-        contextMenus: [
-            {
-                handler: CharacterSheet._getContextMenuOptions,
-                selector: '[data-item-uuid]',
-                options: {
-                    parentClassHooks: false,
-                    fixed: true
-                }
+        contextMenus: [{
+            handler: CharacterSheet.#getDomainCardContextOptions,
+            selector: '[data-item-uuid][data-type="domainCard"]',
+            options: {
+                parentClassHooks: false,
+                fixed: true
             }
-        ]
+        },
+        {
+            handler: CharacterSheet.#getEquipamentContextOptions,
+            selector: '[data-item-uuid][data-type="armor"], [data-item-uuid][data-type="weapon"]',
+            options: {
+                parentClassHooks: false,
+                fixed: true
+            }
+        },
+        {
+            handler: CharacterSheet.#getItemContextOptions,
+            selector: '[data-item-uuid][data-type="consumable"], [data-item-uuid][data-type="miscellaneous"]',
+            options: {
+                parentClassHooks: false,
+                fixed: true
+            }
+        }]
     };
 
     /**@override */
@@ -208,77 +221,70 @@ export default class CharacterSheet extends DHBaseActorSheet {
     /* -------------------------------------------- */
 
     /**
-     * Get the set of ContextMenu options.
+     * Get the set of ContextMenu options for DomainCards.
      * @returns {import('@client/applications/ux/context-menu.mjs').ContextMenuEntry[]} - The Array of context options passed to the ContextMenu instance
      * @this {CharacterSheet}
      * @protected
      */
-    static _getContextMenuOptions() {
-        return [
+    static #getDomainCardContextOptions() {
+        /**@type {import('@client/applications/ux/context-menu.mjs').ContextMenuEntry[]} */
+        const options = [
             {
-                name: 'DAGGERHEART.ACTORS.Character.contextMenu.useItem',
-                icon: '<i class="fa-solid fa-burst"></i>',
-                condition: target => {
-                    const doc = getDocFromElement(target);
-                    return typeof doc.use === 'function';
-                },
-                callback: (target, event) => getDocFromElement(target).use(event)
-            },
-            {
-                name: 'DAGGERHEART.ACTORS.Character.contextMenu.equip',
-                icon: '<i class="fa-solid fa-hands"></i>',
-                condition: target => {
-                    const item = getDocFromElement(target);
-                    return ['weapon', 'armor'].includes(item.type) && !item.system.equipped;
-                },
-                callback: CharacterSheet.#toggleEquipItem.bind(this)
-            },
-            {
-                name: 'DAGGERHEART.ACTORS.Character.contextMenu.unequip',
-                icon: '<i class="fa-solid fa-hands"></i>',
-                condition: el => {
-                    const item = getDocFromElement(el);
-                    return ['weapon', 'armor'].includes(item.type) && item.system.equipped;
-                },
-                callback: CharacterSheet.#toggleEquipItem.bind(this)
-            },
-            {
-                name: 'DAGGERHEART.ACTORS.Character.contextMenu.toLoadout',
-                icon: '<i class="fa-solid fa-arrow-up"></i>',
-                condition: target => {
-                    const item = getDocFromElement(target);
-                    return ['domainCard'].includes(item.type) && item.system.inVault;
-                },
+                name: 'toLoadout',
+                icon: 'fa-solid fa-arrow-up',
+                condition: target => getDocFromElement(target).system.inVault,
                 callback: target => getDocFromElement(target).update({ 'system.inVault': false })
             },
             {
-                name: 'DAGGERHEART.ACTORS.Character.contextMenu.toVault',
-                icon: '<i class="fa-solid fa-arrow-down"></i>',
-                condition: target => {
-                    const item = getDocFromElement(target);
-                    return ['domainCard'].includes(item.type) && !item.system.inVault;
-                },
+                name: 'toVault',
+                icon: 'fa-solid fa-arrow-down',
+                condition: target => !getDocFromElement(target).system.inVault,
                 callback: target => getDocFromElement(target).update({ 'system.inVault': true })
             },
-            {
-                name: 'DAGGERHEART.ACTORS.Character.contextMenu.sendToChat',
-                icon: '<i class="fa-regular fa-message"></i>',
-                condition: target => {
-                    return typeof getDocFromElement(target).toChat === 'function';
-                },
-                callback: (target) => getDocFromElement(target).toChat(this.document.id),
-            },
-            {
-                name: 'CONTROLS.CommonEdit',
-                icon: '<i class="fa-solid fa-pen-to-square"></i>',
-                callback: target => getDocFromElement(target).sheet.render({ force: true })
-            },
-            {
-                name: 'CONTROLS.CommonDelete',
-                icon: '<i class="fa-solid fa-trash"></i>',
-                callback: async el => getDocFromElement(el).deleteDialog(),
-            }
-        ];
+        ].map(option => ({
+            ...option,
+            name: `DAGGERHEART.APPLICATIONS.ContextMenu.${option.name}`,
+            icon: `<i class="${option.icon}"></i>`
+        }));
+
+        return [...options, ...this._getContextMenuCommonOptions.call(this, { usable: true, toChat: true })];
+    }
+
+    /**
+     * Get the set of ContextMenu options for Armors and Weapons.
+     * @returns {import('@client/applications/ux/context-menu.mjs').ContextMenuEntry[]} - The Array of context options passed to the ContextMenu instance
+     * @this {CharacterSheet}
+     * @protected
+     */
+    static #getEquipamentContextOptions() {
+        const options = [{
+            name: 'equip',
+            icon: 'fa-solid fa-hands',
+            condition: target => !getDocFromElement(target).system.equipped,
+            callback: (target, event) => CharacterSheet.#toggleEquipItem.call(this, event, target),
+        },
+        {
+            name: 'unequip',
+            icon: 'fa-solid fa-hands',
+            condition: target => getDocFromElement(target).system.equipped,
+            callback: (target, event) => CharacterSheet.#toggleEquipItem.call(this, event, target),
+        }].map(option => ({
+            ...option,
+            name: `DAGGERHEART.APPLICATIONS.ContextMenu.${option.name}`,
+            icon: `<i class="${option.icon}"></i>`
+        }));
+
+        return [...options, ...this._getContextMenuCommonOptions.call(this, { usable: true, toChat: true })];
+    }
+
+    /**
+     * Get the set of ContextMenu options for Consumable and Miscellaneous.
+     * @returns {import('@client/applications/ux/context-menu.mjs').ContextMenuEntry[]} - The Array of context options passed to the ContextMenu instance
+     * @this {CharacterSheet}
+     * @protected
+     */
+    static #getItemContextOptions() {
+        return this._getContextMenuCommonOptions.call(this, { usable: true, toChat: true });
     }
     /* -------------------------------------------- */
     /*  Filter Tracking                             */
@@ -532,7 +538,7 @@ export default class CharacterSheet extends DHBaseActorSheet {
         this.document.diceRoll(config);
     }
 
-     //TODO: redo toggleEquipItem method
+    //TODO: redo toggleEquipItem method
 
 
     /**
@@ -591,14 +597,6 @@ export default class CharacterSheet extends DHBaseActorSheet {
     static async #toggleVault(_event, button) {
         const doc = getDocFromElement(button)
         await doc?.update({ 'system.inVault': !doc.system.inVault });
-    }
-
-    /**
-     * Trigger the context menu.
-     * @type {ApplicationClickAction}
-     */
-    static #triggerContextMenu(event, _) {
-        return CONFIG.ux.ContextMenu.triggerContextMenu(event);
     }
 
     async _onDrop(event) {

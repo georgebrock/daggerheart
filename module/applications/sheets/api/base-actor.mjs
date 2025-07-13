@@ -24,6 +24,16 @@ export default class DHBaseActorSheet extends DHApplicationMixin(ActorSheetV2) {
             openSettings: DHBaseActorSheet.#openSettings,
             sendExpToChat: DHBaseActorSheet.#sendExpToChat,
         },
+        contextMenus: [
+            {
+                handler: DHBaseActorSheet.#getFeatureContextOptions,
+                selector: '[data-item-uuid][data-type="feature"]',
+                options: {
+                    parentClassHooks: false,
+                    fixed: true
+                }
+            }
+        ],
         dragDrop: []
     };
 
@@ -81,6 +91,21 @@ export default class DHBaseActorSheet extends DHApplicationMixin(ActorSheetV2) {
     }
 
     /* -------------------------------------------- */
+    /*  Context Menu                                */
+    /* -------------------------------------------- */
+
+    /**
+     * Get the set of ContextMenu options for Features.
+     * @returns {import('@client/applications/ux/context-menu.mjs').ContextMenuEntry[]} - The Array of context options passed to the ContextMenu instance
+     * @this {DHSheetV2}
+     * @protected
+     */
+    static #getFeatureContextOptions() {
+        return this._getContextMenuCommonOptions.call(this, { usable: true, toChat: true });
+    }
+
+
+    /* -------------------------------------------- */
     /*  Application Clicks Actions                  */
     /* -------------------------------------------- */
 
@@ -91,7 +116,7 @@ export default class DHBaseActorSheet extends DHApplicationMixin(ActorSheetV2) {
     static async #openSettings() {
         await this.settingSheet.render({ force: true });
     }
-    
+
     /**
      * Send Experience to Chat
      * @type {ApplicationClickAction}
