@@ -5,7 +5,8 @@ import BaseDataActor from './base.mjs';
 const resourceField = () =>
     new foundry.data.fields.SchemaField({
         value: new foundry.data.fields.NumberField({ initial: 0, integer: true }),
-        max: new foundry.data.fields.NumberField({ initial: 0, integer: true })
+        max: new foundry.data.fields.NumberField({ initial: 0, integer: true }),
+        isReversed: new foundry.data.fields.BooleanField({ initial: true })
     });
 
 export default class DhpAdversary extends BaseDataActor {
@@ -22,6 +23,7 @@ export default class DhpAdversary extends BaseDataActor {
     static defineSchema() {
         const fields = foundry.data.fields;
         return {
+            ...super.defineSchema(),
             tier: new fields.StringField({
                 required: true,
                 choices: CONFIG.DH.GENERAL.tiers,
@@ -32,7 +34,6 @@ export default class DhpAdversary extends BaseDataActor {
                 choices: CONFIG.DH.ACTOR.adversaryTypes,
                 initial: CONFIG.DH.ACTOR.adversaryTypes.standard.id
             }),
-            description: new fields.StringField(),
             motivesAndTactics: new fields.StringField(),
             notes: new fields.HTMLField(),
             difficulty: new fields.NumberField({ required: true, initial: 1, integer: true }),
@@ -63,6 +64,7 @@ export default class DhpAdversary extends BaseDataActor {
                     damage: {
                         parts: [
                             {
+                                type: ['physical'],
                                 value: {
                                     multiplier: 'flat'
                                 }
@@ -74,7 +76,7 @@ export default class DhpAdversary extends BaseDataActor {
             experiences: new fields.TypedObjectField(
                 new fields.SchemaField({
                     name: new fields.StringField(),
-                    total: new fields.NumberField({ required: true, integer: true, initial: 1 })
+                    value: new fields.NumberField({ required: true, integer: true, initial: 1 })
                 })
             ),
             bonuses: new fields.SchemaField({

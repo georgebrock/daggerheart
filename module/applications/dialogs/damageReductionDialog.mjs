@@ -11,7 +11,7 @@ export default class DamageReductionDialog extends HandlebarsApplicationMixin(Ap
         this.actor = actor;
         this.damage = damage;
 
-        const canApplyArmor = actor.system.armorApplicableDamageTypes[damageType];
+        const canApplyArmor = damageType.every(t => actor.system.armorApplicableDamageTypes[t] === true);
         const maxArmorMarks = canApplyArmor
             ? Math.min(
                   actor.system.armorScore - actor.system.armor.system.marks.value,
@@ -110,7 +110,7 @@ export default class DamageReductionDialog extends HandlebarsApplicationMixin(Ap
                 ? {
                       value:
                           this.actor.system.resources.stress.value + selectedStressMarks.length + stressReductionStress,
-                      maxTotal: this.actor.system.resources.stress.maxTotal
+                      max: this.actor.system.resources.stress.max
                   }
                 : null;
 
@@ -197,7 +197,7 @@ export default class DamageReductionDialog extends HandlebarsApplicationMixin(Ap
                 : 0;
             const currentStress =
                 this.actor.system.resources.stress.value + selectedStressMarks.length + stressReductionStress;
-            if (currentStress + stressReduction.cost > this.actor.system.resources.stress.maxTotal) {
+            if (currentStress + stressReduction.cost > this.actor.system.resources.stress.max) {
                 ui.notifications.info(game.i18n.localize('DAGGERHEART.UI.Notifications.notEnoughStress'));
                 return;
             }

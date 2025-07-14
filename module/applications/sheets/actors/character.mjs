@@ -27,7 +27,12 @@ export default class CharacterSheet extends DHBaseActorSheet {
         window: {
             resizable: true
         },
-        dragDrop: [],
+        dragDrop: [
+            {
+                dragSelector: '[data-item-id][draggable="true"]',
+                dropSelector: null
+            }
+        ],
         contextMenus: [{
             handler: CharacterSheet.#getDomainCardContextOptions,
             selector: '[data-item-uuid][data-type="domainCard"]',
@@ -599,7 +604,59 @@ export default class CharacterSheet extends DHBaseActorSheet {
         await doc?.update({ 'system.inVault': !doc.system.inVault });
     }
 
+    /**
+     * Use a item
+     * @type {ApplicationClickAction}
+     */
+    static async useItem(event, button) {
+        const item = this.getItem(button);
+        if (!item) return;
+
+        // Should dandle its actions. Or maybe they'll be separate buttons as per an Issue on the board
+        if (item.type === 'feature') {
+            item.use(event);
+        } else if (item instanceof ActiveEffect) {
+            item.toChat(this);
+        } else {
+            const wasUsed = await item.use(event);
+            if (wasUsed && item.type === 'weapon') {
+                Hooks.callAll(CONFIG.DH.HOOKS.characterAttack, {});
+            }
+        }
+    }
+
+    /**
+     * Use an action
+     * @type {ApplicationClickAction}
+     */
+    static async useAction(event, button) {
+        const item = this.getItem(button);
+        if (!item) return;
+
+        const action = item.system.actions.find(x => x.id === button.dataset.actionId);
+        if (!action) return;
+
+        action.use(event);
+    }
+
+    async _onDragStart(event) {
+        const item = this.getItem(event);
+        
+        const dragData = {
+            type: item.documentName,
+            uuid: item.uuid
+        };
+        
+        event.dataTransfer.setData('text/plain', JSON.stringify(dragData));
+        
+        super._onDragStart(event);
+    }
+
     async _onDrop(event) {
+        // Prevent event bubbling to avoid duplicate handling
+        event.preventDefault();
+        event.stopPropagation();
+        
         super._onDrop(event);
         this._onDropItem(event, TextEditor.getDragEventData(event));
     }

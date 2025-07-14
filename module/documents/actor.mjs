@@ -370,99 +370,19 @@ export default class DhpActor extends Actor {
     }
 
     getRollData() {
-        return this.system;
-    }
-
-    formatRollModifier(roll) {
-        const modifier = roll.modifier !== null ? Number.parseInt(roll.modifier) : null;
-        return modifier !== null
-            ? [
-                  {
-                      value: modifier,
-                      label: roll.label
-                          ? modifier >= 0
-                              ? `${roll.label} +${modifier}`
-                              : `${roll.label} ${modifier}`
-                          : null,
-                      title: roll.label
-                  }
-              ]
-            : [];
-    }
-
-    async damageRoll(title, damage, targets, shiftKey) {
-        let rollString = damage.value;
-        let bonusDamage = damage.bonusDamage?.filter(x => x.initiallySelected) ?? [];
-        if (!shiftKey) {
-            const dialogClosed = new Promise((resolve, _) => {
-                new DamageSelectionDialog(rollString, bonusDamage, resolve).render(true);
-            });
-            const result = await dialogClosed;
-            bonusDamage = result.bonusDamage;
-            rollString = result.rollString;
-
-            const automateHope = await game.settings.get(CONFIG.DH.id, CONFIG.DH.SETTINGS.gameSettings.Automation.Hope);
-            if (automateHope && result.hopeUsed) {
-                await this.update({
-                    'system.resources.hope.value': this.system.resources.hope.value - result.hopeUsed
-                });
-            }
-        }
-
-        const roll = new Roll(rollString);
-        let rollResult = await roll.evaluate();
-
-        const dice = [];
-        const modifiers = [];
-        for (var i = 0; i < rollResult.terms.length; i++) {
-            const term = rollResult.terms[i];
-            if (term.faces) {
-                dice.push({
-                    type: `d${term.faces}`,
-                    rolls: term.results.map(x => x.result),
-                    total: term.results.reduce((acc, x) => acc + x.result, 0)
-                });
-            } else if (term.operator) {
-            } else if (term.number) {
-                const operator = i === 0 ? '' : rollResult.terms[i - 1].operator;
-                modifiers.push({ value: term.number, operator: operator });
-            }
-        }
-
-        const cls = getDocumentClass('ChatMessage');
-        const systemData = {
-            title: game.i18n.format('DAGGERHEART.UI.Chat.damageRoll.title', { damage: title }),
-            roll: rollString,
-            damage: {
-                total: rollResult.total,
-                type: damage.type
-            },
-            dice: dice,
-            modifiers: modifiers,
-            targets: targets
-        };
-        const msg = new cls({
-            type: 'damageRoll',
-            user: game.user.id,
-            sound: CONFIG.sounds.dice,
-            system: systemData,
-            content: await foundry.applications.handlebars.renderTemplate(
-                'systems/daggerheart/templates/ui/chat/damage-roll.hbs',
-                systemData
-            ),
-            rolls: [roll]
-        });
-
-        cls.create(msg.toObject());
+        const rollData = super.getRollData();
+        rollData.prof = this.system.proficiency ?? 1;
+        rollData.cast = this.system.spellcast ?? 1;
+        return rollData;
     }
 
     #canReduceDamage(hpDamage, type) {
-        const availableStress = this.system.resources.stress.maxTotal - this.system.resources.stress.value;
+        const availableStress = this.system.resources.stress.max - this.system.resources.stress.value;
 
         const canUseArmor =
             this.system.armor &&
             this.system.armor.system.marks.value < this.system.armorScore &&
-            this.system.armorApplicableDamageTypes[type];
+            type.every(t => this.system.armorApplicableDamageTypes[t] === true);
         const canUseStress = Object.keys(this.system.rules.damageReduction.stressDamageReduction).reduce((acc, x) => {
             const rule = this.system.rules.damageReduction.stressDamageReduction[x];
             if (damageKeyToNumber(x) <= hpDamage) return acc || (rule.enabled && availableStress >= rule.cost);
@@ -480,11 +400,9 @@ export default class DhpActor extends Actor {
             return;
         }
 
-        const flatReduction = this.system.bonuses.damageReduction[type];
-        const damage = Math.max(baseDamage - (flatReduction ?? 0), 0);
-        const hpDamage = this.convertDamageToThreshold(damage);
+        type = !Array.isArray(type) ? [type] : type;
 
-        if (Hooks.call(`${CONFIG.DH.id}.postDamageTreshold`, this, hpDamage, damage, type) === false) return null;
+        const hpDamage = this.calculateDamage(baseDamage, type);
 
         if (!hpDamage) return;
 
@@ -509,6 +427,35 @@ export default class DhpActor extends Actor {
         await this.modifyResource(updates);
 
         if (Hooks.call(`${CONFIG.DH.id}.postTakeDamage`, this, damage, type) === false) return null;
+    }
+
+    calculateDamage(baseDamage, type) {
+        if (Hooks.call(`${CONFIG.DH.id}.preCalculateDamage`, this, baseDamage, type) === false) return null;
+
+        /* if(this.system.resistance[type]?.immunity) return 0;
+        if(this.system.resistance[type]?.resistance) baseDamage = Math.ceil(baseDamage / 2); */
+        if(this.canResist(type, 'immunity')) return 0;
+        if(this.canResist(type, 'resistance')) baseDamage = Math.ceil(baseDamage / 2);
+
+        // const flatReduction = this.system.resistance[type].reduction;
+        const flatReduction = this.getDamageTypeReduction(type);
+        const damage = Math.max(baseDamage - (flatReduction ?? 0), 0);
+        const hpDamage = this.convertDamageToThreshold(damage);
+
+        if (Hooks.call(`${CONFIG.DH.id}.postCalculateDamage`, this, baseDamage, type) === false) return null;
+
+        return hpDamage;
+    }
+
+    canResist(type, resistance) {
+        if(!type) return 0;
+        return type.every(t => this.system.resistance[t]?.[resistance] === true);
+    }
+
+    getDamageTypeReduction(type) {
+        if(!type) return 0;
+        const reduction = Object.entries(this.system.resistance).reduce((a, [index, value]) => type.includes(index) ? Math.min(value.reduction, a) : a, Infinity);
+        return reduction === Infinity ? 0 : reduction;
     }
 
     async takeHealing(resources) {
@@ -538,7 +485,7 @@ export default class DhpActor extends Actor {
                     updates.actor.resources[`system.resources.${r.type}.value`] = Math.max(
                         Math.min(
                             this.system.resources[r.type].value + r.value,
-                            this.system.resources[r.type].maxTotal ?? this.system.resources[r.type].max
+                            this.system.resources[r.type].max
                         ),
                         0
                     );
@@ -553,18 +500,6 @@ export default class DhpActor extends Actor {
                     u.resources,
                     u.target.uuid
                 );
-                /* if (game.user.isGM) {
-                    await u.target.update(u.resources);
-                } else {
-                    await game.socket.emit(`system.${CONFIG.DH.id}`, {
-                        action: socketEvent.GMUpdate,
-                        data: {
-                            action: GMUpdateEvent.UpdateDocument,
-                            uuid: u.target.uuid,
-                            update: u.resources
-                        }
-                    });
-                } */
             }
         });
     }
@@ -582,7 +517,7 @@ export default class DhpActor extends Actor {
     convertStressDamageToHP(resources) {
         const stressDamage = resources.find(r => r.type === 'stress'),
             newValue = this.system.resources.stress.value + stressDamage.value;
-        if (newValue <= this.system.resources.stress.maxTotal) return;
+        if (newValue <= this.system.resources.stress.max) return;
         const hpDamage = resources.find(r => r.type === 'hitPoints');
         if (hpDamage) hpDamage.value++;
         else

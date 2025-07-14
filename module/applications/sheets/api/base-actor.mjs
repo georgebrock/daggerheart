@@ -126,7 +126,7 @@ export default class DHBaseActorSheet extends DHApplicationMixin(ActorSheetV2) {
 
         const systemData = {
             name: game.i18n.localize('DAGGERHEART.GENERAL.Experience.single'),
-            description: `${experience.name} ${experience.total < 0 ? experience.total : `+${experience.total}`}`
+            description: `${experience.name} ${experience.value.signedString()}`
         };
 
         foundry.documents.ChatMessage.implementation.create({

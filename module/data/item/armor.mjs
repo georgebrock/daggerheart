@@ -1,8 +1,9 @@
-import BaseDataItem from './base.mjs';
+import AttachableItem from './attachableItem.mjs';
 import ActionField from '../fields/actionField.mjs';
 import { armorFeatures } from '../../config/itemConfig.mjs';
+import { actionsTypes } from '../action/_module.mjs';
 
-export default class DHArmor extends BaseDataItem {
+export default class DHArmor extends AttachableItem {
     /** @inheritDoc */
     static get metadata() {
         return foundry.utils.mergeObject(super.metadata, {
@@ -42,6 +43,12 @@ export default class DHArmor extends BaseDataItem {
             }),
             actions: new fields.ArrayField(new ActionField())
         };
+    }
+
+    get customActions() {
+        return this.actions.filter(
+            action => !this.armorFeatures.some(feature => feature.actionIds.includes(action.id))
+        );
     }
 
     async _preUpdate(changes, options, user) {

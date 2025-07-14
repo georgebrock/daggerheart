@@ -280,6 +280,11 @@
                     }
                 }
             },
+            "HUD": {
+                "tokenHUD": {
+                    "genericEffects": "Foundry Effects"
+                }
+            },
             "Levelup": {
                 "actions": {
                     "creatureComfort": {
@@ -385,6 +390,7 @@
                 "default": "Default Ownership"
             }
         },
+
         "CONFIG": {
             "ActionType": {
                 "passive": "Passive",
@@ -673,6 +679,10 @@
                     "name": "Dice Set"
                 }
             },
+            "SelectAction": {
+                "selectType": "Select Action Type",
+                "selectAction": "Select Action"
+            },
             "Traits": {
                 "agility": {
                     "name": "Agility",
@@ -950,6 +960,10 @@
                 "stress": {
                     "name": "Stress"
                 }
+            },
+            "Attachments": {
+                "attachHint": "Drop items here to attach them",
+                "transferHint": "If checked, this effect will be applied to any actor that owns this Effect's parent Item. The effect is always applied if this Item is attached to another one."
             }
         },
         "GENERAL": {
@@ -969,11 +983,20 @@
                 "singular": "Character",
                 "plural": "Characters"
             },
+            "Cost": {
+                "single": "Cost",
+                "plural": "Costs"
+            },
             "Damage": {
                 "severe": "Severe",
                 "major": "Major",
                 "minor": "Minor",
                 "none": "None"
+            },
+            "DamageResistance": {
+                "none": "None",
+                "resistance": "Resistance",
+                "immunity": "Immunity"
             },
             "DamageThresholds": {
                 "title": "Damage Thresholds",
@@ -1074,8 +1097,10 @@
                 "specialization": "Specialization",
                 "mastery": "Mastery",
                 "optional": "Optional",
+                "recovery": "Recovery",
                 "setup": "Setup",
-                "equipment": "Equipment"
+                "equipment": "Equipment",
+                "attachments": "Attachments"
             },
             "Tiers": {
                 "singular": "Tier",
@@ -1095,6 +1120,8 @@
             "burden": "Burden",
             "check": "{check} Check",
             "criticalSuccess": "Critical Success",
+            "damage": "Damage",
+            "damageType": "Damage Type",
             "description": "Description",
             "duality": "Duality",
             "dualityRoll": "Duality Roll",
@@ -1107,17 +1134,25 @@
             "inactiveEffects": "Inactive Effects",
             "inventory": "Inventory",
             "level": "Level",
+            "max": "Max",
             "modifier": "Modifier",
             "multiclass": "Multiclass",
+            "none": "None",
             "quantity": "Quantity",
             "range": "Range",
+            "recovery": "Recovery",
+            "scalable": "Scalable",
             "stress": "Stress",
             "take": "Take",
             "target": "Target",
             "title": "Title",
+            "true": "True",
             "type": "Type",
             "unarmored": "Unarmored",
-            "use": "Use"
+            "use": "Use",
+            "used": "Used",
+            "uses": "Uses",
+            "value": "Value"
         },
         "ITEMS": {
             "Armor": {
@@ -1174,6 +1209,7 @@
                 "spellcastingTrait": "Spellcasting Trait"
             },
             "Weapon": {
+                "weaponType": "Weapon Type",
                 "primaryWeapon": "Primary Weapon",
                 "secondaryWeapon": "Secondary Weapon"
             }
@@ -1181,7 +1217,8 @@
         "SETTINGS": {
             "Appearance": {
                 "FIELDS": {
-                    "displayFear": { "label": "Fear Display" }
+                    "displayFear": { "label": "Fear Display" },
+                    "showGenericStatusEffects": { "label": "Show Foundry Status Effects" }
                 },
                 "fearDisplay": {
                     "token": "Tokens",
@@ -1383,7 +1420,8 @@
                 "unequip": "Unequip",
                 "sendToVault": "Send to Vault",
                 "sendToLoadout": "Send to Loadout",
-                "makeDeathMove": "Make a Death Move"
+                "makeDeathMove": "Make a Death Move",
+                "rangeAndTarget": "Range & Target"
             }
         }
     }
