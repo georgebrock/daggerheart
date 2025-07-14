@@ -64,7 +64,7 @@ export default class SubclassSheet extends DHBaseItemSheet {
         if (featureItem) {
             const feature = this.document.system[featureItem.dataset.type];
             if (!feature) {
-                ui.notifications.warn(game.i18n.localize('DAGGERHEART.UI.notifications.featureIsMissing'));
+                ui.notifications.warn(game.i18n.localize('DAGGERHEART.UI.Notifications.featureIsMissing'));
                 return;
             }
 

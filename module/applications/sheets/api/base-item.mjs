@@ -21,6 +21,11 @@ export default class DHBaseItemSheet extends DHApplicationMixin(ItemSheetV2) {
         },
         actions: {
             removeAction: DHBaseItemSheet.#removeAction,
+            addFeature: DHBaseItemSheet.#addFeature,
+            editFeature: DHBaseItemSheet.#editFeature,
+            removeFeature: DHBaseItemSheet.#removeFeature,
+            addResource: DHBaseItemSheet.#addResource,
+            removeResource: DHBaseItemSheet.#removeResource
             addFeature: DHBaseItemSheet.#addFeature
         },
         dragDrop: [
@@ -179,6 +184,71 @@ export default class DHBaseItemSheet extends DHApplicationMixin(ItemSheetV2) {
             'system.features': [...this.document.system.features, feature]
         });
     }
+
+    /**
+     * Edit an existing feature on the item
+     * @type {ApplicationClickAction}
+     */
+    static async #editFeature(_event, button) {
+        const target = button.closest('.feature-item');
+        const feature = this.document.system.features.find(x => x?.id === target.id);
+        if (!feature) {
+            ui.notifications.warn(game.i18n.localize('DAGGERHEART.UI.Notifications.featureIsMissing'));
+            return;
+        }
+
+        feature.sheet.render(true);
+    }
+
+    /**
+     * Remove a feature from the item.
+     * @type {ApplicationClickAction}
+     */
+    static async #removeFeature(event, button) {
+        event.stopPropagation();
+        const target = button.closest('.feature-item');
+        const feature = this.document.system.features.find(x => x && x.id === target.id);
+
+        if (feature) {
+            const confirmed = await foundry.applications.api.DialogV2.confirm({
+                window: {
+                    title: game.i18n.format('DAGGERHEART.APPLICATIONS.DeleteConfirmation.title', {
+                        type: game.i18n.localize(`TYPES.Item.feature`),
+                        name: feature.name
+                    })
+                },
+                content: game.i18n.format('DAGGERHEART.APPLICATIONS.DeleteConfirmation.text', { name: feature.name })
+            });
+            if (!confirmed) return;
+        }
+
+        await this.document.update({
+            'system.features': this.document.system.features
+                .filter(feature => feature && feature.id !== target.id)
+                .map(x => x.uuid)
+        });
+    }
+
+    /**
+     * Add a resource to the item.
+     * @type {ApplicationClickAction}
+     */
+    static async #addResource() {
+        await this.document.update({
+            'system.resource': { type: 'simple', value: 0 }
+        });
+    }
+
+    /**
+     * Remove the resource from the item.
+     * @type {ApplicationClickAction}
+     */
+    static async #removeResource() {
+        await this.document.update({
+            'system.resource': null
+        });
+    }
+
     /* -------------------------------------------- */
     /*  Application Drag/Drop                       */
     /* -------------------------------------------- */
@@ -193,7 +263,7 @@ export default class DHBaseItemSheet extends DHApplicationMixin(ItemSheetV2) {
         if (featureItem) {
             const feature = this.document.system.features.find(x => x?.id === featureItem.id);
             if (!feature) {
-                ui.notifications.warn(game.i18n.localize('DAGGERHEART.UI.notifications.featureIsMissing'));
+                ui.notifications.warn(game.i18n.localize('DAGGERHEART.UI.Notifications.featureIsMissing'));
                 return;
             }
 

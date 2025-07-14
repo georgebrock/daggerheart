@@ -13,6 +13,7 @@ export default class FeatureSheet extends DHBaseItemSheet {
         header: { template: 'systems/daggerheart/templates/sheets/items/feature/header.hbs' },
         tabs: { template: 'systems/daggerheart/templates/sheets/global/tabs/tab-navigation.hbs' },
         description: { template: 'systems/daggerheart/templates/sheets/global/tabs/tab-description.hbs' },
+        settings: { template: 'systems/daggerheart/templates/sheets/items/feature/settings.hbs' },
         actions: {
             template: 'systems/daggerheart/templates/sheets/global/tabs/tab-actions.hbs',
             scrollable: ['.actions']
@@ -26,7 +27,7 @@ export default class FeatureSheet extends DHBaseItemSheet {
     /**@override */
     static TABS = {
         primary: {
-            tabs: [{ id: 'description' }, { id: 'actions' }, { id: 'effects' }],
+            tabs: [{ id: 'description' }, { id: 'settings' }, { id: 'actions' }, { id: 'effects' }],
             initial: 'description',
             labelPrefix: 'DAGGERHEART.GENERAL.Tabs'
         }

@@ -245,10 +245,10 @@ export const getDamageLabel = damage => {
 
 export const damageKeyToNumber = key => {
     return {
-        'none': 0,
-        'minor': 1,
-        'major': 2,
-        'severe': 3
+        none: 0,
+        minor: 1,
+        major: 2,
+        severe: 3
     }[key];
 };
 
@@ -311,3 +311,15 @@ export function getDocFromElement(element) {
     return foundry.utils.fromUuidSync(target.dataset.itemUuid) ?? null;
 }
 
+
+export const itemAbleRollParse = (value, actor, item) => {
+    if (!value) return value;
+
+    const isItemTarget = value.toLowerCase().startsWith('item.');
+    const slicedValue = isItemTarget ? value.slice(5) : value;
+    try {
+        return Roll.safeEval(Roll.replaceFormulaData(slicedValue, isItemTarget ? item : actor));
+    } catch (_) {
+        return '';
+    }
+};
