@@ -1,6 +1,6 @@
-<div class="dice-roll daggerheart chat roll" data-action="expandRoll">
-    <div class="dice-flavor">{{title}}</div>
-    <div class="duality-modifiers">
+<div class="dice-roll daggerheart chat roll"  data-action="expandRoll">
+    <div class="dice-flavor" data-action="expandRoll">{{title}}</div>
+    <div class="duality-modifiers" data-action="expandRoll">
         {{#each roll.modifiers}}
             <div class="duality-modifier">
                 {{localize label}} {{#if (gte value 0)}}+{{/if}}{{value}}
@@ -17,12 +17,12 @@
             </div>
         {{/if}}
     </div>
-    <div class="dice-result">
-        <div class="dice-formula">{{roll.formula}}</div>
+    <div class="dice-result"> 
+        <div class="dice-formula" data-action="expandRoll">{{roll.formula}}</div>
         <div class="dice-tooltip">
             <div class="wrapper">
                 <section class="tooltip-part">
-                    <div class="dice">
+                    <div class="dice" data-action="expandRoll">
                         <header class="part-header flexrow">
                             <span class="part-formula">
                                 <span>1{{roll.hope.dice}}</span>
@@ -59,7 +59,7 @@
                         </div>  
                     </div>
                     {{#if roll.advantage.type}}
-                        <div class="dice">
+                        <div class="dice" data-action="expandRoll">
                             <header class="part-header flexrow">
                                 <span class="part-formula">
                                     <span>1{{roll.advantage.dice}}</span>
@@ -83,7 +83,7 @@
                         </div>
                     {{/if}}
                     {{#each roll.extra as | extra | }}
-                        <div class="dice">
+                        <div class="dice" data-action="expandRoll">
                             <header class="part-header flexrow">
                                 <span class="part-formula">
                                     <span>1{{extra.dice}}</span>
