@@ -10,138 +10,159 @@ Parameters:
 - hideTooltip {boolean} : If true, disables the tooltip on the item image.
 - hideControls {boolean} : If true, hides the controls inside inventory-item partials.
 - hideDescription {boolean} : If true, hides the item's description.
+- hideResources {boolean} : If true, hides the item's resources.
+- showActions {boolean} : If true show feature's actions.
 --}}
 
-<li class="inventory-item" {{#if (eq type 'action' )}}data-action-id="{{item.id}}"{{/if}}
-  data-item-uuid="{{item.uuid}}" data-type="{{type}}">
+<li class="inventory-item" {{#if (eq type 'action' )}}data-action-id="{{item.id}}" {{/if}}
+  data-item-uuid="{{item.uuid}}" data-type="{{type}}" draggable="true">
   {{!-- Image --}}
   <img src="{{item.img}}" class="item-img {{#if isActor}}actor-img{{/if}}"
-  {{!-- I had to use the {{not}} helper because otherwise the function is called when rendering --}}
-    data-action="{{ifThen (not item.use) (ifThen (not item.toChat) 'editDoc' 'toChat') 'useItem' }}" {{#unless
-    hideTooltip}}data-tooltip="#item#{{item.uuid}}" {{/unless}} />
+    data-action='{{ifThen (hasProperty item "use") "useItem" (ifThen (hasProperty item "toChat") "toChat" "editDoc") }}'
+    {{#unless hideTooltip}}data-tooltip="#item#{{item.uuid}}" {{/unless}} />
 
-  {{!-- Name & Tags --}}
-  <div class="item-label">
-    {{!-- Item Name --}}
-    <div class="item-name">{{item.name}}</div>
+  <div class="item-label-wrapper">
+    {{!-- Name & Tags --}}
+    <div class="item-label {{#if hideResources}}fullWidth{{/if}}">
 
-    {{!-- Weapon Block Start --}}
-    {{#if (eq type 'weapon')}}
-    {{#if (not hideTags)}}
-    <div class="item-tags">
-      <div class="tag">
-        {{localize (concat 'DAGGERHEART.CONFIG.Traits.' item.system.attack.roll.trait '.name')}}
-      </div>
-      <div class="tag">
-        {{localize (concat 'DAGGERHEART.CONFIG.Range.' item.system.attack.range '.name')}}
-      </div>
-      <div class="tag">
-        {{item.system.attack.damage.parts.0.value.dice}}{{#if item.system.attack.damage.parts.0.value.bonus}} +
-        {{item.system.attack.damage.parts.0.value.bonus}}{{/if}}
-        ({{localize (concat 'DAGGERHEART.CONFIG.DamageType.' item.system.attack.damage.parts.0.type '.abbreviation')}})
-      </div>
-      <div class="tag">
-        {{localize (concat 'DAGGERHEART.CONFIG.Burden.' item.system.burden)}}
-      </div>
-    </div>
-    {{else if (not hideLabels)}}
-    <div class="item-labels">
-      <div class="label">
-        {{localize (concat 'DAGGERHEART.CONFIG.Range.' item.system.attack.range '.short')}}
-        <span> - </span>
-        {{item.system.attack.damage.parts.0.value.dice}}
-        {{#if item.system.attack.damage.parts.0.value.bonus}} +
-        {{item.system.attack.damage.parts.0.value.bonus}}
-        {{/if}}
-        {{#with (lookup @root.config.GENERAL.damageTypes item.system.attack.damage.parts.0.type)}}
-        {{#each icon}}<i class="fa-solid {{this}}"></i>{{/each}}
-        {{/with}}
-      </div>
-    </div>
-    {{/if}}
-    {{/if}}
-    {{!-- Weapon Block End --}}
+      {{!-- Item Name --}}
+      <div class="item-name">{{item.name}}</div>
 
-    {{!-- Armor Block Start --}}
-    {{#if (eq type 'armor')}}
-    {{#if (not hideTags)}}
-    <div class="item-tags">
-      <div class="tag">{{localize "DAGGERHEART.ITEMS.Armor.baseScore"}}: {{item.system.baseScore}}</div>
-      <div class="tag">
-        {{localize "DAGGERHEART.ITEMS.Armor.baseThresholds.base"}}:
-        {{item.system.baseThresholds.major}} / {{item.system.baseThresholds.severe}}
-      </div>
-    </div>
-    {{else if (not hideLabels)}}
-    <div class="item-labels">
-      <div class="label">
-        {{localize "DAGGERHEART.ITEMS.Armor.baseScore"}}: {{item.system.baseScore}}
-      </div>
-    </div>
-    {{/if}}
-    {{/if}}
-    {{!-- Armor Block End --}}
+      {{!-- Weapon Block Start --}}
+      {{#if (eq type 'weapon')}}
+      {{#if (not hideTags)}}
+      <div class="item-tags">
+        <div class="tag">
+          {{localize (concat 'DAGGERHEART.CONFIG.Traits.' item.system.attack.roll.trait '.name')}}
+        </div>
+        <div class="tag">
+          {{localize (concat 'DAGGERHEART.CONFIG.Range.' item.system.attack.range '.name')}}
+        </div>
+        <div class="tag">
+          {{item.system.attack.damage.parts.0.value.dice}}
+          {{#if item.system.attack.damage.parts.0.value.bonus}} +
+          {{item.system.attack.damage.parts.0.value.bonus}}{{/if}}
+          (
+          {{#each item.system.attack.damage.parts.0.type as |type|}}
 
-    {{!-- Domain Card Block Start --}}
-    {{#if (eq type 'domainCard')}}
-    {{#if (not hideTags)}}
-    <div class="item-tags">
-      <div class="tag">{{localize (concat 'DAGGERHEART.CONFIG.DomainCardTypes.' item.system.type)}}</div>
-      <div class="tag">{{localize (concat 'DAGGERHEART.GENERAL.Domain.' item.system.domain '.label')}}</div>
-      <div class="tag">
-        <span class="recall-label">{{localize "DAGGERHEART.ITEMS.DomainCard.recallCost"}}: </span>
-        <span class="recall-value">{{item.system.recallCost}}</span>
-      </div>
-    </div>
-    {{else if (not hideLabels)}}
-    <div class="item-labels">
-      <div class="label">
-        {{localize (concat 'DAGGERHEART.CONFIG.DomainCardTypes.' item.system.type)}} -
-        {{localize (concat 'DAGGERHEART.GENERAL.Domain.' item.system.domain '.label')}} -
-        <span class="recall-value">{{item.system.recallCost}}</span>
-        <i class="fa-solid fa-bolt"></i>
-      </div>
-    </div>
-    {{/if}}
-    {{/if}}
-    {{!-- Domain Card Block End --}}
+          {{localize (concat 'DAGGERHEART.CONFIG.DamageType.' type '.abbreviation')}}
+          {{#unless @last}}|{{/unless}}
+          {{/each}}
+          )
 
-    {{!-- Effect Block Start --}}
-    {{#if (eq type 'effect')}}
-    {{#if (not hideTags)}}
-    <div class="item-tags">
-      <div class="tag">
-        {{localize item.parent.system.metadata.label}}: {{item.parent.name}}
+        </div>
+        <div class="tag">
+          {{localize (concat 'DAGGERHEART.CONFIG.Burden.' item.system.burden)}}
+        </div>
       </div>
-      <div class="tag">
-        {{#if item.duration.duration}}
-        {{localize 'DAGGERHEART.EFFECTS.Duration.temporary'}}
-        {{else}}
-        {{localize 'DAGGERHEART.EFFECTS.Duration.passive'}}
-        {{/if}}
+      {{else if (not hideLabels)}}
+      <div class="item-labels">
+        <div class="label">
+          {{localize (concat 'DAGGERHEART.CONFIG.Traits.' item.system.attack.roll.trait '.short')}}
+          {{localize (concat 'DAGGERHEART.CONFIG.Range.' item.system.attack.range '.short')}}
+          <span> - </span>
+          {{item.system.attack.damage.parts.0.value.dice}}
+          {{#if item.system.attack.damage.parts.0.value.bonus}} +
+          {{item.system.attack.damage.parts.0.value.bonus}}
+          {{/if}}
+          {{#with (lookup @root.config.GENERAL.damageTypes item.system.attack.damage.parts.0.type)}}
+          {{#each icon}}<i class="fa-solid {{this}}"></i>{{/each}}
+          {{/with}}
+        </div>
       </div>
-      {{#each item.statuses as |status|}}
-      <div class="tag">{{localize (concat 'DAGGERHEART.CONFIG.Condition.' status '.name')}}</div>
-      {{/each}}
-    </div>
-    {{else if (not hideLabels)}}
-    {{!-- Empty --}}
-    {{/if}}
-    {{/if}}
-    {{!-- Effect Block End --}}
+      {{/if}}
+      {{/if}}
+      {{!-- Weapon Block End --}}
 
-    {{!-- Action Block Start --}}
-    {{#if (eq type 'action')}}
-    {{#if (not hideTags)}}
-    <div class="item-tags">
-      <div class="tag">{{localize (concat 'DAGGERHEART.ACTIONS.TYPES.' item.type '.name')}}</div>
-      <div class="tag">{{localize (concat 'DAGGERHEART.CONFIG.ActionType.' item.actionType)}}</div>
+      {{!-- Armor Block Start --}}
+      {{#if (eq type 'armor')}}
+      {{#if (not hideTags)}}
+      <div class="item-tags">
+        <div class="tag">{{localize "DAGGERHEART.ITEMS.Armor.baseScore"}}: {{item.system.baseScore}}</div>
+        <div class="tag">
+          {{localize "DAGGERHEART.ITEMS.Armor.baseThresholds.base"}}:
+          {{item.system.baseThresholds.major}} / {{item.system.baseThresholds.severe}}
+        </div>
+      </div>
+      {{else if (not hideLabels)}}
+      <div class="item-labels">
+        <div class="label">
+          {{localize "DAGGERHEART.ITEMS.Armor.baseScore"}}: {{item.system.baseScore}}
+        </div>
+      </div>
+      {{/if}}
+      {{/if}}
+      {{!-- Armor Block End --}}
+
+      {{!-- Domain Card Block Start --}}
+      {{#if (eq type 'domainCard')}}
+      {{#if (not hideTags)}}
+      <div class="item-tags">
+        <div class="tag">{{localize (concat 'DAGGERHEART.CONFIG.DomainCardTypes.' item.system.type)}}</div>
+        <div class="tag">{{localize (concat 'DAGGERHEART.GENERAL.Domain.' item.system.domain '.label')}}</div>
+        <div class="tag">
+          <span class="recall-label">{{localize "DAGGERHEART.ITEMS.DomainCard.recallCost"}}: </span>
+          <span class="recall-value">{{item.system.recallCost}}</span>
+        </div>
+      </div>
+      {{else if (not hideLabels)}}
+      <div class="item-labels">
+        <div class="label">
+          {{localize (concat 'DAGGERHEART.CONFIG.DomainCardTypes.' item.system.type)}} -
+          {{localize (concat 'DAGGERHEART.GENERAL.Domain.' item.system.domain '.label')}} -
+          <span class="recall-value">{{item.system.recallCost}}</span>
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+      </div>
+      {{/if}}
+      {{/if}}
+      {{!-- Domain Card Block End --}}
+
+      {{!-- Effect Block Start --}}
+      {{#if (eq type 'effect')}}
+      {{#if (not hideTags)}}
+      <div class="item-tags">
+        <div class="tag">
+          {{localize item.parent.system.metadata.label}}: {{item.parent.name}}
+        </div>
+        <div class="tag">
+          {{#if item.duration.duration}}
+          {{localize 'DAGGERHEART.EFFECTS.Duration.temporary'}}
+          {{else}}
+          {{localize 'DAGGERHEART.EFFECTS.Duration.passive'}}
+          {{/if}}
+        </div>
+        {{#each item.statuses as |status|}}
+        <div class="tag">{{localize (concat 'DAGGERHEART.CONFIG.Condition.' status '.name')}}</div>
+        {{/each}}
+      </div>
+      {{else if (not hideLabels)}}
+      {{!-- Empty --}}
+      {{/if}}
+      {{/if}}
+      {{!-- Effect Block End --}}
+
+      {{!-- Action Block Start --}}
+      {{#if (eq type 'action')}}
+      {{#if (not hideTags)}}
+      <div class="item-tags">
+        <div class="tag">{{localize (concat 'DAGGERHEART.ACTIONS.TYPES.' item.type '.name')}}</div>
+        <div class="tag">{{localize (concat 'DAGGERHEART.CONFIG.ActionType.' item.actionType)}}</div>
+      </div>
+      {{else if (not hideLabels)}}
+      {{!-- Empty --}}
+      {{/if}}
+      {{/if}}
+      {{!-- Action Block End --}}
     </div>
-    {{else if (not hideLabels)}}
-    {{!-- Empty --}}
+    {{#if (and (not hideResources) (eq item.system.resource.type 'simple'))}}
+    {{> "systems/daggerheart/templates/sheets/global/partials/item-resource.hbs"}}
     {{/if}}
+    {{#if (and (not hideResources) item.system.quantity)}}
+    <div class="item-resource">
+      <input type="number" class="inventory-item-quantity" value="{{item.system.quantity}}" step="1" />
+    </div>
     {{/if}}
-    {{!-- Action Block End --}}
   </div>
 
   {{!-- Controls --}}
@@ -178,12 +199,11 @@ Parameters:
       <i class="{{ifThen item.disabled 'fa-regular fa-lightbulb' 'fa-solid fa-lightbulb'}}"></i>
     </a>
     {{/if}}
-    {{!-- I had to use the {{not}} helper because otherwise the function is called when rendering --}}
-    {{#unless (not item.toChat)}}
+    {{#if (hasProperty item "toChat")}}
     <a data-action="toChat" data-tooltip="DAGGERHEART.UI.Tooltip.sendToChat">
       <i class="fa-regular fa-message"></i>
     </a>
-    {{/unless}}
+    {{/if}}
     <a data-action="triggerContextMenu" data-tooltip="DAGGERHEART.UI.Tooltip.moreOptions">
       <i class="fa-solid fa-ellipsis-vertical"></i>
     </a>
@@ -199,4 +219,16 @@ Parameters:
     {{{item.system.description}}}
   </div>
   {{/unless}}
+  {{#if (and (not hideResources) (eq item.system.resource.type 'diceValue'))}}
+  {{> "systems/daggerheart/templates/sheets/global/partials/item-resource.hbs"}}
+  {{/if}}
+  {{#if (and showActions (eq item.type 'feature'))}}
+  <div class="item-buttons">
+    {{#each item.system.actions as | action |}}
+    <button type="button" data-action="useAction" data-action-id="{{action.id}}">
+      {{action.name}}
+    </button>
+    {{/each}}
+  </div>
+  {{/if}}
 </li>

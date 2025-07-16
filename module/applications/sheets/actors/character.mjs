@@ -23,11 +23,8 @@ export default class CharacterSheet extends DHBaseActorSheet {
             makeDeathMove: CharacterSheet.#makeDeathMove,
             levelManagement: CharacterSheet.#levelManagement,
             toggleEquipItem: CharacterSheet.#toggleEquipItem,
-            useItem: this.useItem, //TODO Fix this
-            useAction: this.useAction,
-            toggleResourceDice: this.toggleResourceDice,
-            handleResourceDice: this.handleResourceDice,
-            toChat: this.toChat
+            toggleResourceDice: CharacterSheet.#toggleResourceDice,
+            handleResourceDice: CharacterSheet.#handleResourceDice,
         },
         window: {
             resizable: true
@@ -505,22 +502,21 @@ export default class CharacterSheet extends DHBaseActorSheet {
     /* -------------------------------------------- */
     /*  Application Listener Actions                */
     /* -------------------------------------------- */
+
     async updateItemResource(event) {
-        const item = this.getItem(event.currentTarget);
+        const item = getDocFromElement(event.currentTarget);
         if (!item) return;
 
         const max = item.system.resource.max ? itemAbleRollParse(item.system.resource.max, this.document, item) : null;
         const value = max ? Math.min(Number(event.currentTarget.value), max) : event.currentTarget.value;
         await item.update({ 'system.resource.value': value });
-        this.render();
     }
 
     async updateItemQuantity(event) {
-        const item = this.getItem(event.currentTarget);
+        const item = getDocFromElement(event.currentTarget);
         if (!item) return;
 
         await item.update({ 'system.quantity': event.currentTarget.value });
-        this.render();
     }
 
     /* -------------------------------------------- */
@@ -642,52 +638,17 @@ export default class CharacterSheet extends DHBaseActorSheet {
     }
 
     /**
-     * Use a item
-     * @type {ApplicationClickAction}
-     */
-    static async useItem(event, button) {
-        const item = this.getItem(button);
-        if (!item) return;
-
-        // Should dandle its actions. Or maybe they'll be separate buttons as per an Issue on the board
-        if (item.type === 'feature') {
-            item.use(event);
-        } else if (item instanceof ActiveEffect) {
-            item.toChat(this);
-        } else {
-            const wasUsed = await item.use(event);
-            if (wasUsed && item.type === 'weapon') {
-                Hooks.callAll(CONFIG.DH.HOOKS.characterAttack, {});
-            }
-        }
-    }
-
-    /**
-     * Use an action
-     * @type {ApplicationClickAction}
-     */
-    static async useAction(event, button) {
-        const item = this.getItem(button);
-        if (!item) return;
-
-        const action = item.system.actions.find(x => x.id === button.dataset.actionId);
-        if (!action) return;
-
-        action.use(event);
-    }
-
-    /**
      * Toggle the used state of a resource dice.
      * @type {ApplicationClickAction}
      */
-    static async toggleResourceDice(event) {
-        const target = event.target.closest('.item-resource');
-        const item = this.getItem(event);
-        if (!item) return;
+    static async #toggleResourceDice(event, target) {
+        const item = getDocFromElement(target);
 
-        const diceState = item.system.resource.diceStates[target.dataset.dice];
+        const { dice } = event.target.closest('.item-resource').dataset;
+        const diceState = item.system.resource.diceStates[dice];
+
         await item.update({
-            [`system.resource.diceStates.${target.dataset.dice}.used`]: diceState?.used ? !diceState.used : true
+            [`system.resource.diceStates.${dice}.used`]: !diceState.used
         });
     }
 
@@ -695,8 +656,8 @@ export default class CharacterSheet extends DHBaseActorSheet {
      * Handle the roll values of resource dice.
      * @type {ApplicationClickAction}
      */
-    static async handleResourceDice(event) {
-        const item = this.getItem(event);
+    static async #handleResourceDice(_, target) {
+        const item = getDocFromElement(target);
         if (!item) return;
 
         const rollValues = await game.system.api.applications.dialogs.ResourceDiceDialog.create(item, this.document);
@@ -708,41 +669,11 @@ export default class CharacterSheet extends DHBaseActorSheet {
                 return acc;
             }, {})
         });
-        this.render();
-    }
-
-    /**
-     * Send item to Chat
-     * @type {ApplicationClickAction}
-     */
-    static async toChat(event, button) {
-        if (button?.dataset?.type === 'experience') {
-            const experience = this.document.system.experiences[button.dataset.uuid];
-            const cls = getDocumentClass('ChatMessage');
-            const systemData = {
-                name: game.i18n.localize('DAGGERHEART.GENERAL.Experience.single'),
-                description: `${experience.name} ${experience.value.signedString()}`
-            };
-            const msg = new cls({
-                type: 'abilityUse',
-                user: game.user.id,
-                system: systemData,
-                content: await foundry.applications.handlebars.renderTemplate(
-                    'systems/daggerheart/templates/ui/chat/ability-use.hbs',
-                    systemData
-                )
-            });
-
-            cls.create(msg.toObject());
-        } else {
-            const item = this.getItem(event);
-            if (!item) return;
-            item.toChat(this.document.id);
-        }
+        //this.render();
     }
 
     async _onDragStart(event) {
-        const item = this.getItem(event);
+        const item = getDocFromElement(event.target);
 
         const dragData = {
             type: item.documentName,

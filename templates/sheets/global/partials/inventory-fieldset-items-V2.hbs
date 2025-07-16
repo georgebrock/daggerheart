@@ -18,6 +18,8 @@ Parameters:
 - hideTooltip {boolean} : If true, disables the tooltip on the item image.
 - hideControls {boolean} : If true, hides the controls inside inventory-item partials.
 - hideDescription {boolean} : If true, hides the item's description.
+- hideResources {boolean} : If true, hides the item's resources.
+- showActions {boolean} : If true show feature's actions. 
 --}}
 
 <fieldset class="{{#if isGlassy}}glassy{{/if}}">
@@ -58,6 +60,8 @@ Parameters:
     hideTooltip=../hideTooltip
     showLabels=../showLabels
     isAction=../isAction
+    hideResources=../hideResources
+    showActions=../showActions
     }}
 
     {{/each}}

@@ -82,6 +82,7 @@ export default function DHApplicationMixin(Base) {
                 deleteDoc: DHSheetV2.#deleteDoc,
                 toChat: DHSheetV2.#toChat,
                 useItem: DHSheetV2.#useItem,
+                useAction: DHSheetV2.#useAction,
                 toggleEffect: DHSheetV2.#toggleEffect,
             },
             contextMenus: [{
@@ -485,16 +486,28 @@ export default function DHApplicationMixin(Base) {
          */
         static async #useItem(event, target) {
             let doc = getDocFromElement(target);
-
             // TODO: REDO this
             if (!doc) {
                 const { actionId } = target.closest('[data-action-id]').dataset;
                 const { actions, attack } = this.document.system;
-                doc = attack.id === actionId ? attack : actions?.find(a => a.id === actionId);
+                doc = attack?.id === actionId ? attack : actions?.find(a => a.id === actionId);
             }
 
             await doc.use(event);
         }
+
+        /**
+         * Use a item
+         * @type {ApplicationClickAction}
+         */
+        static async #useAction(event, target) {
+            const doc = getDocFromElement(target);
+            const { actionId } = target.closest('[data-action-id]').dataset;
+            const { actions, attack } = doc.system;
+            const action = attack?.id === actionId ? attack : actions?.find(a => a.id === actionId);
+            await action.use(event);
+        }
+
 
         /**
          * Toggle a ActiveEffect

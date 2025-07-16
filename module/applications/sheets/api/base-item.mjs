@@ -26,7 +26,6 @@ export default class DHBaseItemSheet extends DHApplicationMixin(ItemSheetV2) {
             removeFeature: DHBaseItemSheet.#removeFeature,
             addResource: DHBaseItemSheet.#addResource,
             removeResource: DHBaseItemSheet.#removeResource
-            addFeature: DHBaseItemSheet.#addFeature
         },
         dragDrop: [
             { dragSelector: null, dropSelector: '.tab.features .drop-section' },
