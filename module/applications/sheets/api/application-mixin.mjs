@@ -84,6 +84,7 @@ export default function DHApplicationMixin(Base) {
                 useItem: DHSheetV2.#useItem,
                 useAction: DHSheetV2.#useAction,
                 toggleEffect: DHSheetV2.#toggleEffect,
+                toggleExtended: DHSheetV2.#toggleExtended,
             },
             contextMenus: [{
                 handler: DHSheetV2.#getEffectContextOptions,
@@ -122,6 +123,27 @@ export default function DHApplicationMixin(Base) {
         async _onRender(context, options) {
             await super._onRender(context, options);
             this._createTagifyElements(this.options.tagifyConfigs);
+        }
+
+        /* -------------------------------------------- */
+        /*  Sync Parts                                  */
+        /* -------------------------------------------- */
+
+        /**@inheritdoc */
+        _syncPartState(partId, newElement, priorElement, state) {
+            super._syncPartState(partId, newElement, priorElement, state);
+            for (const el of priorElement.querySelectorAll(".extensible.extended")) {
+                const { actionId, itemUuid } = el.parentElement.dataset;
+                const selector = `${actionId ? `[data-action-id="${actionId}"]` : `[data-item-uuid="${itemUuid}"]`} .extensible`;
+                const newExtensible = newElement.querySelector(selector);
+
+                if (!newExtensible) continue;
+                newExtensible.classList.add("extended");
+                const descriptionElement = newExtensible.querySelector('.invetory-description');
+                if (descriptionElement) {
+                    this.#prepareInventoryDescription(newExtensible, descriptionElement);
+                }
+            }
         }
 
         /* -------------------------------------------- */
@@ -355,6 +377,37 @@ export default function DHApplicationMixin(Base) {
         }
 
         /* -------------------------------------------- */
+        /*  Prepare Descriptions                        */
+        /* -------------------------------------------- */
+
+        /**
+         * Prepares and enriches an inventory item or action description for display.
+         * @param {HTMLElement} extensibleElement - The parent element containing the description.
+         * @param {HTMLElement} descriptionElement - The element where the enriched description will be rendered.
+         * @returns {Promise<void>}
+         */
+        async #prepareInventoryDescription(extensibleElement, descriptionElement) {
+            const parent = extensibleElement.closest('[data-item-uuid], [data-action-id]');
+            const { actionId, itemUuid } = parent?.dataset || {};
+            if (!actionId && !itemUuid) return;
+
+            const doc = itemUuid
+                ? getDocFromElement(extensibleElement)
+                : this.document.system.attack?.id === actionId
+                    ? this.document.system.attack
+                    : this.document.system.actions?.find(a => a.id === actionId);
+            if (!doc) return;
+
+            const description = doc.system?.description ?? doc.description;
+            const isAction = !!actionId;
+            descriptionElement.innerHTML = await foundry.applications.ux.TextEditor.implementation.enrichHTML(description, {
+                relativeTo: isAction ? doc.parent : doc,
+                rollData: doc.getRollData(),
+                secrets: isAction ? doc.parent.isOwner : doc.isOwner
+            });
+        }
+
+        /* -------------------------------------------- */
         /*  Application Clicks Actions                  */
         /* -------------------------------------------- */
 
@@ -524,6 +577,20 @@ export default function DHApplicationMixin(Base) {
          */
         static #triggerContextMenu(event, _) {
             return CONFIG.ux.ContextMenu.triggerContextMenu(event);
+        }
+
+        /**
+         * Toggle the 'extended' class on the .extensible element inside inventory-item-content
+         * @type {ApplicationClickAction}
+         * @this {DHSheetV2}
+         */
+        static async #toggleExtended(_, target) {
+            const container = target.closest('.inventory-item');
+            const extensible = container?.querySelector('.extensible');
+            const t = extensible?.classList.toggle('extended');
+
+            const descriptionElement = extensible?.querySelector('.invetory-description');
+            if (t && !!descriptionElement) this.#prepareInventoryDescription(extensible, descriptionElement);
         }
 
     }
