@@ -37,6 +37,12 @@ export default class BeastformDialog extends HandlebarsApplicationMixin(Applicat
         }
     };
 
+    // _attachPartListeners(partId, htmlElement, options) {
+    //     super._attachPartListeners(partId, htmlElement, options);
+
+    //     htmlElement.querySelector('');
+    // }
+
     async _prepareContext(_options) {
         const context = await super._prepareContext(_options);
 
@@ -60,8 +66,15 @@ export default class BeastformDialog extends HandlebarsApplicationMixin(Applicat
         this.render();
     }
 
-    static selectBeastform(_, target) {
+    static async selectBeastform(_, target) {
         this.selected = this.selected === target.dataset.uuid ? null : target.dataset.uuid;
+        const beastform = this.selected ? await foundry.utils.fromUuid(this.selected) : null;
+        if (beastform && beastform.system.beastformType !== CONFIG.DH.ITEM.beastformTypes.normal.id) {
+            this.element.classList.add('expanded');
+        } else {
+            this.element.classList.remove('expanded');
+        }
+
         this.render();
     }
 

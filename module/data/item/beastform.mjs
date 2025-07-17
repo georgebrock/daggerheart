@@ -19,6 +19,11 @@ export default class DHBeastform extends BaseDataItem {
         const fields = foundry.data.fields;
         return {
             ...super.defineSchema(),
+            beastformType: new fields.StringField({
+                required: true,
+                choices: CONFIG.DH.ITEM.beastformTypes,
+                initial: CONFIG.DH.ITEM.beastformTypes.normal.id
+            }),
             tier: new fields.StringField({
                 required: true,
                 choices: CONFIG.DH.GENERAL.tiers,
@@ -40,7 +45,25 @@ export default class DHBeastform extends BaseDataItem {
             }),
             examples: new fields.StringField(),
             advantageOn: new fields.StringField(),
-            features: new ForeignDocumentUUIDArrayField({ type: 'Item' })
+            features: new ForeignDocumentUUIDArrayField({ type: 'Item' }),
+            evolved: new fields.SchemaField({
+                maximumTier: new fields.StringField({
+                    required: true,
+                    choices: CONFIG.DH.GENERAL.tiers,
+                    initial: CONFIG.DH.GENERAL.tiers.tier1.id
+                })
+            }),
+            hybrid: new fields.SchemaField({
+                maximumTier: new fields.StringField({
+                    required: true,
+                    choices: CONFIG.DH.GENERAL.tiers,
+                    initial: CONFIG.DH.GENERAL.tiers.tier1.id,
+                    label: 'DAGGERHEART.ITEMS.Beastform.FIELDS.evolved.maximumTier.label'
+                }),
+                beastformOptions: new fields.NumberField({ required: true, integer: true, initial: 2, min: 2 }),
+                advantages: new fields.NumberField({ required: true, integer: true, initial: 2, min: 2 }),
+                features: new fields.NumberField({ required: true, integer: true, initial: 2, min: 2 })
+            })
         };
     }
 

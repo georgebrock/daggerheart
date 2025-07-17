@@ -559,6 +559,11 @@
                     "description": "You reduce incoming magic damage by your Armor Score before applying it to your damage thresholds."
                 }
             },
+            "BeastformType": {
+                "normal": "Normal",
+                "evolved": "Evolved",
+                "hybrid": "Hybrid"
+            },
             "Burden": {
                 "oneHanded": "One-Handed",
                 "twoHanded": "Two-Handed"
@@ -1194,7 +1199,8 @@
                 "recovery": "Recovery",
                 "setup": "Setup",
                 "equipment": "Equipment",
-                "attachments": "Attachments"
+                "attachments": "Attachments",
+                "advanced": "Advanced"
             },
             "Tiers": {
                 "singular": "Tier",
@@ -1290,6 +1296,7 @@
             },
             "Beastform": {
                 "FIELDS": {
+                    "beastformType": { "label": "Beastform Type" },
                     "tier": { "label": "Tier" },
                     "examples": { "label": "Examples" },
                     "advantageOn": { "label": "Gain Advantage On" },
@@ -1299,6 +1306,14 @@
                         "placeholder": "Using character dimensions",
                         "height": { "label": "Height" },
                         "width": { "label": "Width" }
+                    },
+                    "evolved": {
+                        "maximumTier": { "label": "Maximum Tier" }
+                    },
+                    "hybrid": {
+                        "beastformOptions": { "label": "Nr Beastforms" },
+                        "advantages": { "label": "Nr Advantages" },
+                        "features": { "label": "Nr Features" }
                     }
                 },
                 "dialogTitle": "Beastform Selection",

@@ -15,6 +15,7 @@ export default class BeastformSheet extends DHBaseItemSheet {
             template: 'systems/daggerheart/templates/sheets/global/tabs/tab-features.hbs',
             scrollable: ['.features']
         },
+        advanced: { template: 'systems/daggerheart/templates/sheets/items/beastform/advanced.hbs' },
         effects: {
             template: 'systems/daggerheart/templates/sheets/global/tabs/tab-effects.hbs',
             scrollable: ['.effects']
@@ -23,7 +24,7 @@ export default class BeastformSheet extends DHBaseItemSheet {
 
     static TABS = {
         primary: {
-            tabs: [{ id: 'settings' }, { id: 'features' }, { id: 'effects' }],
+            tabs: [{ id: 'settings' }, { id: 'features' }, { id: 'advanced' }, { id: 'effects' }],
             initial: 'settings',
             labelPrefix: 'DAGGERHEART.GENERAL.Tabs'
         }
@@ -33,7 +34,14 @@ export default class BeastformSheet extends DHBaseItemSheet {
     async _prepareContext(_options) {
         const context = await super._prepareContext(_options);
 
-        context.document = context.document.toObject();
+        const data = { ...context.document.toObject() };
+        context.document = {
+            ...data,
+            system: {
+                ...data.system,
+                features: this.document.system.features
+            }
+        };
         context.document.effects = this.document.effects.map(effect => {
             const data = effect.toObject();
             data.id = effect.id;
