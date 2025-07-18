@@ -3,6 +3,7 @@ import ForeignDocumentUUIDField from '../fields/foreignDocumentUUIDField.mjs';
 import DhLevelData from '../levelData.mjs';
 import BaseDataActor from './base.mjs';
 import { attributeField, resourceField, stressDamageReductionRule, bonusField } from '../fields/actorField.mjs';
+import ActionField from '../fields/actionField.mjs';
 
 export default class DhCharacter extends BaseDataActor {
     static LOCALIZATION_PREFIXES = ['DAGGERHEART.ACTORS.Character'];
@@ -87,8 +88,45 @@ export default class DhCharacter extends BaseDataActor {
                 value: new ForeignDocumentUUIDField({ type: 'Item', nullable: true }),
                 subclass: new ForeignDocumentUUIDField({ type: 'Item', nullable: true })
             }),
-            advantageSources: new fields.ArrayField(new fields.StringField()),
-            disadvantageSources: new fields.ArrayField(new fields.StringField()),
+            attack: new ActionField({
+                initial: {
+                    name: 'DAGGERHEART.GENERAL.unarmedStrike',
+                    img: 'icons/skills/melee/unarmed-punch-fist-yellow-red.webp',
+                    _id: foundry.utils.randomID(),
+                    systemPath: 'attack',
+                    type: 'attack',
+                    range: 'melee',
+                    target: {
+                        type: 'any',
+                        amount: 1
+                    },
+                    roll: {
+                        type: 'attack',
+                        trait: 'strength'
+                    },
+                    damage: {
+                        parts: [
+                            {
+                                type: ['physical'],
+                                value: {
+                                    custom: {
+                                        enabled: true,
+                                        formula: '@system.rules.attack.damage.value'
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            }),
+            advantageSources: new fields.ArrayField(new fields.StringField(), {
+                label: 'DAGGERHEART.ACTORS.Character.advantageSources.label',
+                hint: 'DAGGERHEART.ACTORS.Character.advantageSources.hint'
+            }),
+            disadvantageSources: new fields.ArrayField(new fields.StringField(), {
+                label: 'DAGGERHEART.ACTORS.Character.disadvantageSources.label',
+                hint: 'DAGGERHEART.ACTORS.Character.disadvantageSources.hint'
+            }),
             levelData: new fields.EmbeddedDataField(DhLevelData),
             bonuses: new fields.SchemaField({
                 roll: new fields.SchemaField({
@@ -160,6 +198,15 @@ export default class DhCharacter extends BaseDataActor {
                     }),
                     magical: new fields.BooleanField({ initial: false }),
                     physical: new fields.BooleanField({ initial: false })
+                }),
+                attack: new fields.SchemaField({
+                    damage: new fields.SchemaField({
+                        value: new fields.StringField({
+                            required: true,
+                            initial: '@profd4',
+                            label: 'DAGGERHEART.GENERAL.Rules.attack.damage.value.label'
+                        })
+                    })
                 }),
                 weapon: new fields.SchemaField({
                     /*  Unimplemented 
@@ -420,11 +467,14 @@ export default class DhCharacter extends BaseDataActor {
         const data = super.getRollData();
         return {
             ...data,
-            ...this.resources.tokens,
-            ...this.resources.dice,
-            ...this.bonuses,
-            tier: this.tier,
-            level: this.levelData.level.current
+            system: {
+                ...this.resources.tokens,
+                ...this.resources.dice,
+                ...this.bonuses,
+                ...this.rules,
+                tier: this.tier,
+                level: this.levelData.level.current
+            }
         };
     }
 

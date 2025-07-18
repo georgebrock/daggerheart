@@ -1,13 +1,26 @@
 @import '../../utils/colors.less';
 @import '../../utils/mixin.less';
 
-.appTheme({
-    &.beastform-selection {
-        .beastforms-outer-container .beastform-title {
+.theme-light .application.daggerheart.dh-style.views.beastform-selection .beastforms-outer-container {
+    .beastform-title {
+        background-image: url('../assets/parchments/dh-parchment-light.png');
+    }
+
+    .advanced-container {
+        .advanced-forms-container {
+            .advanced-form-container {
+                background-image: url('../assets/parchments/dh-parchment-light.png');
+            }
+
+            .hybrid-data-wrapper .hybrid-data-container .hybrid-data-inner-container .hybrid-data {
+                background-image: url('../assets/parchments/dh-parchment-light.png');
+            }
+        }
+        .form-features .form-feature {
             background-image: url('../assets/parchments/dh-parchment-light.png');
         }
     }
-}, {});
+}
 
 .application.daggerheart.dh-style.views.beastform-selection {
     .beastforms-outer-container {
@@ -80,6 +93,17 @@
                 width: 300px;
             }
 
+            h2 {
+                margin: 0;
+            }
+
+            .advanced-forms-container {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 16px;
+            }
+
             .advanced-form-container {
                 position: relative;
                 display: flex;
@@ -91,11 +115,72 @@
                 height: 120px;
                 align-items: center;
                 text-align: center;
+                color: light-dark(@dark, @beige);
+                background-image: url('../assets/parchments/dh-parchment-dark.png');
+
+                &.hybridized {
+                    flex-direction: column;
+                    justify-content: start;
+                    padding-top: 4px;
+                    height: 200px;
+                    overflow: hidden;
+
+                    &.empty {
+                        justify-content: center;
+                    }
+
+                    .beastform-title {
+                        position: initial;
+                    }
+                }
 
                 .empty-form {
                     display: flex;
                     flex-direction: column;
                     align-items: center;
+
+                    i {
+                        font-size: 24px;
+                    }
+                }
+
+                .beastform-title-wrapper {
+                    height: 44px;
+                }
+
+                .hybrid-data-wrapper {
+                    overflow: auto;
+
+                    .hybrid-data-container {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 2px;
+                        padding: 0 4px;
+
+                        label {
+                            font-weight: bold;
+                        }
+
+                        .hybrid-data-inner-container {
+                            display: flex;
+                            justify-content: center;
+                            flex-wrap: wrap;
+                            gap: 4px;
+
+                            .hybrid-data {
+                                padding: 0 2px;
+                                border: 1px solid light-dark(@dark-blue, @golden);
+                                border-radius: 6px;
+                                color: light-dark(@dark, @beige);
+                                background-image: url('../assets/parchments/dh-parchment-dark.png');
+                                opacity: 0.4;
+
+                                &.active {
+                                    opacity: 1;
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -104,13 +189,13 @@
                 flex-direction: column;
                 gap: 8px;
                 padding: 0 16px;
-                margin-top: 8px;
+                margin: 8px 0;
 
                 .form-feature {
                     display: flex;
                     flex-direction: column;
                     gap: 4px;
-                    padding: 0 2px;
+                    padding: 0 4px;
                     border: 1px solid light-dark(@dark-blue, @golden);
                     border-radius: 6px;
                     color: light-dark(@dark, @beige);

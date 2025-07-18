@@ -106,6 +106,10 @@
                 "horderHp": "Horde/HP"
             },
             "Character": {
+                "advantageSources": {
+                    "label": "Advantage Sources",
+                    "hint": "Add single words or short text as reminders and hints of what a character has advantage on."
+                },
                 "age": "Age",
                 "companionFeatures": "Companion Features",
                 "contextMenu": {
@@ -116,6 +120,10 @@
                     "toVault": "Send to Vault",
                     "unequip": "Unequip",
                     "useItem": "Use Item"
+                },
+                "disadvantageSources": {
+                    "label": "Disadvantage Sources",
+                    "hint": "Add single words or short text as reminders and hints of what a character has disadvantage on."
                 },
                 "faith": "Faith",
                 "levelUp": "You can level up",
@@ -1014,6 +1022,7 @@
             },
             "Advantage": {
                 "full": "Advantage",
+                "plural": "Advantages",
                 "short": "Adv"
             },
             "Adversary": {
@@ -1169,6 +1178,11 @@
                             "hint": "The cost in stress you can pay to reduce minor damage to none."
                         }
                     }
+                },
+                "attack": {
+                    "damage": {
+                        "value": { "label": "Base Attack: Damage" }
+                    }
                 }
             },
             "Tabs": {
@@ -1266,6 +1280,7 @@
             "title": "Title",
             "true": "True",
             "type": "Type",
+            "unarmedStrike": "Unarmed Strike",
             "unarmored": "Unarmored",
             "use": "Use",
             "used": "Used",
@@ -1327,8 +1342,10 @@
                 "beastformEffect": "Beastform Transformation",
                 "evolve": "Evolve",
                 "evolvedFeatureTitle": "Evolved",
+                "evolvedDrag": "Drag a form here to evolve it.",
                 "hybridize": "Hybridize",
-                "hybridFeatureTitle": "Hybrid Features"
+                "hybridizeFeatureTitle": "Hybrid Features",
+                "hybridizeDrag": "Drag a form here to hybridize it."
             },
             "Class": {
                 "hopeFeatures": "Hope Features",
@@ -1573,7 +1590,9 @@
                 "featureNotFoundation": "This feature is used as something else than a Foundation feature and cannot be used here.",
                 "featureNotSpecialization": "This feature is used as something else than a Specialization feature and cannot be used here.",
                 "featureNotMastery": "This feature is used as something else than a Mastery feature and cannot be used here.",
-                "beastformMissingEffect": "The Beastform is missing a Beastform Effect. Cannot be used."
+                "beastformMissingEffect": "The Beastform is missing a Beastform Effect. Cannot be used.",
+                "beastformToManyAdvantages": "You cannot select any more advantages.",
+                "beastformToManyFeatures": "You cannot select any more features."
             },
             "Tooltip": {
                 "openItemWorld": "Open Item World",

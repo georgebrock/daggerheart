@@ -36,7 +36,25 @@ export default class BeastformSheet extends DHBaseItemSheet {
 
         const advantageOnInput = htmlElement.querySelector('.advantageon-input');
         if (advantageOnInput) {
-            const tagifyElement = new Tagify(advantageOnInput);
+            const tagifyElement = new Tagify(advantageOnInput, {
+                tagTextProp: 'name',
+                templates: {
+                    tag(tagData) {
+                        return `<tag
+                                    contenteditable='false'
+                                    spellcheck='false'
+                                    tabIndex="${this.settings.a11y.focusableTags ? 0 : -1}"
+                                    class="${this.settings.classNames.tag} ${tagData.class ? tagData.class : ''}"
+                                    ${this.getAttributes(tagData)}> 
+                            <x class="${this.settings.classNames.tagX}" role='button' aria-label='remove tag'></x>
+                            <div>
+                                <span class="${this.settings.classNames.tagText}">${tagData[this.settings.tagTextProp] || tagData.value}</span>
+                                ${tagData.src ? `<img src="${tagData.src}"></i>` : ''}
+                            </div>
+                        </tag>`;
+                    }
+                }
+            });
             tagifyElement.on('add', this.advantageOnAdd.bind(this));
             tagifyElement.on('remove', this.advantageOnRemove.bind(this));
         }
@@ -61,19 +79,25 @@ export default class BeastformSheet extends DHBaseItemSheet {
 
             return data;
         });
+        context.advantageOn = JSON.stringify(
+            Object.keys(context.document.system.advantageOn).map(key => ({
+                value: key,
+                name: context.document.system.advantageOn[key].value
+            }))
+        );
 
         return context;
     }
 
     async advantageOnAdd(event) {
         await this.document.update({
-            'system.advantageOn': [...this.document.system.advantageOn, event.detail.data.value]
+            [`system.advantageOn.${foundry.utils.randomID()}`]: { value: event.detail.data.value }
         });
     }
 
     async advantageOnRemove(event) {
         await this.document.update({
-            'system.advantageOn': this.document.system.advantageOn.filter(x => x !== event.detail.data.value)
+            [`system.advantageOn.-=${event.detail.data.value}`]: null
         });
     }
 }

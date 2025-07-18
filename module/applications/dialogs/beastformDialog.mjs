@@ -7,7 +7,7 @@ export default class BeastformDialog extends HandlebarsApplicationMixin(Applicat
         this.configData = configData;
         this.selected = null;
         this.evolved = { form: null };
-        this.hybrid = null;
+        this.hybrid = { forms: {}, advantages: {}, features: {} };
 
         this._dragDrop = this._createDragDropHandlers();
     }
@@ -21,6 +21,8 @@ export default class BeastformDialog extends HandlebarsApplicationMixin(Applicat
         },
         actions: {
             selectBeastform: this.selectBeastform,
+            toggleHybridFeature: this.toggleHybridFeature,
+            toggleHybridAdvantage: this.toggleHybridAdvantage,
             submitBeastform: this.submitBeastform
         },
         form: {
@@ -38,7 +40,7 @@ export default class BeastformDialog extends HandlebarsApplicationMixin(Applicat
     /** @override */
     static PARTS = {
         beastform: {
-            template: 'systems/daggerheart/templates/dialogs/beastformDialog.hbs'
+            template: 'systems/daggerheart/templates/dialogs/beastform/beastformDialog.hbs'
         }
     };
 
@@ -65,7 +67,33 @@ export default class BeastformDialog extends HandlebarsApplicationMixin(Applicat
         context.selectedBeastformEffect = this.selected?.effects?.find?.(x => x.type === 'beastform');
 
         context.evolved = this.evolved;
-        context.hybrid = this.hybrid;
+
+        context.hybridForms = Object.keys(this.hybrid.forms).reduce((acc, formKey) => {
+            if (!this.hybrid.forms[formKey]) {
+                acc[formKey] = null;
+            } else {
+                const data = this.hybrid.forms[formKey].toObject();
+                acc[formKey] = {
+                    ...data,
+                    system: {
+                        ...data.system,
+                        features: this.hybrid.forms[formKey].system.features.map(feature => ({
+                            ...feature.toObject(),
+                            uuid: feature.uuid,
+                            selected: Boolean(this.hybrid.features?.[formKey]?.[feature.uuid])
+                        })),
+                        advantageOn: Object.keys(data.system.advantageOn).reduce((acc, key) => {
+                            acc[key] = {
+                                ...data.system.advantageOn[key],
+                                selected: Boolean(this.hybrid.advantages?.[formKey]?.[key])
+                            };
+                            return acc;
+                        }, {})
+                    }
+                };
+            }
+            return acc;
+        }, {});
 
         const maximumDragTier = Math.max(
             this.selected?.system?.evolved?.maximumTier ?? 0,
@@ -83,13 +111,16 @@ export default class BeastformDialog extends HandlebarsApplicationMixin(Applicat
                 acc[tier.id].values[x.uuid] = {
                     selected: this.selected?.uuid == x.uuid,
                     value: x,
-                    draggable: maximumDragTier ? x.system.tier <= maximumDragTier : false
+                    draggable:
+                        !['evolved', 'hybrid'].includes(x.system.beastformType) && maximumDragTier
+                            ? x.system.tier <= maximumDragTier
+                            : false
                 };
 
                 return acc;
             },
             {}
-        ); // Also get from compendium when added
+        );
 
         context.canSubmit = this.canSubmit();
 
@@ -103,6 +134,19 @@ export default class BeastformDialog extends HandlebarsApplicationMixin(Applicat
                     return true;
                 case 'evolved':
                     return this.evolved.form;
+                case 'hybrid':
+                    const selectedAdvantages = Object.values(this.hybrid.advantages).reduce(
+                        (acc, form) => acc + Object.values(form).length,
+                        0
+                    );
+                    const selectedFeatures = Object.values(this.hybrid.features).reduce(
+                        (acc, form) => acc + Object.values(form).length,
+                        0
+                    );
+
+                    const advantagesSelected = selectedAdvantages === this.selected.system.hybrid.advantages;
+                    const featuresSelected = selectedFeatures === this.selected.system.hybrid.features;
+                    return advantagesSelected && featuresSelected;
             }
         }
 
@@ -135,7 +179,62 @@ export default class BeastformDialog extends HandlebarsApplicationMixin(Applicat
 
         if (this.selected) {
             if (this.selected.system.beastformType !== 'evolved') this.evolved.form = null;
-            if (this.selected.system.beastformType !== 'hybrid') this.hybrid = null;
+            if (this.selected.system.beastformType !== 'hybrid') {
+                this.hybrid.forms = {};
+                this.hybrid.advantages = {};
+                this.hybrid.features = {};
+            } else {
+                this.hybrid.forms = [...Array(this.selected.system.hybrid.beastformOptions).keys()].reduce((acc, _) => {
+                    acc[foundry.utils.randomID()] = null;
+                    return acc;
+                }, {});
+            }
+        }
+
+        this.render();
+    }
+
+    static toggleHybridFeature(_, button) {
+        const current = this.hybrid.features[button.dataset.form];
+        if (!current) this.hybrid.features[button.dataset.form] = {};
+
+        if (this.hybrid.features[button.dataset.form][button.id])
+            delete this.hybrid.features[button.dataset.form][button.id];
+        else {
+            const currentFeatures = Object.values(this.hybrid.features).reduce(
+                (acc, form) => acc + Object.values(form).length,
+                0
+            );
+            if (currentFeatures === this.selected.system.hybrid.features) {
+                ui.notifications.warn(game.i18n.localize('DAGGERHEART.UI.Notifications.beastformToManyFeatures'));
+                return;
+            }
+
+            const feature = this.hybrid.forms[button.dataset.form].system.features.find(x => x.uuid === button.id);
+            this.hybrid.features[button.dataset.form][button.id] = feature;
+        }
+
+        this.render();
+    }
+
+    static toggleHybridAdvantage(_, button) {
+        const current = this.hybrid.advantages[button.dataset.form];
+        if (!current) this.hybrid.advantages[button.dataset.form] = {};
+
+        if (this.hybrid.advantages[button.dataset.form][button.id])
+            delete this.hybrid.advantages[button.dataset.form][button.id];
+        else {
+            const currentAdvantages = Object.values(this.hybrid.advantages).reduce(
+                (acc, form) => acc + Object.values(form).length,
+                0
+            );
+            if (currentAdvantages === this.selected.system.hybrid.advantages) {
+                ui.notifications.warn(game.i18n.localize('DAGGERHEART.UI.Notifications.beastformToManyAdvantages'));
+                return;
+            }
+
+            const advantage = this.hybrid.forms[button.dataset.form].system.advantageOn[button.id];
+            this.hybrid.advantages[button.dataset.form][button.id] = advantage;
         }
 
         this.render();
@@ -164,23 +263,17 @@ export default class BeastformDialog extends HandlebarsApplicationMixin(Applicat
 
     async _onDragStart(event) {
         const target = event.currentTarget;
-        if (!this.selected) {
-            event.preventDefault();
-            return;
-        }
+        const abort = () => event.preventDefault();
+        if (!this.selected) abort();
 
         const draggedForm = await foundry.utils.fromUuid(target.dataset.uuid);
+        if (['evolved', 'hybrid'].includes(draggedForm.system.beastformType)) abort();
+
         if (this.selected.system.beastformType === 'evolved') {
-            if (draggedForm.system.tier > this.selected.system.evolved.maximumTier) {
-                event.preventDefault();
-                return;
-            }
+            if (draggedForm.system.tier > this.selected.system.evolved.maximumTier) abort();
         }
         if (this.selected.system.beastformType === 'hybrid') {
-            if (draggedForm.system.tier > this.selected.system.hybrid.maximumTier) {
-                event.preventDefault();
-                return;
-            }
+            if (draggedForm.system.tier > this.selected.system.hybrid.maximumTier) abort();
         }
 
         event.dataTransfer.setData('text/plain', JSON.stringify(target.dataset));
@@ -191,9 +284,20 @@ export default class BeastformDialog extends HandlebarsApplicationMixin(Applicat
         event.stopPropagation();
         const data = foundry.applications.ux.TextEditor.getDragEventData(event);
         const item = await fromUuid(data.uuid);
+        if (!item) return;
 
         if (event.target.closest('.advanced-form-container.evolved')) {
             this.evolved.form = item;
+        } else {
+            const hybridContainer = event.target.closest('.advanced-form-container.hybridized');
+            if (hybridContainer) {
+                const existingId = Object.keys(this.hybrid.forms).find(
+                    key => this.hybrid.forms[key]?.uuid === item.uuid
+                );
+                if (existingId) this.hybrid.forms[existingId] = null;
+
+                this.hybrid.forms[hybridContainer.id] = item;
+            }
         }
 
         this.render();

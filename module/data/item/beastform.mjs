@@ -50,7 +50,11 @@ export default class DHBeastform extends BaseDataItem {
                 initial: CONFIG.DH.ACTOR.abilities.agility.id
             }),
             examples: new fields.StringField(),
-            advantageOn: new fields.ArrayField(new fields.StringField()),
+            advantageOn: new fields.TypedObjectField(
+                new fields.SchemaField({
+                    value: new fields.StringField()
+                })
+            ),
             features: new ForeignDocumentUUIDArrayField({ type: 'Item' }),
             evolved: new fields.SchemaField({
                 maximumTier: new fields.NumberField({
@@ -104,7 +108,13 @@ export default class DHBeastform extends BaseDataItem {
         await beastformEffect.updateSource({
             changes: [
                 ...beastformEffect.changes,
-                { key: 'system.advantageSources', mode: 2, value: this.advantageOn.join(', ') }
+                {
+                    key: 'system.advantageSources',
+                    mode: 2,
+                    value: Object.values(this.advantageOn)
+                        .map(x => x.value)
+                        .join(', ')
+                }
             ],
             system: {
                 characterTokenData: {

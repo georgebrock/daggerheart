@@ -48,19 +48,29 @@ export default class DhBeastformAction extends DHBaseAction {
             formData.system.features = [...formData.system.features, ...selectedForm.system.features.map(x => x.uuid)];
         }
 
+        if (selectedForm.system.beastformType === CONFIG.DH.ITEM.beastformTypes.hybrid.id) {
+            formData.system.advantageOn = Object.values(hybridData.advantages).reduce((advantages, formCategory) => {
+                Object.keys(formCategory).forEach(advantageKey => {
+                    advantages[advantageKey] = formCategory[advantageKey];
+                });
+                return advantages;
+            }, {});
+            formData.system.features = [
+                ...formData.system.features,
+                ...Object.values(hybridData.features).flatMap(x => Object.keys(x))
+            ];
+        }
+
         this.actor.createEmbeddedDocuments('Item', [formData]);
     }
 
     async handleActiveTransformations() {
         const beastformEffects = this.actor.effects.filter(x => x.type === 'beastform');
-        if (beastformEffects.length > 0) {
-            for (let effect of beastformEffects) {
-                await effect.delete();
-            }
-
-            return true;
-        }
-
-        return false;
+        const existingEffects = beastformEffects.length > 0;
+        await this.actor.deleteEmbeddedDocuments(
+            'ActiveEffect',
+            beastformEffects.map(x => x.id)
+        );
+        return existingEffects;
     }
 }
