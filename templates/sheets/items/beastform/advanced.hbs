@@ -6,9 +6,11 @@
     {{formGroup systemFields.beastformType value=source.system.beastformType localize=true blank=false}}
 
     {{#if (eq source.system.beastformType 'evolved')}}
-        <fieldset class="one-column">
+        <fieldset class="two-columns even">
             <legend>{{localize "DAGGERHEART.CONFIG.BeastformType.evolved"}}</legend>
+
             {{formGroup systemFields.evolved.fields.maximumTier value=source.system.evolved.maximumTier localize=true blank=false}}
+            {{formGroup systemFields.evolved.fields.mainTraitBonus value=source.system.evolved.mainTraitBonus localize=true}}
         </fieldset>
     {{/if}}
 

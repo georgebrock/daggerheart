@@ -1,4 +1,5 @@
 import DHBaseItemSheet from '../api/base-item.mjs';
+import Tagify from '@yaireo/tagify';
 
 export default class BeastformSheet extends DHBaseItemSheet {
     /**@inheritdoc */
@@ -30,6 +31,17 @@ export default class BeastformSheet extends DHBaseItemSheet {
         }
     };
 
+    _attachPartListeners(partId, htmlElement, options) {
+        super._attachPartListeners(partId, htmlElement, options);
+
+        const advantageOnInput = htmlElement.querySelector('.advantageon-input');
+        if (advantageOnInput) {
+            const tagifyElement = new Tagify(advantageOnInput);
+            tagifyElement.on('add', this.advantageOnAdd.bind(this));
+            tagifyElement.on('remove', this.advantageOnRemove.bind(this));
+        }
+    }
+
     /**@inheritdoc */
     async _prepareContext(_options) {
         const context = await super._prepareContext(_options);
@@ -51,5 +63,17 @@ export default class BeastformSheet extends DHBaseItemSheet {
         });
 
         return context;
+    }
+
+    async advantageOnAdd(event) {
+        await this.document.update({
+            'system.advantageOn': [...this.document.system.advantageOn, event.detail.data.value]
+        });
+    }
+
+    async advantageOnRemove(event) {
+        await this.document.update({
+            'system.advantageOn': this.document.system.advantageOn.filter(x => x !== event.detail.data.value)
+        });
     }
 }

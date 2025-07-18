@@ -3,32 +3,37 @@
 
 .appTheme({
     &.beastform-selection {
-        .beastforms-container .beastforms-tier .beastform-container .beastform-title {
-            background-image: url('../assets/parchments/dh-parchment-dark.png');
+        .beastforms-outer-container .beastform-title {
+            background-image: url('../assets/parchments/dh-parchment-light.png');
         }
     }
 }, {});
 
 .application.daggerheart.dh-style.views.beastform-selection {
-    transition: all 0.3s ease;
-
-    &.expanded {
-        width: 900px !important;
-
-        .beastforms-outer-container .advanced-container {
-            max-width: 300px;
-        }
-    }
-
     .beastforms-outer-container {
         display: flex;
         overflow: hidden;
+
+        .beastform-title {
+            position: absolute;
+            top: 4px;
+            padding: 0 2px;
+            display: flex;
+            flex-wrap: wrap;
+            text-align: center;
+            font-size: 16px;
+            margin: 0 4px;
+            border: 1px solid light-dark(@dark-blue, @golden);
+            border-radius: 6px;
+            color: light-dark(@dark, @beige);
+            background-image: url('../assets/parchments/dh-parchment-dark.png');
+        }
 
         .beastforms-container {
             display: flex;
             flex-direction: column;
             gap: 4px;
-            max-width: 566px;
+            width: 600px;
 
             .beastforms-tier {
                 display: grid;
@@ -42,47 +47,83 @@
                     border: 1px solid light-dark(@dark-blue, @golden);
                     border-radius: 6px;
                     cursor: pointer;
+                    width: 120px;
+                    height: 120px;
 
                     &.inactive {
                         opacity: 0.4;
+                        cursor: default;
+                    }
+
+                    &.draggable {
+                        cursor: pointer;
+                        filter: drop-shadow(0 0 15px light-dark(@dark-blue, @golden));
                     }
 
                     img {
                         width: 100%;
                         border-radius: 6px;
                     }
-
-                    .beastform-title {
-                        position: absolute;
-                        top: 4px;
-                        display: flex;
-                        flex-wrap: wrap;
-                        font-size: 16px;
-                        margin: 0 4px;
-                        border: 1px solid light-dark(@dark-blue, @golden);
-                        border-radius: 6px;
-                        color: light-dark(@dark, @beige);
-                        background-image: url('../assets/parchments/dh-parchment-light.png');
-                    }
                 }
             }
         }
 
         .advanced-container {
-            max-width: 0;
-            transition: all 0.3s ease;
+            width: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 12px;
+            transition: width 0.3s ease;
+
+            &.expanded {
+                width: 300px;
+            }
+
+            .advanced-form-container {
+                position: relative;
+                display: flex;
+                justify-content: center;
+                border: 1px solid light-dark(#18162e, #f3c267);
+                border-radius: 6px;
+                cursor: pointer;
+                width: 120px;
+                height: 120px;
+                align-items: center;
+                text-align: center;
+
+                .empty-form {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                }
+            }
+
+            .form-features {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                padding: 0 16px;
+                margin-top: 8px;
+
+                .form-feature {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                    padding: 0 2px;
+                    border: 1px solid light-dark(@dark-blue, @golden);
+                    border-radius: 6px;
+                    color: light-dark(@dark, @beige);
+                    background-image: url('../assets/parchments/dh-parchment-dark.png');
+
+                    h4 {
+                        text-align: center;
+                        margin: 0;
+                    }
+                }
+            }
         }
     }
-
-    // .advanced-container {
-    //     position: absolute;
-    //     top: 0;
-    //     right: -300px;
-    //     height: 100%;
-    //     width: 300px;
-    //     border: 1px solid @golden;
-    //     background: url("../systems/daggerheart/assets/parchments/dh-parchment-light.png") no-repeat center;
-    // }
 
     footer {
         margin-top: 8px;

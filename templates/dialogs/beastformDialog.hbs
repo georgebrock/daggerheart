@@ -5,7 +5,7 @@
                 <fieldset class="beastforms-tier">
                     <legend>{{tier.label}}</legend>
                     {{#each tier.values as |form uuid|}}
-                        <div data-action="selectBeastform" data-uuid="{{uuid}}" data-tooltip="{{concat "#item#" uuid}}" class="beastform-container {{#if (and @root.canSubmit (not form.selected))}}inactive{{/if}}">
+                        <div data-action="selectBeastform" data-uuid="{{uuid}}" data-tooltip="{{concat "#item#" uuid}}" class="beastform-container {{#unless form.selected}}inactive{{/unless}} {{#if form.draggable}}draggable{{/if}}">
                             <img src="{{form.value.img}}" />
                             <div class="beastform-title">{{form.value.name}}</div>
                         </div>
@@ -13,8 +13,29 @@
                 </fieldset>
             {{/each}}
         </div>
-        <div class="advanced-container">
-            Test
+        <div class="advanced-container {{#if (or (eq selected.system.beastformType 'evolved') (eq selected.system.beastformType 'hybrid'))}}expanded{{/if}}">
+            {{#if (eq selected.system.beastformType 'evolved')}}
+                <h2>{{localize "DAGGERHEART.ITEMS.Beastform.evolve"}}</h2>
+                <div class="advanced-form-container evolved">
+                    {{#if evolved.form}}
+                        <div class="beastform-title">{{concat (localize "DAGGERHEART.CONFIG.BeastformType.evolved") " " evolved.form.name}}</div>
+                        <img src="{{evolved.form.img}}" />                        
+                    {{else}}
+                        <div class="empty-form">
+                            <i class="fa-solid fa-plus"></i>
+                            <label>{{localize "Drag a form here to evolve it"}}</label>
+                        </div>
+                    {{/if}}
+                </div>
+                <div class="form-features">   
+                    {{#if selectedBeastformEffect}}
+                        <div class="form-feature" data-tooltip="{{concat "#item#" selectedBeastformEffect.uuid}}">
+                            <h4>{{localize "DAGGERHEART.ITEMS.Beastform.evolvedFeatureTitle"}}</h4>
+                            <div>{{{selectedBeastformEffect.description}}}</div>
+                        </div>
+                    {{/if}}
+                </div>
+            {{/if}}
         </div>
     </div>
 

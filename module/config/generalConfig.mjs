@@ -279,6 +279,25 @@ export const tiers = {
     }
 };
 
+export const tiersAlternate = {
+    1: {
+        id: 1,
+        label: 'DAGGERHEART.GENERAL.Tiers.tier1'
+    },
+    2: {
+        id: 2,
+        label: 'DAGGERHEART.GENERAL.Tiers.tier2'
+    },
+    3: {
+        id: 3,
+        label: 'DAGGERHEART.GENERAL.Tiers.tier3'
+    },
+    4: {
+        id: 4,
+        label: 'DAGGERHEART.GENERAL.Tiers.tier4'
+    }
+};
+
 export const diceTypes = {
     d4: 'd4',
     d6: 'd6',
