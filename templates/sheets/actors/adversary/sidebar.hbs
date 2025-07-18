@@ -17,7 +17,7 @@
                 <progress class='progress-bar' value='{{source.system.resources.hitPoints.value}}'
                     max='{{source.system.resources.hitPoints.max}}'></progress>
                 <div class="status-label">
-                    <h4>HP</h4>
+                    <h4>{{localize 'DAGGERHEART.GENERAL.attack.hitPoints.short'}}</h4>
                 </div>
 
             </div>
@@ -31,7 +31,7 @@
                 <progress class='progress-bar stress-color' value='{{source.system.resources.stress.value}}'
                     max='{{source.system.resources.stress.max}}'></progress>
                 <div class="status-label">
-                    <h4>Stress</h4>
+                    <h4>{{localize 'DAGGERHEART.GENERAL.stress'}}</h4>
                 </div>
             </div>
         </div>
@@ -54,7 +54,7 @@
                     {{/if}}
                 </div>
                 <div class="status-label">
-                    <h4>Difficulty</h4>
+                    <h4>{{localize DAGGERHEART.GENERAL.difficulty}}</h4>
                 </div>
             </div>
             <div class="status-number">
@@ -66,7 +66,7 @@
                     {{/if}}
                 </div>
                 <div class="status-label">
-                    <h4>Attack</h4>
+                    <h4>{{localize "DAGGERHEART.GENERAL.attack"}}</h4>
                 </div>
             </div>
         </div>
@@ -74,7 +74,7 @@
     <div class="attack-section">
         <div class="title">
             <side-line-div class="invert"></side-line-div>
-            <h3>Attack</h3>
+            <h3>{{localize "DAGGERHEART.GENERAL.attack"}}</h3>
             <side-line-div></side-line-div>
         </div>
         <ul class="items-sidebar-list">
@@ -92,7 +92,7 @@
     <div class="experience-section">
         <div class="title">
             <side-line-div class="invert"></side-line-div>
-            <h3>Experience</h3>
+            <h3>{{localize DAGGERHEART.GENERAL.experience.plural}}</h3>
             <side-line-div></side-line-div>
         </div>
         <div class="experience-list">
@@ -113,6 +113,6 @@
     </div>
     <line-div></line-div>
     <div class="reaction-section">
-        <button data-action="reactionRoll">Reaction Test</button>
+        <button data-action="reactionRoll">{{localize DAGGERHEART.GENERAL.Roll.reaction}}</button>
     </div>
 </aside>

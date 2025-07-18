@@ -36,6 +36,9 @@ export default class DhpEnvironment extends DHBaseActorSheet {
     async _preparePartContext(partId, context, options) {
         context = await super._preparePartContext(partId, context, options);
         switch (partId) {
+            case 'header':
+                await this._prepareHeaderContext(context, options);
+                break;
             case 'notes':
                 await this._prepareNotesContext(context, options);
                 break;
@@ -69,6 +72,23 @@ export default class DhpEnvironment extends DHBaseActorSheet {
                 })
             };
         }
+    }
+
+    /**
+     * Prepare render context for the Header part.
+     * @param {ApplicationRenderContext} context
+     * @param {ApplicationRenderOptions} options
+     * @returns {Promise<void>}
+     * @protected
+     */
+    async _prepareHeaderContext(context, _options) {
+        const { system } = this.document;
+        const { TextEditor } = foundry.applications.ux;
+
+        context.description = await TextEditor.implementation.enrichHTML(system.description, {
+            secrets: this.document.isOwner,
+            relativeTo: this.document
+        });
     }
 
     /* -------------------------------------------- */
