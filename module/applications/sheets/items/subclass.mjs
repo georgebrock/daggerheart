@@ -6,10 +6,7 @@ export default class SubclassSheet extends DHBaseItemSheet {
         classes: ['subclass'],
         position: { width: 600 },
         window: { resizable: false },
-        actions: {
-            addFeature: this.addFeature,
-            deleteFeature: this.deleteFeature
-        }
+        actions: {}
     };
 
     /**@override */
@@ -40,24 +37,6 @@ export default class SubclassSheet extends DHBaseItemSheet {
         }
     };
 
-    static async addFeature(_, target) {
-        const cls = foundry.documents.Item.implementation;
-        const feature = await cls.create({
-            type: 'feature',
-            name: cls.defaultName({ type: 'feature' }),
-        });
-
-        await this.document.update({
-            [`system.${target.dataset.type}`]: feature
-        });
-    }
-
-    static async deleteFeature(_, button) {
-        await this.document.update({
-            [`system.${button.dataset.actionPath}`]: null
-        });
-    }
-
     async _onDragStart(event) {
         const featureItem = event.currentTarget.closest('.drop-section');
 
@@ -75,18 +54,45 @@ export default class SubclassSheet extends DHBaseItemSheet {
     }
 
     async _onDrop(event) {
+        event.stopPropagation();
+
         const data = foundry.applications.ux.TextEditor.implementation.getDragEventData(event);
         if (data.fromInternal) return;
 
         const item = await fromUuid(data.uuid);
-        if (item?.type === 'feature') {
-            const dropSection = event.target.closest('.drop-section');
-            if (this.document.system[dropSection.dataset.type]) {
-                ui.notifications.warn(game.i18n.localize('DAGGERHEART.UI.notifications.featureIsFull'));
-                return;
-            }
+        const target = event.target.closest('fieldset.drop-section');
+        if (item.type === 'feature') {
+            if (target.dataset.type === 'foundation') {
+                if (item.system.subType && item.system.subType !== CONFIG.DH.ITEM.featureSubTypes.foundation) {
+                    ui.notifications.warn(game.i18n.localize('DAGGERHEART.UI.Notifications.featureNotFoundation'));
+                    return;
+                }
 
-            await this.document.update({ [`system.${dropSection.dataset.type}`]: item.uuid });
+                await item.update({ 'system.subType': CONFIG.DH.ITEM.featureSubTypes.foundation });
+                await this.document.update({
+                    'system.features': [...this.document.system.features.map(x => x.uuid), item.uuid]
+                });
+            } else if (target.dataset.type === 'specialization') {
+                if (item.system.subType && item.system.subType !== CONFIG.DH.ITEM.featureSubTypes.specialization) {
+                    ui.notifications.warn(game.i18n.localize('DAGGERHEART.UI.Notifications.featureNotSpecialization'));
+                    return;
+                }
+
+                await item.update({ 'system.subType': CONFIG.DH.ITEM.featureSubTypes.specialization });
+                await this.document.update({
+                    'system.features': [...this.document.system.features.map(x => x.uuid), item.uuid]
+                });
+            } else if (target.dataset.type === 'mastery') {
+                if (item.system.subType && item.system.subType !== CONFIG.DH.ITEM.featureSubTypes.mastery) {
+                    ui.notifications.warn(game.i18n.localize('DAGGERHEART.UI.Notifications.featureNotMastery'));
+                    return;
+                }
+
+                await item.update({ 'system.subType': CONFIG.DH.ITEM.featureSubTypes.mastery });
+                await this.document.update({
+                    'system.features': [...this.document.system.features.map(x => x.uuid), item.uuid]
+                });
+            }
         }
     }
 }

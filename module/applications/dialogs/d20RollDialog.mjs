@@ -64,6 +64,13 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
         context.rollConfig = this.config;
         context.hasRoll = !!this.config.roll;
         context.canRoll = true;
+        context.selectedRollMode = this.config.selectedRollMode;
+        context.rollModes = Object.entries(CONFIG.Dice.rollModes).map(([action, { label, icon }]) => ({
+            action,
+            label,
+            icon
+        }));
+
         if (this.config.costs?.length) {
             const updatedCosts = this.action.calcCosts(this.config.costs);
             context.costs = updatedCosts.map(x => ({
@@ -82,6 +89,7 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
         if (this.roll) {
             context.roll = this.roll;
             context.rollType = this.roll?.constructor.name;
+            context.rallyDie = this.roll.rallyChoices;
             context.experiences = Object.keys(this.config.data.experiences).map(id => ({
                 id,
                 ...this.config.data.experiences[id]
@@ -99,6 +107,8 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
 
     static updateRollConfiguration(event, _, formData) {
         const { ...rest } = foundry.utils.expandObject(formData.object);
+        this.config.selectedRollMode = rest.selectedRollMode;
+
         if (this.config.costs) {
             this.config.costs = foundry.utils.mergeObject(this.config.costs, rest.costs);
         }
@@ -122,11 +132,6 @@ export default class D20RollDialog extends HandlebarsApplicationMixin(Applicatio
     }
 
     static selectExperience(_, button) {
-        /* if (this.config.experiences.find(x => x === button.dataset.key)) {
-            this.config.experiences = this.config.experiences.filter(x => x !== button.dataset.key);
-        } else {
-            this.config.experiences = [...this.config.experiences, button.dataset.key];
-        } */
         this.config.experiences =
             this.config.experiences.indexOf(button.dataset.key) > -1
                 ? this.config.experiences.filter(x => x !== button.dataset.key)

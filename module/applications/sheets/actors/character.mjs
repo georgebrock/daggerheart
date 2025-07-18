@@ -25,6 +25,7 @@ export default class CharacterSheet extends DHBaseActorSheet {
             toggleEquipItem: CharacterSheet.#toggleEquipItem,
             toggleResourceDice: CharacterSheet.#toggleResourceDice,
             handleResourceDice: CharacterSheet.#handleResourceDice,
+            useDowntime: this.useDowntime
         },
         window: {
             resizable: true
@@ -112,6 +113,11 @@ export default class CharacterSheet extends DHBaseActorSheet {
         });
         htmlElement.querySelectorAll('.inventory-item-quantity').forEach(element => {
             element.addEventListener('change', this.updateItemQuantity.bind(this));
+        });
+
+        // Add listener for armor marks input
+        htmlElement.querySelectorAll('.armor-marks-input').forEach(element => {
+            element.addEventListener('change', this.updateArmorMarks.bind(this));
         });
     }
 
@@ -519,6 +525,16 @@ export default class CharacterSheet extends DHBaseActorSheet {
         await item.update({ 'system.quantity': event.currentTarget.value });
     }
 
+    async updateArmorMarks(event) {
+        const armor = this.document.system.armor;
+        if (!armor) return;
+
+        const maxMarks = this.document.system.armorScore;
+        const value = Math.min(Math.max(Number(event.currentTarget.value), 0), maxMarks);
+        await armor.update({ 'system.marks.value': value });
+        this.render();
+    }
+
     /* -------------------------------------------- */
     /*  Application Clicks Actions                  */
     /* -------------------------------------------- */
@@ -669,7 +685,12 @@ export default class CharacterSheet extends DHBaseActorSheet {
                 return acc;
             }, {})
         });
-        //this.render();
+    }
+
+    static useDowntime(_, button) {
+        new game.system.api.applications.dialogs.Downtime(this.document, button.dataset.type === 'shortRest').render(
+            true
+        );
     }
 
     async _onDragStart(event) {

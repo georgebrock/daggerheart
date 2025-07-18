@@ -22,14 +22,14 @@ export default class DHBaseItemSheet extends DHApplicationMixin(ItemSheetV2) {
         actions: {
             removeAction: DHBaseItemSheet.#removeAction,
             addFeature: DHBaseItemSheet.#addFeature,
-            editFeature: DHBaseItemSheet.#editFeature,
-            removeFeature: DHBaseItemSheet.#removeFeature,
+            deleteFeature: DHBaseItemSheet.#deleteFeature,
             addResource: DHBaseItemSheet.#addResource,
             removeResource: DHBaseItemSheet.#removeResource
         },
         dragDrop: [
             { dragSelector: null, dropSelector: '.tab.features .drop-section' },
-            { dragSelector: '.feature-item', dropSelector: null }
+            { dragSelector: '.feature-item', dropSelector: null },
+            { dragSelector: '.action-item', dropSelector: null }
         ],
         contextMenus: [
             {
@@ -153,16 +153,19 @@ export default class DHBaseItemSheet extends DHApplicationMixin(ItemSheetV2) {
         const actionIndex = button.closest('[data-index]').dataset.index;
         const action = this.document.system.actions[actionIndex];
 
-        const confirmed = await foundry.applications.api.DialogV2.confirm({
-            window: {
-                title: game.i18n.format('DAGGERHEART.APPLICATIONS.DeleteConfirmation.title', {
-                    type: game.i18n.localize(`DAGGERHEART.GENERAL.Action.single`),
-                    name: action.name
-                })
-            },
-            content: game.i18n.format('DAGGERHEART.APPLICATIONS.DeleteConfirmation.text', { name: action.name })
-        });
-        if (!confirmed) return;
+        if(!event.shiftKey) {
+            const confirmed = await foundry.applications.api.DialogV2.confirm({
+                window: {
+                    title: game.i18n.format('DAGGERHEART.APPLICATIONS.DeleteConfirmation.title', {
+                        type: game.i18n.localize(`DAGGERHEART.GENERAL.Action.single`),
+                        name: action.name
+                    })
+                },
+                content: game.i18n.format('DAGGERHEART.APPLICATIONS.DeleteConfirmation.text', { name: action.name })
+            });
+            if (!confirmed) return;
+        }
+
 
         await this.document.update({
             'system.actions': this.document.system.actions.filter((_, index) => index !== Number.parseInt(actionIndex))
@@ -173,58 +176,31 @@ export default class DHBaseItemSheet extends DHApplicationMixin(ItemSheetV2) {
      * Add a new feature to the item, prompting the user for its type.
      * @type {ApplicationClickAction}
      */
-    static async #addFeature(_event, _button) {
+    static async #addFeature(_, target) {
+        const { type } = target.dataset;
         const cls = foundry.documents.Item.implementation;
         const feature = await cls.create({
             type: 'feature',
             name: cls.defaultName({ type: 'feature' }),
+            "system.subType": CONFIG.DH.ITEM.featureSubTypes[type]
         });
         await this.document.update({
-            'system.features': [...this.document.system.features, feature]
+            'system.features': [...this.document.system.features, feature].map(f => f.uuid)
         });
-    }
-
-    /**
-     * Edit an existing feature on the item
-     * @type {ApplicationClickAction}
-     */
-    static async #editFeature(_event, button) {
-        const target = button.closest('.feature-item');
-        const feature = this.document.system.features.find(x => x?.id === target.id);
-        if (!feature) {
-            ui.notifications.warn(game.i18n.localize('DAGGERHEART.UI.Notifications.featureIsMissing'));
-            return;
-        }
-
-        feature.sheet.render(true);
     }
 
     /**
      * Remove a feature from the item.
      * @type {ApplicationClickAction}
      */
-    static async #removeFeature(event, button) {
-        event.stopPropagation();
-        const target = button.closest('.feature-item');
-        const feature = this.document.system.features.find(x => x && x.id === target.id);
-
-        if (feature) {
-            const confirmed = await foundry.applications.api.DialogV2.confirm({
-                window: {
-                    title: game.i18n.format('DAGGERHEART.APPLICATIONS.DeleteConfirmation.title', {
-                        type: game.i18n.localize(`TYPES.Item.feature`),
-                        name: feature.name
-                    })
-                },
-                content: game.i18n.format('DAGGERHEART.APPLICATIONS.DeleteConfirmation.text', { name: feature.name })
-            });
-            if (!confirmed) return;
-        }
-
+    static async #deleteFeature(_, target) {
+        const feature = getDocFromElement(target);
+        if (!feature) return ui.notifications.warn(game.i18n.localize('DAGGERHEART.UI.Notifications.featureIsMissing'));
+        await feature.update({ 'system.subType': null });
         await this.document.update({
             'system.features': this.document.system.features
-                .filter(feature => feature && feature.id !== target.id)
                 .map(x => x.uuid)
+                .filter(uuid => uuid !== feature.uuid)
         });
     }
 
@@ -269,6 +245,23 @@ export default class DHBaseItemSheet extends DHApplicationMixin(ItemSheetV2) {
             const featureData = { type: 'Item', data: { ...feature.toObject(), _id: null }, fromInternal: true };
             event.dataTransfer.setData('text/plain', JSON.stringify(featureData));
             event.dataTransfer.setDragImage(featureItem.querySelector('img'), 60, 0);
+        } else {
+            const actionItem = event.currentTarget.closest('.action-item');
+            if (actionItem) {
+                const action = this.document.system.actions[actionItem.dataset.index];
+                if (!action) {
+                    ui.notifications.warn(game.i18n.localize('DAGGERHEART.UI.Notifications.actionIsMissing'));
+                    return;
+                }
+
+                const actionData = {
+                    type: 'Action',
+                    data: { ...action.toObject(), id: action.id, itemUuid: this.document.uuid },
+                    fromInternal: true
+                };
+                event.dataTransfer.setData('text/plain', JSON.stringify(actionData));
+                event.dataTransfer.setDragImage(actionItem.querySelector('img'), 60, 0);
+            }
         }
     }
 

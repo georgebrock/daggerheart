@@ -4,6 +4,7 @@ import ForeignDocumentUUIDField from '../fields/foreignDocumentUUIDField.mjs';
 import ActionField from '../fields/actionField.mjs';
 import { adjustDice, adjustRange } from '../../helpers/utils.mjs';
 import DHCompanionSettings from '../../applications/sheets-configs/companion-settings.mjs';
+import { resourceField, bonusField } from '../fields/actorField.mjs';
 
 export default class DhCompanion extends BaseDataActor {
     static LOCALIZATION_PREFIXES = ['DAGGERHEART.ACTORS.Companion'];
@@ -23,14 +24,16 @@ export default class DhCompanion extends BaseDataActor {
             ...super.defineSchema(),
             partner: new ForeignDocumentUUIDField({ type: 'Actor' }),
             resources: new fields.SchemaField({
-                stress: new fields.SchemaField({
-                    value: new fields.NumberField({ initial: 0, integer: true }),
-                    max: new fields.NumberField({ initial: 3, integer: true }),
-                    isReversed: new foundry.data.fields.BooleanField({ initial: true })
-                }),
-                hope: new fields.NumberField({ initial: 0, integer: true })
+                stress: resourceField(3, 'DAGGERHEART.GENERAL.stress', true),
+                hope: new fields.NumberField({ initial: 0, integer: true, label: 'DAGGERHEART.GENERAL.hope' })
             }),
-            evasion: new fields.NumberField({ required: true, min: 1, initial: 10, integer: true }),
+            evasion: new fields.NumberField({
+                required: true,
+                min: 1,
+                initial: 10,
+                integer: true,
+                label: 'DAGGERHEART.GENERAL.evasion'
+            }),
             experiences: new fields.TypedObjectField(
                 new fields.SchemaField({
                     name: new fields.StringField({}),
@@ -56,9 +59,8 @@ export default class DhCompanion extends BaseDataActor {
                         amount: 1
                     },
                     roll: {
-                        type: 'weapon',
-                        bonus: 0,
-                        trait: 'instinct'
+                        type: 'attack',
+                        bonus: 0
                     },
                     damage: {
                         parts: [
@@ -74,13 +76,13 @@ export default class DhCompanion extends BaseDataActor {
                 }
             }),
             actions: new fields.ArrayField(new ActionField()),
-            levelData: new fields.EmbeddedDataField(DhLevelData)
-        };
-    }
-
-    get traits() {
-        return {
-            instinct: { value: this.attack.roll.bonus }
+            levelData: new fields.EmbeddedDataField(DhLevelData),
+            bonuses: new fields.SchemaField({
+                damage: new fields.SchemaField({
+                    physical: bonusField('DAGGERHEART.GENERAL.Damage.physicalDamage'),
+                    magical: bonusField('DAGGERHEART.GENERAL.Damage.magicalDamage')
+                })
+            })
         };
     }
 
@@ -89,9 +91,7 @@ export default class DhCompanion extends BaseDataActor {
     }
 
     prepareBaseData() {
-        const partnerSpellcastingModifier = this.partner?.system?.spellcastingModifiers?.main;
-        const spellcastingModifier = this.partner?.system?.traits?.[partnerSpellcastingModifier]?.value;
-        this.attack.roll.bonus = spellcastingModifier ?? 0; // Needs to expand on which modifier it is that should be used because of multiclassing;
+        this.attack.roll.bonus = this.partner?.system?.spellcastModifier ?? 0;
 
         for (let levelKey in this.levelData.levelups) {
             const level = this.levelData.levelups[levelKey];
@@ -121,12 +121,6 @@ export default class DhCompanion extends BaseDataActor {
                         break;
                 }
             }
-        }
-    }
-
-    prepareDerivedData() {
-        if (this.partner) {
-            this.partner.system.resources.hope.max += this.resources.hope;
         }
     }
 

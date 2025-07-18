@@ -5,7 +5,7 @@ import * as documents from './module/documents/_module.mjs';
 import RegisterHandlebarsHelpers from './module/helpers/handlebarsHelper.mjs';
 import { DhDualityRollEnricher, DhTemplateEnricher } from './module/enrichers/_module.mjs';
 import { getCommandTarget, rollCommandToJSON } from './module/helpers/utils.mjs';
-import { NarrativeCountdowns, registerCountdownApplicationHooks } from './module/applications/ui/countdowns.mjs';
+import { NarrativeCountdowns } from './module/applications/ui/countdowns.mjs';
 import { DualityRollColor } from './module/data/settings/Appearance.mjs';
 import { DHRoll, DualityRoll, D20Roll, DamageRoll, DualityDie } from './module/dice/_module.mjs';
 import { renderDualityButton } from './module/enrichers/DualityRollEnricher.mjs';
@@ -19,6 +19,7 @@ import {
 import { placeables } from './module/canvas/_module.mjs';
 import { registerRollDiceHooks } from './module/dice/dhRoll.mjs';
 import { registerDHActorHooks } from './module/documents/actor.mjs';
+import './node_modules/@yaireo/tagify/dist/tagify.css';
 
 Hooks.once('init', () => {
     CONFIG.DH = SYSTEM;
@@ -42,7 +43,7 @@ Hooks.once('init', () => {
     );
 
     CONFIG.statusEffects = [
-        ...CONFIG.statusEffects,
+        ...CONFIG.statusEffects.filter(x => !['dead', 'unconscious'].includes(x.id)),
         ...Object.values(SYSTEM.GENERAL.conditions).map(x => ({
             ...x,
             name: game.i18n.localize(x.name),
@@ -60,6 +61,14 @@ Hooks.once('init', () => {
 
     CONFIG.Dice.rolls = [...CONFIG.Dice.rolls, ...[DHRoll, DualityRoll, D20Roll, DamageRoll]];
     CONFIG.MeasuredTemplate.objectClass = placeables.DhMeasuredTemplate;
+
+    const { DocumentSheetConfig } = foundry.applications.apps;
+    CONFIG.Token.documentClass = documents.DhToken;
+    CONFIG.Token.prototypeSheetClass = applications.sheetConfigs.DhPrototypeTokenConfig;
+    DocumentSheetConfig.unregisterSheet(TokenDocument, 'core', foundry.applications.sheets.TokenConfig);
+    DocumentSheetConfig.registerSheet(TokenDocument, 'dnd5e', applications.sheetConfigs.DhTokenConfig, {
+        makeDefault: true
+    });
 
     CONFIG.Item.documentClass = documents.DHItem;
 
@@ -98,12 +107,12 @@ Hooks.once('init', () => {
     CONFIG.ActiveEffect.documentClass = documents.DhActiveEffect;
     CONFIG.ActiveEffect.dataModels = models.activeEffects.config;
 
-    foundry.applications.apps.DocumentSheetConfig.unregisterSheet(
+    DocumentSheetConfig.unregisterSheet(
         CONFIG.ActiveEffect.documentClass,
         'core',
         foundry.applications.sheets.ActiveEffectConfig
     );
-    foundry.applications.apps.DocumentSheetConfig.registerSheet(
+    DocumentSheetConfig.registerSheet(
         CONFIG.ActiveEffect.documentClass,
         SYSTEM.id,
         applications.sheetConfigs.ActiveEffectConfig,
@@ -127,9 +136,11 @@ Hooks.once('init', () => {
 
     CONFIG.Canvas.rulerClass = placeables.DhRuler;
     CONFIG.Canvas.layers.templates.layerClass = placeables.DhTemplateLayer;
+    CONFIG.Token.objectClass = placeables.DhTokenPlaceable;
     CONFIG.Combat.documentClass = documents.DhpCombat;
     CONFIG.ui.combat = applications.ui.DhCombatTracker;
     CONFIG.ui.chat = applications.ui.DhChatLog;
+    CONFIG.ui.hotbar = applications.ui.DhHotbar;
     CONFIG.Token.rulerClass = placeables.DhTokenRuler;
 
     CONFIG.ui.resources = applications.ui.DhFearTracker;
@@ -160,7 +171,6 @@ Hooks.on('ready', () => {
 
     registerCountdownHooks();
     socketRegistration.registerSocketHooks();
-    registerCountdownApplicationHooks();
     registerRollDiceHooks();
     registerDHActorHooks();
 });

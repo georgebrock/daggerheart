@@ -272,13 +272,15 @@ export default function DHApplicationMixin(Base) {
             const getAction = (target) => {
                 const { actionId } = target.closest('[data-action-id]').dataset;
                 const { actions, attack } = this.document.system;
-                return attack.id === actionId ? attack : actions?.find(a => a.id === actionId);
+                return attack?.id === actionId ? attack : actions?.find(a => a.id === actionId);
             };
 
             const options = [
                 {
                     name: 'DAGGERHEART.APPLICATIONS.ContextMenu.useItem',
                     icon: 'fa-solid fa-burst',
+                    condition: this.document instanceof foundry.documents.Actor ||
+                        (this.document instanceof foundry.documents.Item && this.document.parent),
                     callback: (target, event) => getAction(target).use(event),
                 },
                 {
@@ -297,7 +299,7 @@ export default function DHApplicationMixin(Base) {
                     condition: (target) => {
                         const { actionId } = target.closest('[data-action-id]').dataset;
                         const { attack } = this.document.system;
-                        return attack.id !== actionId
+                        return attack?.id !== actionId
                     },
                     callback: async (target) => {
                         const action = getAction(target)
@@ -313,7 +315,7 @@ export default function DHApplicationMixin(Base) {
                         if (!confirmed) return;
 
                         return this.document.update({
-                            'system.actions': this.document.system.actions.do.filter((a) => a.id !== action.id)
+                            'system.actions': this.document.system.actions.filter((a) => a.id !== action.id)
                         });
                     }
                 }
@@ -353,7 +355,11 @@ export default function DHApplicationMixin(Base) {
             if (deletable) options.push({
                 name: 'CONTROLS.CommonDelete',
                 icon: 'fa-solid fa-trash',
-                callback: target => getDocFromElement(target).deleteDialog(),
+                callback: (target, event) => {
+                    const doc = getDocFromElement(target);
+                    if (event.shiftKey) return doc.delete();
+                    else return doc.deleteDialog();
+                }
             })
 
             return options.map(option => ({
@@ -402,7 +408,7 @@ export default function DHApplicationMixin(Base) {
             const isAction = !!actionId;
             descriptionElement.innerHTML = await foundry.applications.ux.TextEditor.implementation.enrichHTML(description, {
                 relativeTo: isAction ? doc.parent : doc,
-                rollData: doc.getRollData(),
+                rollData: doc.getRollData?.(),
                 secrets: isAction ? doc.parent.isOwner : doc.isOwner
             });
         }
@@ -432,7 +438,7 @@ export default function DHApplicationMixin(Base) {
                             type: game.i18n.localize('DAGGERHEART.GENERAL.Action.single')
                         }),
                     }
-                });
+                }) ?? {};
                 if (!actionType) return;
                 const cls = game.system.api.models.actions.actionsTypes[actionType]
                 const action = new cls({
@@ -482,7 +488,7 @@ export default function DHApplicationMixin(Base) {
             // TODO: REDO this
             const { actionId } = target.closest('[data-action-id]').dataset;
             const { actions, attack } = this.document.system;
-            const action = attack.id === actionId ? attack : actions?.find(a => a.id === actionId);
+            const action = attack?.id === actionId ? attack : actions?.find(a => a.id === actionId);
             new DHActionConfig(action).render({ force: true })
         }
 
@@ -490,27 +496,32 @@ export default function DHApplicationMixin(Base) {
          * Delete an embedded document.
          * @type {ApplicationClickAction}
          */
-        static async #deleteDoc(_event, target) {
+        static async #deleteDoc(event, target) {
             const doc = getDocFromElement(target);
 
-            // TODO: REDO this
-            if (doc) return await doc.deleteDialog()
+            if (doc) {
+                if (event.shiftKey) return doc.delete()
+                else return await doc.deleteDialog()
+            }
 
+            // TODO: REDO this
             const { actionId } = target.closest('[data-action-id]').dataset;
             const { actions, attack } = this.document.system;
-            if (attack.id === actionId) return;
+            if (attack?.id === actionId) return;
             const action = actions.find(a => a.id === actionId);
 
-            const confirmed = await foundry.applications.api.DialogV2.confirm({
-                window: {
-                    title: game.i18n.format('DAGGERHEART.APPLICATIONS.DeleteConfirmation.title', {
-                        type: game.i18n.localize(`DAGGERHEART.GENERAL.Action.single`),
-                        name: action.name
-                    })
-                },
-                content: game.i18n.format('DAGGERHEART.APPLICATIONS.DeleteConfirmation.text', { name: action.name })
-            });
-            if (!confirmed) return;
+            if (!event.shiftKey) {
+                const confirmed = await foundry.applications.api.DialogV2.confirm({
+                    window: {
+                        title: game.i18n.format('DAGGERHEART.APPLICATIONS.DeleteConfirmation.title', {
+                            type: game.i18n.localize(`DAGGERHEART.GENERAL.Action.single`),
+                            name: action.name
+                        })
+                    },
+                    content: game.i18n.format('DAGGERHEART.APPLICATIONS.DeleteConfirmation.text', { name: action.name })
+                });
+                if (!confirmed) return;
+            }
 
             return await this.document.update({
                 'system.actions': actions.filter((a) => a.id !== action.id)
@@ -528,7 +539,7 @@ export default function DHApplicationMixin(Base) {
             if (!doc) {
                 const { actionId } = target.closest('[data-action-id]').dataset;
                 const { actions, attack } = this.document.system;
-                doc = attack.id === actionId ? attack : actions?.find(a => a.id === actionId);
+                doc = attack?.id === actionId ? attack : actions?.find(a => a.id === actionId);
             }
             return doc.toChat(this.document.id);
         }
@@ -544,6 +555,7 @@ export default function DHApplicationMixin(Base) {
                 const { actionId } = target.closest('[data-action-id]').dataset;
                 const { actions, attack } = this.document.system;
                 doc = attack?.id === actionId ? attack : actions?.find(a => a.id === actionId);
+                if(this.document instanceof foundry.documents.Item && !this.document.parent) return;
             }
 
             await doc.use(event);

@@ -10,8 +10,6 @@ export default class ClassSheet extends DHBaseItemSheet {
         actions: {
             removeItemFromCollection: ClassSheet.#removeItemFromCollection,
             removeSuggestedItem: ClassSheet.#removeSuggestedItem,
-            addFeature: ClassSheet.#addFeature,
-            deleteFeature: ClassSheet.#deleteFeature
         },
         tagifyConfigs: [
             {
@@ -80,6 +78,7 @@ export default class ClassSheet extends DHBaseItemSheet {
     /* -------------------------------------------- */
 
     async _onDrop(event) {
+        event.stopPropagation();
         const data = TextEditor.getDragEventData(event);
         const item = await fromUuid(data.uuid);
         const target = event.target.closest('fieldset.drop-section');
@@ -89,12 +88,24 @@ export default class ClassSheet extends DHBaseItemSheet {
             });
         } else if (item.type === 'feature') {
             if (target.classList.contains('hope-feature')) {
+                if (item.system.subType && item.system.subType !== CONFIG.DH.ITEM.featureSubTypes.hope) {
+                    ui.notifications.warn(game.i18n.localize('DAGGERHEART.UI.Notifications.featureNotHope'));
+                    return;
+                }
+
+                await item.update({ 'system.subType': CONFIG.DH.ITEM.featureSubTypes.hope });
                 await this.document.update({
-                    'system.hopeFeatures': [...this.document.system.hopeFeatures.map(x => x.uuid), item.uuid]
+                    'system.features': [...this.document.system.features.map(x => x.uuid), item.uuid]
                 });
             } else if (target.classList.contains('class-feature')) {
+                if (item.system.subType && item.system.subType !== CONFIG.DH.ITEM.featureSubTypes.class) {
+                    ui.notifications.warn(game.i18n.localize('DAGGERHEART.UI.Notifications.featureNotClass'));
+                    return;
+                }
+
+                await item.update({ 'system.subType': CONFIG.DH.ITEM.featureSubTypes.class });
                 await this.document.update({
-                    'system.classFeatures': [...this.document.system.classFeatures.map(x => x.uuid), item.uuid]
+                    'system.features': [...this.document.system.features.map(x => x.uuid), item.uuid]
                 });
             }
         } else if (item.type === 'weapon') {
@@ -167,29 +178,5 @@ export default class ClassSheet extends DHBaseItemSheet {
     static async #removeSuggestedItem(_event, element) {
         const { target } = element.dataset;
         await this.document.update({ [`system.characterGuide.${target}`]: null });
-    }
-
-    static async #addFeature(_, target) {
-        const { actionPath } = target.dataset;
-        const cls = foundry.documents.Item.implementation;
-
-        const feature = await cls.create({
-            type: 'feature',
-            name: cls.defaultName({ type: 'feature' }),
-        });
-
-        await this.document.update({
-            [`system.${actionPath}`]: [
-                ...this.document.system[actionPath],
-                feature.uuid
-            ]
-        });
-    }
-
-    static async #deleteFeature(_, button) {
-        const { actionPath, itemUuid } = button.dataset;
-        await this.document.update({
-            [`system.${actionPath}`]: this.document.system[actionPath].filter(f => f.uuid !== itemUuid)
-        });
     }
 }
