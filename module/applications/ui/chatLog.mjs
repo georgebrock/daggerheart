@@ -303,61 +303,41 @@ export default class DhpChatLog extends foundry.applications.sidebar.tabs.ChatLo
 
     //Reroll Functionality
     rerollEvent = async(event,message)=> {
-        let originalMessage = message;
-        let dicetype = "str";
-        let originalobject=originalMessage.rolls.map(roll => JSON.parse(roll));
-        let fear,hope;
-
-        if (originalMessage.rolls.length) {
-          console.log("Reroll button clicked for message:", originalMessage._id,originalMessage,originalobject);
-          if (originalobject[0].class==='DualityRoll') {
-            new foundry.applications.api.DialogV2({
-                    window: { title: 'Reroll' },
-                    content: '<p>Select which die/dice to reroll:</p><label><input type="radio" name="choice" value="fear" checked> Fear</label><label><input type="radio" name="choice" value="hope"> Hope</label><label><input type="radio" name="choice" value="both"> Both</label><p>Confirm option?</p>',
-                    buttons:[{
-                        action: "choice",
-                        label: "Confirm Choice",
-                        default: true,
-                        callback: (event, button, dialog) => button.form.elements.choice.value
-                    },
-                    {
-                       action: "cancel",
-                       label:"Discard Reroll"
-                    }],
-                    submit: result =>{
-                        if (result==="cancel") return;
-                        else dicetype = result;
-                    },
-                }).render({ force: true });
-                console.log('User picked:',dicetype);
-                switch(dicetype) {
-                    case "fear":
-                        console.log('Rerolling fear for user.');
-                        fear=new Roll("1d12");
-                        await fear.evaluate();
-                        console.log('Dice rerolled to',fear.result);
-                    case "hope":
-                        console.log('Rerolling hope for user.');
-                        hope=new Roll("1d12");
-                        await hope.evaluate();
-                        console.log('Dice rerolled to',hope.result);
-                    case "both":
-                        console.log('Rerolling both fear and hope for user.');
-                        await hope.evaluate();
-                        await fear.evaluate();
-                        console.log('Dice rerolled to',hope.result,' in hope and ',fear.result,' in fear');
-                }
-                
-/*            const confirm = await foundry.applications.api.DialogV2.confirm({
-                    window: { title: 'Confirm Reroll' },
-                    content: `<p>You have rerolled your ${dicetype} to ${r.result}</p><p>Apply new roll?</p>`
-                });
-                if (!confirm) return;
-                else{
-                 originalobject[0].;   
-                }   */ 
-          }
-        
+        let DieTerm=foundry.dice.terms.Die;
+        let dicetype = event.target.value;
+        let originalRoll=message.rolls.map(roll => JSON.parse(roll))[0];
+        let diceIndex;
+        console.log("Dice to reroll is:",dicetype,", and the message id is:",message._id)
+        console.log("Original Roll Terms:",originalRoll.terms);
+        switch(dicetype){
+            case "hope": {
+                diceIndex=0; //Hope Die
+                break;
+            };
+            case "fear" :{
+                diceIndex=2 //Fear Die
+                break;
+            };
+            default: 
+                ui.notifications.warn("Invalid Dice type selected.");
+                break;
         }
+        let rollClone=originalRoll;
+        let rerolledTerm=rollClone.terms[diceIndex];
+        if (!(rerolledTerm instanceof DieTerm)) {
+            ui.notifications.error("Selected term is not a die.");
+            return;
+        }
+/*
+        await rerolledTerm.reroll();
+        await rollClone.evaluate();
+        const confirm = await foundry.applications.api.DialogV2.confirm({
+            window: { title: 'Confirm Reroll' },
+            content: `<p>You have rerolled your <strong>${dicetype}</strong> die to <strong>${rerolledTerm.results[0].result}</strong>.</p><p>Apply this new roll?</p>`
+            });
+        if (!confirm) return;
+        rollClone.toMessage({flavor: 'Selective reroll applied for ${dicetype}.'});
+        console.log("Updated Roll",rollClone);
+        */
     }
 }

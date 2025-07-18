@@ -37,10 +37,12 @@
                                     <div class="dice-container">
                                         <div class="dice-title">{{localize "DAGGERHEART.GENERAL.hope"}}</div>
                                         <div class="dice-inner-container hope" title="{{localize "DAGGERHEART.GENERAL.hope"}}">
-                                            <div class="dice-wrapper">
-                                                <img class="dice" src="../icons/svg/d12-grey.svg"/>
-                                            </div>
-                                            <div class="dice-value">{{roll.hope.value}}</div>
+                                            <button type="checkbox" class="reroll-button" id="reroll-dice" value="hope">
+                                                <div class="dice-wrapper">
+                                                    <img class="dice" src="../icons/svg/d12-grey.svg"/>
+                                                </div>
+                                                <div class="dice-value">{{roll.hope.value}}</div>
+                                            </button>
                                         </div>
                                     </div>
                                 </li>
@@ -152,6 +154,6 @@
         </div>
     </div>
 </div>
-<div class="reroll-div">
+<!-- <div class="reroll-div">
     <button class="reroll-button"><i class="fas fa-dice"></i><span>Reroll</span></button>
-</div>
+</div> -->
