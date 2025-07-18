@@ -532,7 +532,6 @@ export default class CharacterSheet extends DHBaseActorSheet {
         const maxMarks = this.document.system.armorScore;
         const value = Math.min(Math.max(Number(event.currentTarget.value), 0), maxMarks);
         await armor.update({ 'system.marks.value': value });
-        this.render();
     }
 
     /* -------------------------------------------- */
