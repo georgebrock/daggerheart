@@ -325,6 +325,14 @@ export default class DhCharacter extends BaseDataActor {
         return this.parent.items.find(x => x.type === 'armor' && x.system.equipped);
     }
 
+    get activeBeastform() {
+        return this.parent.effects.find(x => x.type === 'beastform');
+    }
+
+    get unarmedIcon() {
+        return this.activeBeastform ? 'icons/creatures/claws/claw-straight-brown.webp' : this.attack.img;
+    }
+
     get sheetLists() {
         const ancestryFeatures = [],
             communityFeatures = [],
