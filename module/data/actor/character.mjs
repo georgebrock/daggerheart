@@ -164,6 +164,44 @@ export default class DhCharacter extends BaseDataActor {
                 }),
                 rally: new fields.ArrayField(new fields.StringField(), {
                     label: 'DAGGERHEART.CLASS.Feature.rallyDice'
+                }),
+                rest: new fields.SchemaField({
+                    shortRest: new fields.SchemaField({
+                        shortMoves: new fields.NumberField({
+                            required: true,
+                            integer: true,
+                            min: 0,
+                            initial: 0,
+                            label: 'DAGGERHEART.GENERAL.Bonuses.rest.shortRest.shortRestMoves.label',
+                            hint: 'DAGGERHEART.GENERAL.Bonuses.rest.shortRest.shortRestMoves.hint'
+                        }),
+                        longMoves: new fields.NumberField({
+                            required: true,
+                            integer: true,
+                            min: 0,
+                            initial: 0,
+                            label: 'DAGGERHEART.GENERAL.Bonuses.rest.shortRest.longRestMoves.label',
+                            hint: 'DAGGERHEART.GENERAL.Bonuses.rest.shortRest.longRestMoves.hint'
+                        })
+                    }),
+                    longRest: new fields.SchemaField({
+                        shortMoves: new fields.NumberField({
+                            required: true,
+                            integer: true,
+                            min: 0,
+                            initial: 0,
+                            label: 'DAGGERHEART.GENERAL.Bonuses.rest.longRest.shortRestMoves.label',
+                            hint: 'DAGGERHEART.GENERAL.Bonuses.rest.longRest.shortRestMoves.hint'
+                        }),
+                        longMoves: new fields.NumberField({
+                            required: true,
+                            integer: true,
+                            min: 0,
+                            initial: 0,
+                            label: 'DAGGERHEART.GENERAL.Bonuses.rest.longRest.longRestMoves.label',
+                            hint: 'DAGGERHEART.GENERAL.Bonuses.rest.longRest.longRestMoves.hint'
+                        })
+                    })
                 })
             }),
             companion: new ForeignDocumentUUIDField({ type: 'Actor', nullable: true, initial: null }),
