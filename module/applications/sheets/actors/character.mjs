@@ -4,7 +4,7 @@ import { abilities } from '../../../config/actorConfig.mjs';
 import DhCharacterlevelUp from '../../levelup/characterLevelup.mjs';
 import DhCharacterCreation from '../../characterCreation/characterCreation.mjs';
 import FilterMenu from '../../ux/filter-menu.mjs';
-import { getDocFromElement, itemAbleRollParse } from "../../../helpers/utils.mjs";
+import { getDocFromElement, itemAbleRollParse } from '../../../helpers/utils.mjs';
 
 /**@typedef {import('@client/applications/_types.mjs').ApplicationClickAction} ApplicationClickAction */
 
@@ -36,30 +36,32 @@ export default class CharacterSheet extends DHBaseActorSheet {
                 dropSelector: null
             }
         ],
-        contextMenus: [{
-            handler: CharacterSheet.#getDomainCardContextOptions,
-            selector: '[data-item-uuid][data-type="domainCard"]',
-            options: {
-                parentClassHooks: false,
-                fixed: true
+        contextMenus: [
+            {
+                handler: CharacterSheet.#getDomainCardContextOptions,
+                selector: '[data-item-uuid][data-type="domainCard"]',
+                options: {
+                    parentClassHooks: false,
+                    fixed: true
+                }
+            },
+            {
+                handler: CharacterSheet.#getEquipamentContextOptions,
+                selector: '[data-item-uuid][data-type="armor"], [data-item-uuid][data-type="weapon"]',
+                options: {
+                    parentClassHooks: false,
+                    fixed: true
+                }
+            },
+            {
+                handler: CharacterSheet.#getItemContextOptions,
+                selector: '[data-item-uuid][data-type="consumable"], [data-item-uuid][data-type="miscellaneous"]',
+                options: {
+                    parentClassHooks: false,
+                    fixed: true
+                }
             }
-        },
-        {
-            handler: CharacterSheet.#getEquipamentContextOptions,
-            selector: '[data-item-uuid][data-type="armor"], [data-item-uuid][data-type="weapon"]',
-            options: {
-                parentClassHooks: false,
-                fixed: true
-            }
-        },
-        {
-            handler: CharacterSheet.#getItemContextOptions,
-            selector: '[data-item-uuid][data-type="consumable"], [data-item-uuid][data-type="miscellaneous"]',
-            options: {
-                parentClassHooks: false,
-                fixed: true
-            }
-        }]
+        ]
     };
 
     /**@override */
@@ -264,7 +266,7 @@ export default class CharacterSheet extends DHBaseActorSheet {
                 icon: 'fa-solid fa-arrow-down',
                 condition: target => !getDocFromElement(target).system.inVault,
                 callback: target => getDocFromElement(target).update({ 'system.inVault': true })
-            },
+            }
         ].map(option => ({
             ...option,
             name: `DAGGERHEART.APPLICATIONS.ContextMenu.${option.name}`,
@@ -281,18 +283,20 @@ export default class CharacterSheet extends DHBaseActorSheet {
      * @protected
      */
     static #getEquipamentContextOptions() {
-        const options = [{
-            name: 'equip',
-            icon: 'fa-solid fa-hands',
-            condition: target => !getDocFromElement(target).system.equipped,
-            callback: (target, event) => CharacterSheet.#toggleEquipItem.call(this, event, target),
-        },
-        {
-            name: 'unequip',
-            icon: 'fa-solid fa-hands',
-            condition: target => getDocFromElement(target).system.equipped,
-            callback: (target, event) => CharacterSheet.#toggleEquipItem.call(this, event, target),
-        }].map(option => ({
+        const options = [
+            {
+                name: 'equip',
+                icon: 'fa-solid fa-hands',
+                condition: target => !getDocFromElement(target).system.equipped,
+                callback: (target, event) => CharacterSheet.#toggleEquipItem.call(this, event, target)
+            },
+            {
+                name: 'unequip',
+                icon: 'fa-solid fa-hands',
+                condition: target => getDocFromElement(target).system.equipped,
+                callback: (target, event) => CharacterSheet.#toggleEquipItem.call(this, event, target)
+            }
+        ].map(option => ({
             ...option,
             name: `DAGGERHEART.APPLICATIONS.ContextMenu.${option.name}`,
             icon: `<i class="${option.icon}"></i>`
@@ -593,7 +597,6 @@ export default class CharacterSheet extends DHBaseActorSheet {
 
     //TODO: redo toggleEquipItem method
 
-
     /**
      * Toggles the equipped state of an item (armor or weapon).
      * @type {ApplicationClickAction}
@@ -648,7 +651,7 @@ export default class CharacterSheet extends DHBaseActorSheet {
      * @type {ApplicationClickAction}
      */
     static async #toggleVault(_event, button) {
-        const doc = getDocFromElement(button)
+        const doc = getDocFromElement(button);
         await doc?.update({ 'system.inVault': !doc.system.inVault });
     }
 
@@ -663,7 +666,7 @@ export default class CharacterSheet extends DHBaseActorSheet {
         const diceState = item.system.resource.diceStates[dice];
 
         await item.update({
-            [`system.resource.diceStates.${dice}.used`]: !diceState.used
+            [`system.resource.diceStates.${dice}.used`]: diceState ? !diceState.used : true
         });
     }
 
