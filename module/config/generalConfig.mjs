@@ -258,44 +258,21 @@ export const deathMoves = {
 };
 
 export const tiers = {
-    tier1: {
-        id: 'tier1',
-        label: 'DAGGERHEART.GENERAL.Tiers.tier1',
-        value: 1
-    },
-    tier2: {
-        id: 'tier2',
-        label: 'DAGGERHEART.GENERAL.Tiers.tier2',
-        value: 2
-    },
-    tier3: {
-        id: 'tier3',
-        label: 'DAGGERHEART.GENERAL.Tiers.tier3',
-        value: 3
-    },
-    tier4: {
-        id: 'tier4',
-        label: 'DAGGERHEART.GENERAL.Tiers.tier4',
-        value: 4
-    }
-};
-
-export const tiersAlternate = {
     1: {
         id: 1,
-        label: 'DAGGERHEART.GENERAL.Tiers.tier1'
+        label: 'DAGGERHEART.GENERAL.Tiers.1'
     },
     2: {
         id: 2,
-        label: 'DAGGERHEART.GENERAL.Tiers.tier2'
+        label: 'DAGGERHEART.GENERAL.Tiers.2'
     },
     3: {
         id: 3,
-        label: 'DAGGERHEART.GENERAL.Tiers.tier3'
+        label: 'DAGGERHEART.GENERAL.Tiers.3'
     },
     4: {
         id: 4,
-        label: 'DAGGERHEART.GENERAL.Tiers.tier4'
+        label: 'DAGGERHEART.GENERAL.Tiers.4'
     }
 };
 

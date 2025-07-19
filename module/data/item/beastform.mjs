@@ -27,8 +27,8 @@ export default class DHBeastform extends BaseDataItem {
             tier: new fields.NumberField({
                 required: true,
                 integer: true,
-                choices: CONFIG.DH.GENERAL.tiersAlternate,
-                initial: CONFIG.DH.GENERAL.tiersAlternate[1].id
+                choices: CONFIG.DH.GENERAL.tiers,
+                initial: CONFIG.DH.GENERAL.tiers[1].id
             }),
             tokenImg: new fields.FilePathField({
                 initial: 'icons/svg/mystery-man.svg',
@@ -59,7 +59,7 @@ export default class DHBeastform extends BaseDataItem {
             evolved: new fields.SchemaField({
                 maximumTier: new fields.NumberField({
                     integer: true,
-                    choices: CONFIG.DH.GENERAL.tiersAlternate
+                    choices: CONFIG.DH.GENERAL.tiers
                 }),
                 mainTraitBonus: new fields.NumberField({
                     required: true,
@@ -71,7 +71,7 @@ export default class DHBeastform extends BaseDataItem {
             hybrid: new fields.SchemaField({
                 maximumTier: new fields.NumberField({
                     integer: true,
-                    choices: CONFIG.DH.GENERAL.tiersAlternate,
+                    choices: CONFIG.DH.GENERAL.tiers,
                     label: 'DAGGERHEART.ITEMS.Beastform.FIELDS.evolved.maximumTier.label'
                 }),
                 beastformOptions: new fields.NumberField({ required: true, integer: true, initial: 2, min: 2 }),

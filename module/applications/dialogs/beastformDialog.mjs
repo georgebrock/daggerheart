@@ -103,7 +103,7 @@ export default class BeastformDialog extends HandlebarsApplicationMixin(Applicat
         const compendiumBeastforms = await game.packs.get(`daggerheart.beastforms`)?.getDocuments();
         context.beastformTiers = [...(compendiumBeastforms ? compendiumBeastforms : []), ...game.items].reduce(
             (acc, x) => {
-                const tier = CONFIG.DH.GENERAL.tiersAlternate[x.system.tier];
+                const tier = CONFIG.DH.GENERAL.tiers[x.system.tier];
                 if (x.type !== 'beastform' || tier.id > this.configData.tierLimit) return acc;
 
                 if (!acc[tier.id]) acc[tier.id] = { label: game.i18n.localize(tier.label), values: {} };
